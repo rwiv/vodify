@@ -1,6 +1,6 @@
 services:
   vtask-server:
-    image: ghcr.io/rwiv/vtask:0.3.2
+    image: harbor.rwiv.xyz/private/vtask:0.1.0
     container_name: vtask-server
     working_dir: /app
     entrypoint: python -m vtask server
@@ -21,7 +21,7 @@ services:
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
   vtask-flower:
-    image: ghcr.io/rwiv/vtask:0.3.2
+    image: harbor.rwiv.xyz/private/vtask:0.1.0
     container_name: vtask-flower
     working_dir: /app
     entrypoint: celery -A vtask.celery.celery_app.app flower

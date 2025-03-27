@@ -1,6 +1,6 @@
 services:
   vtask-worker-local:
-    image: ghcr.io/rwiv/vtask:0.3.2
+    image: harbor.rwiv.xyz/private/vtask:0.1.0
     container_name: vtask-worker-local
     working_dir: /app
     entrypoint: python -m vtask worker
@@ -27,7 +27,7 @@ services:
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl/src"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
   vtask-worker-remote:
-    image: ghcr.io/rwiv/vtask:0.3.2
+    image: harbor.rwiv.xyz/private/vtask:0.1.0
     container_name: vtask-worker-remote
     working_dir: /app
     entrypoint: python -m vtask worker
