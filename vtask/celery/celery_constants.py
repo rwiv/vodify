@@ -1,0 +1,4 @@
+LOCAL_WORKER_NAME = "local"
+
+LOCAL_QUEUE_NAME = "local"
+REMOTE_QUEUE_NAME = "remote"
