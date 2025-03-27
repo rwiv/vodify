@@ -9,8 +9,6 @@ def run():
 
     app = FastAPI()
 
-    deps.stdl_listener.run()
-
     app.include_router(deps.celery_router)
     app.include_router(deps.stdl_router)
 

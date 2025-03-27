@@ -6,7 +6,7 @@ from pyutils import load_dotenv, path_join, find_project_root
 
 load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
 
-from vtask.common.amqp import AmqpBlocking
+from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env
 from vtask.common.fs import FsType, read_fs_config
 from vtask.celery import stdl_done_local, LOCAL_QUEUE_NAME
@@ -95,9 +95,9 @@ def test_task():
 def test_amqp():
     print()
     env = get_server_env()
-    amqp = AmqpBlocking(env.amqp)
+    amqp = AmqpHelperBlocking(env.amqp)
     conn, chan = amqp.connect()
-    amqp.assert_queue(chan, STDL_DONE_QUEUE)
+    amqp.ensure_queue(chan, STDL_DONE_QUEUE)
     for target in targets:
         body = json.dumps(create_msg(target).to_json_dict()).encode("utf-8")
         amqp.publish(chan, STDL_DONE_QUEUE, body)

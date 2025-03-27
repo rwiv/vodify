@@ -1,17 +1,18 @@
 from fastapi import APIRouter
 
-from .celery_redis_broker_client import RedisBrokerClient
-from .celery_app import app
-from .celery_utils import (
-    find_active_workers,
+from ...celery import (
+    app,
+    CeleryRedisBrokerClient,
     shutdown_workers,
+    find_active_workers,
     get_running_tasks,
+    LOCAL_QUEUE_NAME,
+    REMOTE_QUEUE_NAME,
 )
-from .celery_constants import LOCAL_QUEUE_NAME, REMOTE_QUEUE_NAME
 
 
 class CeleryController:
-    def __init__(self, redis_broker: RedisBrokerClient):
+    def __init__(self, redis_broker: CeleryRedisBrokerClient):
         self.redis_broker = redis_broker
         self.router = APIRouter(prefix="/api/celery")
         self.router.add_api_route("/shutdown", self.shutdown, methods=["POST"])

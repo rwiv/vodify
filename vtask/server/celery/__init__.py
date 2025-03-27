@@ -1,13 +1,10 @@
 import os
 import sys
 
-from .amqp import AmqpHelper, AmqpHelperBlocking, AmqpHelperMock
+from .celery_controller import CeleryController
 
 targets = [
-    "env_celery",
-    "env_common_configs",
-    "env_server",
-    "env_worker",
+    "celery_controller",
 ]
 if os.getenv("PY_ENV") != "prod":
     for name in list(sys.modules.keys()):

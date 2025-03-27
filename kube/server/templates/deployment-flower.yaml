@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.global.name }}-flower
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.flower.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.global.name }}-flower
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.global.name }}-flower
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{ .Values.global.name }}-flower
+          workingDir: "/app"
+          command: ["celery", "-A", "vtask.celery.celery_app.app", "flower"]
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          ports:
+            - containerPort: {{ .Values.flower.service.targetPort }}
+          env:
+            - name: PY_ENV
+              value: prod
+            - name: FLOWER_UNAUTHENTICATED_API
+              value: "{{ .Values.flower.unauthenticatedApi }}"
+            - name: REDIS_HOST
+              value: {{ .Values.redis.host }}
+            - name: REDIS_PORT
+              value: "{{ .Values.redis.port }}"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: {{ .Values.redis.passwordKey }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

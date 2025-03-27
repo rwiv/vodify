@@ -4,7 +4,6 @@ from ..service.stdl import StdlMuxer, create_stdl_helper
 
 
 class WorkerDependencyManager:
-
     def create_stdl_muxer(self, src_fs_name: str) -> StdlMuxer:
         env = self.read_env()
         fs_configs = read_fs_config(env.fs_config_path)

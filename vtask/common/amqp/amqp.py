@@ -1,21 +1,26 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Callable
 
 import pika
 from pika.adapters.blocking_connection import BlockingConnection, BlockingChannel
+from pika.exceptions import ChannelClosedByBroker
 from pika.spec import Basic, BasicProperties
-from pyutils import stacktrace_dict, log
+from pyutils import log, error_dict
 
-from ..env.env_server import AmqpConfig
+from ..env import AmqpConfig
 
 
-class Amqp:
+class AmqpHelper(ABC):
     @abstractmethod
     def connect(self) -> tuple[BlockingConnection, BlockingChannel]:
         pass
 
     @abstractmethod
-    def assert_queue(self, chan: BlockingChannel, queue_name: str, auto_delete: bool = False):
+    def queue_exists(self, chan: BlockingChannel, queue_name: str) -> bool:
+        pass
+
+    @abstractmethod
+    def ensure_queue(self, chan: BlockingChannel, queue_name: str, auto_delete: bool = False):
         pass
 
     @abstractmethod
@@ -36,16 +41,27 @@ class Amqp:
         pass
 
 
-class AmqpBlocking(Amqp):
+class AmqpHelperBlocking(AmqpHelper):
     def __init__(self, conf: AmqpConfig):
-        self.url = f"amqp://{conf.username}:{conf.password}@{conf.host}:{conf.port}"
+        self.conf = conf
+        self.__amqp_url = f"amqp://{conf.username}:{conf.password}@{conf.host}:{conf.port}"
 
     def connect(self) -> tuple[BlockingConnection, BlockingChannel]:
-        conn = BlockingConnection(pika.URLParameters(self.url))
+        conn = BlockingConnection(pika.URLParameters(self.__amqp_url))
         chan = conn.channel()
         return conn, chan
 
-    def assert_queue(self, chan: BlockingChannel, queue_name: str, auto_delete: bool = False):
+    def queue_exists(self, chan: BlockingChannel, queue_name: str) -> bool:
+        try:
+            chan.queue_declare(queue=queue_name, passive=True)
+            return True
+        except ChannelClosedByBroker as e:
+            if e.reply_code == 404:
+                return False
+            else:
+                raise e
+
+    def ensure_queue(self, chan: BlockingChannel, queue_name: str, auto_delete: bool = False):
         chan.queue_declare(
             queue=queue_name,
             auto_delete=auto_delete,
@@ -71,16 +87,19 @@ class AmqpBlocking(Amqp):
             if not conn.is_closed:
                 conn.close()
                 log.debug("AMQP connection closed")
-        except:
-            log.error("Error closing AMQP connection", stacktrace_dict())
+        except Exception as e:
+            log.error("Error closing AMQP connection", error_dict(e))
 
 
-class AmqpMock(Amqp):
+class AmqpHelperMock(AmqpHelper):
     def connect(self) -> tuple[BlockingConnection, BlockingChannel]:
         log.info("AmqpMock.connect()")
         return None, None  # type: ignore
 
-    def assert_queue(self, chan: BlockingChannel, queue_name: str, auto_delete: bool = False):
+    def queue_exists(self, chan: BlockingChannel, queue_name: str) -> bool:
+        return False
+
+    def ensure_queue(self, chan: BlockingChannel, queue_name: str, auto_delete: bool = False):
         log.info(f"AmqpMock.assert_queue({queue_name}, {auto_delete})")
         pass
 

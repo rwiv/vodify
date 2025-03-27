@@ -6,7 +6,7 @@ from pyutils import path_join, find_project_root, load_dotenv, filename
 
 load_dotenv(path_join(find_project_root(), "dev", ".env-server-prod"))
 
-from vtask.common.amqp import AmqpBlocking
+from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env
 from vtask.common.fs import read_fs_config
 from vtask.server.stdl import STDL_DONE_QUEUE
@@ -53,10 +53,10 @@ def test_backup():
 def test_publish_done_message():
     print()
     env = get_server_env()
-    amqp = AmqpBlocking(env.amqp)
+    amqp = AmqpHelperBlocking(env.amqp)
 
     conn, chan = amqp.connect()
-    amqp.assert_queue(chan, STDL_DONE_QUEUE, auto_delete=False)
+    amqp.ensure_queue(chan, STDL_DONE_QUEUE, auto_delete=False)
     msg = StdlDoneMsg(
         status=StdlDoneStatus.COMPLETE,
         platform=StdlPlatformType.CHZZK,

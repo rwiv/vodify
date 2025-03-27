@@ -48,7 +48,7 @@ class CeleryTaskInfo(BaseModel):
         return base64.b64decode(self.body).decode("utf-8")
 
 
-class RedisBrokerClient:
+class CeleryRedisBrokerClient:
     def __init__(self, conf: RedisConfig):
         self.__redis = Redis(host=conf.host, port=conf.port, password=conf.password, db=0)
 
@@ -58,4 +58,7 @@ class RedisBrokerClient:
         for task in tasks:  # type: ignore
             info = CeleryTaskInfo(**json.loads(task.decode()))
             bodies.append(info.get_parsed_body())
-        return bodies
+        return {
+            "count": len(bodies),
+            "bodies": bodies,
+        }

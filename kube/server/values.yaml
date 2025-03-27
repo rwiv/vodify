@@ -1,0 +1,36 @@
+global:
+  name: vtask
+  namespace: media
+image:
+  repository: harbor.rwiv.xyz/private/vtask
+  tag: 0.0.0
+  pullSecret: image-pull-secret
+affinity: ~
+podLabels:
+  sidecar.istio.io/inject: "true"
+redis:
+  host: redis-master.infra.svc.cluster.local
+  port: 6379
+  secretName: redis-main
+  passwordKey: password
+rabbitmq:
+  host: rabbitmq.infra.svc.cluster.local
+  port: 5672
+  username: admin
+  secretName: rabbitmq-main
+  passwordKey: password
+server:
+  replicas: 1
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 80
+    nodePort: 30280
+flower:
+  replicas: 1
+  unauthenticatedApi: true
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 5555
+    nodePort: 30281

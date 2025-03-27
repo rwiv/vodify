@@ -1,6 +1,7 @@
-from .stdl import StdlController, StdlListener, STDL_DONE_QUEUE
-from ..celery import CeleryController, RedisBrokerClient
-from ..common.amqp import AmqpBlocking, AmqpMock
+from .celery import CeleryController
+from .stdl import StdlController, STDL_DONE_QUEUE, StdlListener
+from ..celery import CeleryRedisBrokerClient
+from ..common.amqp import AmqpHelperBlocking, AmqpHelperMock
 from ..common.env import get_server_env, get_celery_env
 
 
@@ -10,19 +11,19 @@ class ServerDependencyManager:
         self.celery_env = get_celery_env()
         self.amqp = self.create_amqp()
 
-        self.redis_broker = RedisBrokerClient(self.celery_env.redis)
-        self.__celery_controller = CeleryController(self.redis_broker)
-        self.celery_router = self.__celery_controller.router
+        redis_broker = CeleryRedisBrokerClient(self.celery_env.redis)
+        celery_controller = CeleryController(redis_broker)
+        self.celery_router = celery_controller.router
 
-        self.__stdl_controller = StdlController()
-        self.stdl_router = self.__stdl_controller.router
-        self.stdl_listener = StdlListener(self.amqp, STDL_DONE_QUEUE)
+        stdl_listener = StdlListener(self.amqp, STDL_DONE_QUEUE)
+        stdl_controller = StdlController(stdl_listener)
+        self.stdl_router = stdl_controller.router
 
     def create_amqp(self):
         if self.env.env == "prod":
-            return AmqpBlocking(self.env.amqp)
+            return AmqpHelperBlocking(self.env.amqp)
         else:
-            return AmqpMock()
+            return AmqpHelperMock()
 
 
 deps = ServerDependencyManager()
