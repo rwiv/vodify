@@ -11,9 +11,15 @@ class StdlController:
     def __init__(self, stdl_listener: StdlListener):
         self.listener = stdl_listener
         self.router = APIRouter(prefix="/api/stdl")
+        self.router.add_api_route("/stats", self.get_stats, methods=["GET"])
         self.router.add_api_route("/task", self.start_task, methods=["POST"])
         self.router.add_api_route("/amqp/start", self.start_consume, methods=["POST"])
         self.router.add_api_route("/amqp/stop", self.stop_consume, methods=["POST"])
+
+    def get_stats(self):
+        return {
+            "consuming": self.listener.listen_thread is not None,
+        }
 
     def start_consume(self):
         self.listener.start_consume()

@@ -35,11 +35,13 @@ class CeleryTaskInfo(BaseModel):
 
     def get_parsed_body(self) -> dict[str, Any]:
         decoded = json.loads(self.__decode_body())
-        if not isinstance(decoded, list) or len(decoded) < 2:
+        if not isinstance(decoded, list) or len(decoded) < 3:
             raise ValueError("Expected list data")
+        print(decoded)
         return {
             "args": decoded[0],
             "kwargs": decoded[1],
+            # "options": decoded[2],
         }
 
     def __decode_body(self) -> str:
@@ -58,7 +60,4 @@ class CeleryRedisBrokerClient:
         for task in tasks:  # type: ignore
             info = CeleryTaskInfo(**json.loads(task.decode()))
             bodies.append(info.get_parsed_body())
-        return {
-            "count": len(bodies),
-            "bodies": bodies,
-        }
+        return bodies

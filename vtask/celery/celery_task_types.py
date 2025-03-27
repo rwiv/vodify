@@ -28,7 +28,7 @@ class TaskDict(TypedDict):
     kwargs: dict
     type: str
     hostname: str
-    time_start: float
+    time_start: float | None
     acknowledged: bool
     delivery_info: DeliveryInfo
     worker_pid: int
@@ -42,11 +42,15 @@ class TaskInfo:
     task_kwargs: dict
     worker_name: str  # e.g. "celery@worker-1"
     worker_pid: int
-    started_at: datetime
+    started_at: datetime | None
     acknowledged: bool
 
     @staticmethod
     def from_dict(task_dict: TaskDict) -> "TaskInfo":
+        started_at = None
+        time_start = task_dict.get("time_start")
+        if time_start is not None:
+            started_at = datetime.fromtimestamp(time_start)
         return TaskInfo(
             task_id=task_dict["id"],
             task_name=task_dict["name"],
@@ -54,7 +58,7 @@ class TaskInfo:
             task_kwargs=task_dict["kwargs"],
             worker_name=task_dict["hostname"],
             worker_pid=task_dict["worker_pid"],
-            started_at=datetime.fromtimestamp(task_dict["time_start"]),
+            started_at=started_at,
             acknowledged=task_dict["acknowledged"],
         )
 

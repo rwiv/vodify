@@ -17,12 +17,23 @@ def shutdown_workers(app: Celery):
 
 
 def get_running_tasks(app: Celery) -> list[TaskInfo]:
-    worker_dict = app.control.inspect().active()
-    if not worker_dict:
+    task_dict = app.control.inspect().active()
+    if not task_dict:
         return []
+    return get_tasks(task_dict)
+
+
+def get_prefetched_tasks(app: Celery) -> list[TaskInfo]:
+    task_dict = app.control.inspect().reserved()
+    if not task_dict:
+        return []
+    return get_tasks(task_dict)
+
+
+def get_tasks(task_dict: dict) -> list[TaskInfo]:
     result = []
-    for worker_name in worker_dict.keys():
-        tasks: list[TaskDict] = worker_dict[worker_name]
+    for worker_name in task_dict.keys():
+        tasks: list[TaskDict] = task_dict[worker_name]
         for task in tasks:
             result.append(TaskInfo.from_dict(task))
     return result

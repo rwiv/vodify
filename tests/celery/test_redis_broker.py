@@ -23,7 +23,6 @@ def test_all_redis_keys():
 
 def test_queue():
     print()
-    print("local")
     print(client.get_received_task_bodies(LOCAL_QUEUE_NAME))
     print(client.get_received_task_bodies(REMOTE_QUEUE_NAME))
 
