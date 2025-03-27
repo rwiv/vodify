@@ -5,7 +5,7 @@ from pydantic import BaseModel, constr
 
 
 class BatchCommand(Enum):
-    FRAME_LOSS = "frame_loss"
+    LOSS = "loss"
 
 
 class UntfConfig(BaseModel):
@@ -17,7 +17,8 @@ class UntfConfig(BaseModel):
 class BatchEnv(BaseModel):
     env: constr(min_length=1)
     command: BatchCommand
-    fl_config_path: constr(min_length=1)
+    loss_config_path: constr(min_length=1)
+    tmp_dir_path: constr(min_length=1)
     untf: UntfConfig
 
 
@@ -35,6 +36,7 @@ def get_batch_env() -> BatchEnv:
     return BatchEnv(
         env=env,
         command=BatchCommand(os.getenv("BATCH_COMMAND")),
-        fl_config_path=os.getenv("FL_CONFIG_PATH"),
+        tmp_dir_path=os.getenv("TMP_DIR_PATH"),
+        loss_config_path=os.getenv("LOSS_CONFIG_PATH"),
         untf=untf,
     )

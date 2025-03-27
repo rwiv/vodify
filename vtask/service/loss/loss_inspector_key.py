@@ -1,11 +1,11 @@
 import csv
 
-from .frame_loss_config import KeyFrameLossConfig
-from .frame_loss_inspector import InspectResult, Frame, FrameLossInspector
-from .frame_loss_utils import format_time, extract_frames
+from .loss_config import KeyFrameLossConfig
+from .loss_inspector import InspectResult, Frame, LossInspector
+from .loss_utils import format_time, extract_frames
 
 
-class KeyFrameLossInspector(FrameLossInspector):
+class KeyLossInspector(LossInspector):
     def __init__(self, conf: KeyFrameLossConfig):
         super().__init__()
         self.threshold_sec = conf.threshold_sec
@@ -31,4 +31,4 @@ class KeyFrameLossInspector(FrameLossInspector):
             prev = cur
 
         file.close()
-        return InspectResult(frame_loss_ranges=loss_ranges, total_loss_time=format_time(sum))
+        return InspectResult(loss_ranges=loss_ranges, total_loss_time=format_time(sum))

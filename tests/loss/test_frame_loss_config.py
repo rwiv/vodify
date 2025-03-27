@@ -1,11 +1,11 @@
 from pyutils import path_join, find_project_root
 
-from vtask.service.loss import read_fl_config
+from vtask.service.loss import read_loss_config
 
 
 def test_frame_loss_config():
-    conf_path = path_join(find_project_root(), "dev", "fl_conf.yaml")
-    conf = read_fl_config(conf_path)
+    conf_path = path_join(find_project_root(), "dev", "loss_conf_test.yaml")
+    conf = read_loss_config(conf_path)
     print()
-    print(conf.key_frame)
+    print(conf.key)
     print(conf.all)

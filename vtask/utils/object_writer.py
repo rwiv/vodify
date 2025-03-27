@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from io import BufferedReader
 from pathlib import Path
 
-from pyutils import filename, dirname
+from pyutils import filename, dirpath
 
 from vtask.common.fs import FsType, S3Config
 from vtask.utils import S3Client
@@ -31,8 +31,8 @@ class LocalObjectWriter(ObjectWriter):
         return base_path
 
     def write(self, path: str, data: bytes | BufferedReader) -> None:
-        if not Path(dirname(path)).exists():
-            os.makedirs(dirname(path), exist_ok=True)
+        if not Path(dirpath(path)).exists():
+            os.makedirs(dirpath(path), exist_ok=True)
         with open(path, "wb") as f:
             if isinstance(data, bytes):
                 f.write(data)
@@ -54,7 +54,7 @@ class S3ObjectWriter(ObjectWriter):
         self.__s3 = S3Client(self.conf)
 
     def normalize_base_path(self, base_path: str) -> str:
-        return filename(base_path, "/")
+        return filename(base_path)
 
     def write(self, path: str, data: bytes | BufferedReader):
         return self.__s3.write(path, data)

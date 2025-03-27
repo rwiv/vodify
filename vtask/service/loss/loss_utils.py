@@ -22,7 +22,7 @@ def group_consecutive(nums: list[int]):
 
 def extract_frames(vid_path: str, csv_path: str, only_key_frames: bool, is_print: bool = False):
     if shutil.which("ffprobe") is None:
-        raise FileNotFoundError("ffmpeg not found")
+        raise FileNotFoundError("ffprobe not found")
 
     command = ["ffprobe", "-select_streams", "v", "-show_frames", "-print_format", "csv"]
     if only_key_frames:

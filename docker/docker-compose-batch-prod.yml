@@ -1,0 +1,19 @@
+services:
+  vtask-batch:
+    image: harbor.rwiv.xyz/private/vtask:0.1.2
+    container_name: vtask-batch
+    working_dir: /app
+    entrypoint: python -m vtask batch
+    environment:
+      PY_ENV: dev
+      BATCH_COMMAND: "${BATCH_COMMAND}"
+      TMP_DIR_PATH: /app/tmp
+      LOSS_CONFIG_PATH: /mnt/app/loss_conf.yaml
+
+      UNTF_ENDPOINT: "${UNTF_ENDPOINT}"
+      UNTF_API_KEY: "${UNTF_API_KEY}"
+      UNTF_TOPIC: "${UNTF_TOPIC}"
+    volumes:
+      - "${SRC_DIR_PATH}:/mnt/volume"
+      - "${TMP_DIR_PATH}:/app/tmp"
+      - "${LOSS_CONFIG_PATH}:/mnt/app/loss_conf.yaml"

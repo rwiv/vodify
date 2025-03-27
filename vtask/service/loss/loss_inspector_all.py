@@ -1,12 +1,12 @@
 import csv
 import statistics
 
-from .frame_loss_config import AllFrameLossConfig
-from .frame_loss_inspector import InspectResult, Frame, FrameLossInspector
-from .frame_loss_utils import group_consecutive, format_time, extract_frames
+from .loss_config import AllFrameLossConfig
+from .loss_inspector import InspectResult, Frame, LossInspector
+from .loss_utils import group_consecutive, format_time, extract_frames
 
 
-class AllFrameLossInspector(FrameLossInspector):
+class AllLossInspector(LossInspector):
     def __init__(self, conf: AllFrameLossConfig):
         super().__init__()
         self.threshold_byte = conf.threshold_byte
@@ -47,4 +47,4 @@ class AllFrameLossInspector(FrameLossInspector):
             loss_ranges.append(f"{format_time(from_sec)}-{format_time(to_sec)}")
             sum += to_sec - from_sec
 
-        return InspectResult(frame_loss_ranges=loss_ranges, total_loss_time=format_time(sum))
+        return InspectResult(loss_ranges=loss_ranges, total_loss_time=format_time(sum))

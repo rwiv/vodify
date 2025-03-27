@@ -1,7 +1,7 @@
 import os
 import sys
 
-from .env_batch import BatchEnv, UntfConfig
+from .env_batch import BatchEnv, UntfConfig, BatchCommand, get_batch_env
 from .env_celery import CeleryEnv, get_celery_env
 from .env_common_configs import AmqpConfig, RedisConfig
 from .env_server import ServerEnv, get_server_env

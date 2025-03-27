@@ -5,9 +5,14 @@ import yaml
 from pydantic import BaseModel, constr, Field
 
 
-class FrameLossCommand(Enum):
-    KEY_FRAME = "keyFrame"
+class LossCommand(Enum):
+    KEY = "key"
     ALL = "all"
+
+
+class LossMethod(Enum):
+    INSPECT = "inspect"
+    ANALYZE = "analyze"
 
 
 class KeyFrameLossConfig(BaseModel):
@@ -20,17 +25,19 @@ class AllFrameLossConfig(BaseModel):
     weight_sec: float = Field(alias="weightSec", default=1)
 
 
-class FrameLossConfig(BaseModel):
-    command: FrameLossCommand
+class LossConfig(BaseModel):
+    command: LossCommand
+    method: LossMethod
+    archive_csv: bool = Field(alias="archiveCsv")
     src_dir_path: constr(min_length=1) = Field(alias="srcDirPath")
     out_dir_path: constr(min_length=1) = Field(alias="outDirPath")
-    key_frame: KeyFrameLossConfig = Field(alias="keyFrame")
+    key: KeyFrameLossConfig
     all: AllFrameLossConfig
 
 
-def read_fl_config(config_path: str) -> FrameLossConfig:
+def read_loss_config(config_path: str) -> LossConfig:
     if not Path(config_path).exists():
         raise FileNotFoundError(f"File not found: {config_path}")
     with open(config_path, "r") as file:
         text = file.read()
-    return FrameLossConfig(**yaml.load(text, Loader=yaml.FullLoader))
+    return LossConfig(**yaml.load(text, Loader=yaml.FullLoader))

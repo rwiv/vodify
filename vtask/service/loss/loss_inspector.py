@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class InspectResult(BaseModel):
-    frame_loss_ranges: list[str] = Field(serialization_alias="frameLossRanges")
+    loss_ranges: list[str] = Field(serialization_alias="lossRanges")
     total_loss_time: str = Field(serialization_alias="totalLossTime")
 
 
@@ -17,7 +17,7 @@ class Frame(BaseModel):
         return Frame(pkt_pts_time=row[5], pkt_size=row[13])  # type: ignore
 
 
-class FrameLossInspector(ABC):
+class LossInspector(ABC):
     def __init__(self, encoding: str = "utf-8"):
         self.encoding = encoding
 
