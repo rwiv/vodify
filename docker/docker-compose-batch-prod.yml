@@ -5,7 +5,7 @@ services:
     working_dir: /app
     entrypoint: python -m vtask batch
     environment:
-      PY_ENV: dev
+      PY_ENV: prod
       BATCH_COMMAND: "${BATCH_COMMAND}"
       TMP_DIR_PATH: /app/tmp
       LOSS_CONFIG_PATH: /mnt/app/loss_conf.yaml
