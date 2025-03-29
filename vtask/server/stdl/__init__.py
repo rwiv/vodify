@@ -3,7 +3,6 @@ import sys
 
 from .stdl_controller import StdlController
 from .stdl_listener import StdlListener
-from .stdl_periodic_task import StdlPeriodicTask
 
 targets = ["stdl_constants", "stdl_controller", "stdl_listener"]
 if os.getenv("PY_ENV") != "prod":

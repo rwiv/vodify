@@ -1,15 +1,10 @@
 import threading
 
-from redis import Redis
 
-from ...common.env import RedisConfig
-
-
-class StdlPeriodicTask:
-    def __init__(self, conf: RedisConfig):
+class StdlPeriodicJob:
+    def __init__(self):
         self.abort_flag = False
         self.thread: threading.Thread | None = None
-        self.__redis = Redis(host=conf.host, port=conf.port, password=conf.password, db=0)
 
     def start(self):
         if self.thread is not None:
