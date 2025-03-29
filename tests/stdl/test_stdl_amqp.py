@@ -1,10 +1,12 @@
+import json
 import os
 import time
 
 import yaml
 from pyutils import path_join, find_project_root, load_dotenv, filename
 
-load_dotenv(path_join(find_project_root(), "dev", ".env-server-prod"))
+load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
+# load_dotenv(path_join(find_project_root(), "dev", ".env-server-prod"))
 
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env
@@ -51,7 +53,6 @@ def test_backup():
 
 
 def test_publish_done_message():
-    print()
     env = get_server_env()
     amqp = AmqpHelperBlocking(env.amqp)
 
@@ -66,3 +67,17 @@ def test_publish_done_message():
     ).model_dump_json(by_alias=True)
     amqp.publish(chan, STDL_DONE_QUEUE, msg.encode("utf-8"))
     amqp.close(conn)
+
+
+def test_read_one():
+    print()
+    env = get_server_env()
+    amqp = AmqpHelperBlocking(env.amqp)
+    conn, chan = amqp.connect()
+    msg = amqp.read_one(chan, STDL_DONE_QUEUE)
+    if msg is None:
+        print("No message")
+        return
+    stdl_msg = StdlDoneMsg(**json.loads(msg.body))
+    print(stdl_msg)
+    # chan.basic_ack(delivery_tag=msg.method.delivery_tag)

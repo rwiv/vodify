@@ -51,7 +51,7 @@ class StdlListener:
                 stdl_done_local.apply_async(args=[dct], queue=LOCAL_QUEUE_NAME)  # type: ignore
             else:
                 stdl_done_remote.apply_async(args=[dct], queue=REMOTE_QUEUE_NAME)  # type: ignore
-            ch.basic_ack(method.delivery_tag)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
             log.info("stdl.done task sent", dct)
         except:
             log.error("stdl.done task failed", stacktrace_dict())

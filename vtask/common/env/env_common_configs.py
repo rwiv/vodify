@@ -13,7 +13,7 @@ class AmqpConfig(BaseModel):
 def read_amqp_config():
     return AmqpConfig(
         host=os.getenv("AMQP_HOST"),
-        port=int(os.getenv("AMQP_PORT")),  # type: ignore
+        port=os.getenv("AMQP_PORT"),  # type: ignore
         username=os.getenv("AMQP_USERNAME"),
         password=os.getenv("AMQP_PASSWORD"),
     )

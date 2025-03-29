@@ -15,7 +15,7 @@ class StdlDoneStatus(Enum):
 
 class StdlDoneMsg(BaseModel):
     status: StdlDoneStatus
-    platform: StdlPlatformType
+    platform: StdlPlatformType | None = None  # TODO: remove
     uid: constr(min_length=1)
     video_name: constr(min_length=1) = Field(alias="videoName")
     fs_name: constr(min_length=1) = Field(alias="fsName")

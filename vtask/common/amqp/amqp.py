@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from dataclasses import dataclass
 from typing import Callable
 
 import pika
@@ -8,6 +9,13 @@ from pika.spec import Basic, BasicProperties
 from pyutils import log, error_dict
 
 from ..env import AmqpConfig
+
+
+@dataclass
+class AmqpMessage:
+    method: Basic.GetOk
+    properties: BasicProperties
+    body: str
 
 
 class AmqpHelper(ABC):
@@ -21,6 +29,10 @@ class AmqpHelper(ABC):
 
     @abstractmethod
     def ensure_queue(self, chan: BlockingChannel, queue_name: str, auto_delete: bool = False):
+        pass
+
+    @abstractmethod
+    def read_one(self, chan: BlockingChannel, queue_name: str) -> AmqpMessage | None:
         pass
 
     @abstractmethod
@@ -70,6 +82,12 @@ class AmqpHelperBlocking(AmqpHelper):
             exclusive=False,
         )
 
+    def read_one(self, chan: BlockingChannel, queue_name: str) -> AmqpMessage | None:
+        method, properties, body = chan.basic_get(queue=queue_name)
+        if method is None or properties is None or body is None:
+            return None
+        return AmqpMessage(method, properties, body.decode("utf-8"))
+
     def consume(
         self,
         chan: BlockingChannel,
@@ -102,6 +120,10 @@ class AmqpHelperMock(AmqpHelper):
     def ensure_queue(self, chan: BlockingChannel, queue_name: str, auto_delete: bool = False):
         log.info(f"AmqpMock.assert_queue({queue_name}, {auto_delete})")
         pass
+
+    def read_one(self, chan: BlockingChannel, queue_name: str) -> AmqpMessage | None:
+        log.info(f"AmqpMock.consume_one({queue_name})")
+        return None
 
     def consume(
         self,

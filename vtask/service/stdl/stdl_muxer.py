@@ -5,10 +5,12 @@ from enum import Enum
 from pathlib import Path
 from typing import TypedDict
 
+import yaml
 from pyutils import log, path_join
 
 from .stdl_constrants import STDL_INCOMPLETE_DIR_NAME, STDL_COMPLETE_DIR_NAME, STDL_ARCHIVE_DIR_NAME
 from .stdl_helper import StdlHelper
+from ..loss import TimeLossInspector, TimeFrameLossConfig
 from ...common.fs import FsType
 
 
@@ -36,6 +38,7 @@ class StdlMuxer:
         self.complete_dir_path = path_join(base_path, STDL_COMPLETE_DIR_NAME)
         self.archive_dir_path = path_join(base_path, STDL_ARCHIVE_DIR_NAME)
         self.is_archive = is_archive
+        self.loss_inspector = TimeLossInspector(TimeFrameLossConfig())
 
     def clear(self, uid: str, video_name: str) -> StdlDoneTaskResult:
         self.helper.clear(uid=uid, video_name=video_name)
@@ -66,8 +69,17 @@ class StdlMuxer:
         _mux_video(merged_tmp_ts_path, tmp_mp4_path)
         os.remove(merged_tmp_ts_path)
 
+        # Inspect video
+        tmp_csv_path = path_join(self.tmp_path, uid, f"{video_name}.csv")
+        loss_result = self.loss_inspector.inspect(tmp_mp4_path, tmp_csv_path)
+        os.remove(tmp_csv_path)
+
         # Move mp4 file
         self.move_mp4(tmp_mp4_path=tmp_mp4_path, uid=uid, video_name=video_name)
+
+        # Write loss result file
+        with open(path_join(self.complete_dir_path, uid, f"{video_name}.yaml"), "w") as file:
+            file.write(yaml.dump(loss_result.model_dump(by_alias=True), allow_unicode=True))
 
         # Organize files
         if self.is_archive and self.helper.fs_type is not FsType.LOCAL:
