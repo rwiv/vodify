@@ -6,8 +6,8 @@ from pydantic import BaseModel, constr, Field
 
 
 class LossCommand(Enum):
-    KEY = "key"
-    ALL = "all"
+    TIME = "time"
+    SIZE = "size"
 
 
 class LossMethod(Enum):
@@ -15,11 +15,11 @@ class LossMethod(Enum):
     ANALYZE = "analyze"
 
 
-class KeyFrameLossConfig(BaseModel):
-    threshold_sec: float = Field(alias="thresholdSec", default=1.5)
+class TimeFrameLossConfig(BaseModel):
+    threshold_sec: float = Field(alias="thresholdSec", default=0.1)
 
 
-class AllFrameLossConfig(BaseModel):
+class SizeFrameLossConfig(BaseModel):
     threshold_byte: int = Field(alias="thresholdByte", default=50)
     list_capacity: int = Field(alias="listCapacity", default=60)
     weight_sec: float = Field(alias="weightSec", default=1)
@@ -31,8 +31,8 @@ class LossConfig(BaseModel):
     archive_csv: bool = Field(alias="archiveCsv")
     src_dir_path: constr(min_length=1) = Field(alias="srcDirPath")
     out_dir_path: constr(min_length=1) = Field(alias="outDirPath")
-    key: KeyFrameLossConfig
-    all: AllFrameLossConfig
+    time: TimeFrameLossConfig
+    size: SizeFrameLossConfig
 
 
 def read_loss_config(config_path: str) -> LossConfig:

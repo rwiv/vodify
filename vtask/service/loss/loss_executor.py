@@ -7,8 +7,8 @@ from pyutils import path_join, get_ext, log, filename
 
 from .loss_config import read_loss_config, LossConfig, LossCommand, LossMethod
 from .loss_inspector import LossInspector
-from .loss_inspector_all import AllLossInspector
-from .loss_inspector_key import KeyLossInspector
+from .loss_inspector_size import SizeLossInspector
+from .loss_inspector_time import TimeLossInspector
 from ...common.env import BatchEnv
 from ...common.notifier import create_notifier
 from ...utils import check_dir, read_dir_recur
@@ -88,7 +88,9 @@ class LossExecutor:
 
 
 def create_inspector(conf: LossConfig) -> LossInspector:
-    if conf.command == LossCommand.KEY:
-        return KeyLossInspector(conf.key)
+    if conf.command == LossCommand.TIME:
+        return TimeLossInspector(conf.time)
+    elif conf.command == LossCommand.SIZE:
+        return SizeLossInspector(conf.size)
     else:
-        return AllLossInspector(conf.all)
+        raise ValueError(f"Unknown command: {conf.command}")

@@ -1,20 +1,20 @@
 import csv
 import statistics
 
-from .loss_config import AllFrameLossConfig
-from .loss_inspector import InspectResult, Frame, LossInspector
-from .loss_utils import group_consecutive, format_time, extract_frames
+from .loss_config import SizeFrameLossConfig
+from .loss_inspector import InspectResult, Packet, LossInspector
+from .loss_utils import group_consecutive, format_time, extract_packets
 
 
-class AllLossInspector(LossInspector):
-    def __init__(self, conf: AllFrameLossConfig):
+class SizeLossInspector(LossInspector):
+    def __init__(self, conf: SizeFrameLossConfig):
         super().__init__()
         self.threshold_byte = conf.threshold_byte
         self.list_capacity = conf.list_capacity
         self.weight_sec = conf.weight_sec
 
     def inspect(self, vid_path: str, csv_path: str) -> InspectResult:
-        extract_frames(vid_path, csv_path, False)
+        extract_packets(vid_path, csv_path)
         return self.analyze(csv_path)
 
     def analyze(self, csv_path: str) -> InspectResult:
@@ -25,13 +25,13 @@ class AllLossInspector(LossInspector):
 
         prev_sec = 0
         for row in csv.reader(file):
-            cur = Frame.from_row(row)
+            cur = Packet.from_row(row)
             if len(prev_size_list) > self.list_capacity:
                 prev_size_list.pop(0)
-            prev_size_list.append(cur.pkt_size)
+            prev_size_list.append(cur.size)
             avg = statistics.mean(prev_size_list)
             if avg < self.threshold_byte:
-                cur_sec = int(cur.pkt_pts_time)
+                cur_sec = int(cur.pts_time)
                 if prev_sec == cur_sec:
                     continue
                 result_times.append(cur_sec)
@@ -40,11 +40,11 @@ class AllLossInspector(LossInspector):
         file.close()
 
         loss_ranges = []
-        sum = 0
+        sum_secs = 0
         for group in group_consecutive(result_times):
             from_sec = group[0] - self.weight_sec
             to_sec = group[1] + self.weight_sec
             loss_ranges.append(f"{format_time(from_sec)}-{format_time(to_sec)}")
-            sum += to_sec - from_sec
+            sum_secs += to_sec - from_sec
 
-        return InspectResult(loss_ranges=loss_ranges, total_loss_time=format_time(sum))
+        return InspectResult(loss_ranges=loss_ranges, total_loss_time=format_time(sum_secs))
