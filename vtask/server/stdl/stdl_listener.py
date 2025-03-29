@@ -8,7 +8,7 @@ from pyutils import stacktrace_dict, log
 from ...celery import stdl_done_local, stdl_done_remote, LOCAL_QUEUE_NAME, REMOTE_QUEUE_NAME
 from ...common.amqp import AmqpHelper
 from ...common.fs import LOCAL_FILE_NAME
-from ...service.stdl import StdlDoneMsg
+from ...service.stdl.schema import StdlDoneMsg
 
 
 class StdlListener:

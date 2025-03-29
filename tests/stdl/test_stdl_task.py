@@ -1,13 +1,12 @@
 from pyutils import path_join, find_project_root, load_dotenv
 
-from vtask.service.stdl import StdlDoneStatus, StdlPlatformType, StdlDoneMsg
-
 load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
 # load_dotenv(path_join(find_project_root(), "dev", ".env-server-prod"))
 
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env, get_celery_env
-from vtask.server.stdl import StdlDoneMessageManager, STDL_DONE_QUEUE
+from vtask.service.stdl.schema import StdlDoneStatus, StdlPlatformType, StdlDoneMsg, STDL_DONE_QUEUE
+from vtask.service.stdl.manager import StdlMessageManager
 
 
 server_env = get_server_env()
@@ -19,7 +18,7 @@ def test_stdl_test():
     print()
     for i in range(3):
         publish_done_message(i)
-    task = StdlDoneMessageManager(amqp, celery_env.redis)
+    task = StdlMessageManager(amqp, celery_env.redis)
     task.run_task()
 
 

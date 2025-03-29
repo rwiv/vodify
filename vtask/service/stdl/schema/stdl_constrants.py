@@ -1,3 +1,5 @@
+STDL_DONE_QUEUE = "stdl.done"
+
 STDL_INCOMPLETE_DIR_NAME = "incomplete"
 STDL_COMPLETE_DIR_NAME = "complete"
 STDL_ARCHIVE_DIR_NAME = "archive"

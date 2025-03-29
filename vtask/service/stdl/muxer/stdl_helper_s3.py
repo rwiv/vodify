@@ -3,9 +3,9 @@ import os
 from pyutils import path_join, filename
 
 from .stdl_helper import StdlHelper
-from .stdl_constrants import STDL_INCOMPLETE_DIR_NAME
-from ...common.fs import S3Config, FsType
-from ...utils import S3Client
+from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
+from ....common.fs import S3Config, FsType
+from ....utils import S3Client
 
 
 class StdlS3Helper(StdlHelper):

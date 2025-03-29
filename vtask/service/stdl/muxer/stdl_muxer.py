@@ -8,10 +8,14 @@ from typing import TypedDict
 import yaml
 from pyutils import log, path_join
 
-from .stdl_constrants import STDL_INCOMPLETE_DIR_NAME, STDL_COMPLETE_DIR_NAME, STDL_ARCHIVE_DIR_NAME
 from .stdl_helper import StdlHelper
-from ..loss import TimeLossInspector, TimeFrameLossConfig
-from ...common.fs import FsType
+from ..schema.stdl_constrants import (
+    STDL_INCOMPLETE_DIR_NAME,
+    STDL_COMPLETE_DIR_NAME,
+    STDL_ARCHIVE_DIR_NAME,
+)
+from ...loss import TimeLossInspector, TimeFrameLossConfig
+from ....common.fs import FsType
 
 
 class StdlDoneTaskStatus(Enum):

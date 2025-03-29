@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ...common.fs import FsType
+from ....common.fs import FsType
 
 
 class StdlHelper(ABC):

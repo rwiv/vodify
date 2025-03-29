@@ -1,6 +1,6 @@
 from ..common.env import get_worker_env
 from ..common.fs import read_fs_config
-from ..service.stdl import StdlMuxer, create_stdl_helper
+from ..service.stdl.muxer import StdlMuxer, create_stdl_helper
 
 
 class WorkerDependencyManager:

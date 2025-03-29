@@ -10,14 +10,8 @@ from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env
 from vtask.common.fs import FsType, read_fs_config
 from vtask.celery import stdl_done_local, LOCAL_QUEUE_NAME
-from vtask.server.stdl import STDL_DONE_QUEUE
-from vtask.service.stdl import (
-    StdlMuxer,
-    StdlDoneMsg,
-    StdlDoneStatus,
-    StdlPlatformType,
-    StdlS3Helper,
-)
+from vtask.service.stdl.muxer import StdlMuxer, StdlS3Helper
+from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, STDL_DONE_QUEUE
 from vtask.utils import LocalObjectWriter
 
 with open(path_join(find_project_root(), "dev", "test_conf.yaml"), "r") as file:

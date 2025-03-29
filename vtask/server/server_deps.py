@@ -1,8 +1,9 @@
 from .celery import CeleryController
-from .stdl import StdlController, STDL_DONE_QUEUE, StdlListener
+from .stdl import StdlController, StdlListener
 from ..celery import CeleryRedisBrokerClient
 from ..common.amqp import AmqpHelperBlocking, AmqpHelperMock
 from ..common.env import get_server_env, get_celery_env
+from ..service.stdl.schema import STDL_DONE_QUEUE
 
 
 class ServerDependencyManager:

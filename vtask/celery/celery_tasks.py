@@ -1,7 +1,7 @@
 from .celery_app import app
 from .celery_constants import LOCAL_QUEUE_NAME, REMOTE_QUEUE_NAME
 from .celery_worker_deps import deps
-from ..service.stdl import StdlDoneMsg, StdlDoneStatus
+from ..service.stdl.schema import StdlDoneMsg, StdlDoneStatus
 
 
 @app.task(name="vtask.stdl.done.local", queue=LOCAL_QUEUE_NAME)

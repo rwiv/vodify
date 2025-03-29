@@ -3,16 +3,15 @@ import json
 from pyutils import log, error_dict
 from redis import Redis
 
-from vtask.common.amqp import AmqpHelper
-from vtask.common.env import RedisConfig
-from vtask.server.stdl import STDL_DONE_QUEUE
-from vtask.service.stdl import StdlDoneMsg
+from ..schema import StdlDoneMsg, STDL_DONE_QUEUE
+from ....common.amqp import AmqpHelper
+from ....common.env import RedisConfig
 
 
 REDIS_STDL_DONE_LIST_KEY = "vtask:stdl:done"
 
 
-class StdlDoneMessageManager:
+class StdlMessageManager:
     def __init__(self, amqp: AmqpHelper, conf: RedisConfig):
         self.__amqp = amqp
         self.__redis = Redis(host=conf.host, port=conf.port, password=conf.password, db=0)

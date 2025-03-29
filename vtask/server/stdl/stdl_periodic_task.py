@@ -18,7 +18,8 @@ class StdlPeriodicTask:
 
     def __run(self):
         while not self.abort_flag:
-            self.__redis.lpush(REDIS_STDL_DONE_KEY, "test")
+            # TODO: implement
+            pass
 
     def stop(self):
         if self.thread is None:

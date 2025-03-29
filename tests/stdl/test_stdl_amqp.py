@@ -11,8 +11,7 @@ load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env
 from vtask.common.fs import read_fs_config
-from vtask.server.stdl import STDL_DONE_QUEUE
-from vtask.service.stdl import StdlDoneMsg, StdlDoneStatus, StdlPlatformType
+from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, STDL_DONE_QUEUE
 from vtask.utils import S3Client
 
 
