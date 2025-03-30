@@ -2,10 +2,10 @@ import yaml
 from pyutils import path_join, find_project_root
 
 from vtask.service.loss import (
-    TimeLossInspector,
-    SizeLossInspector,
-    SizeFrameLossConfig,
-    TimeFrameLossConfig,
+    KeyFrameLossInspector,
+    AllFrameLossInspector,
+    AllFrameLossConfig,
+    KeyFrameLossConfig,
 )
 
 
@@ -14,7 +14,7 @@ def test_inspect_time():
     csv_path = path_join(find_project_root(), "dev", "out", "source.csv")
     yaml_path = path_join(find_project_root(), "dev", "out", "source.yaml")
 
-    inspector = TimeLossInspector(TimeFrameLossConfig())
+    inspector = KeyFrameLossInspector(KeyFrameLossConfig())
     result = inspector.inspect(vid_path, csv_path)
 
     with open(yaml_path, "w") as file:
@@ -26,7 +26,7 @@ def test_inspect_size():
     csv_path = path_join(find_project_root(), "dev", "out", "encoded.csv")
     yaml_path = path_join(find_project_root(), "dev", "out", "encoded.yaml")
 
-    inspector = SizeLossInspector(SizeFrameLossConfig())
+    inspector = AllFrameLossInspector(AllFrameLossConfig())
     result = inspector.inspect(vid_path, csv_path)
 
     with open(yaml_path, "w") as file:

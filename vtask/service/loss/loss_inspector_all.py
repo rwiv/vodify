@@ -1,20 +1,20 @@
 import csv
 import statistics
 
-from .loss_config import SizeFrameLossConfig
-from .loss_inspector import InspectResult, Packet, LossInspector
-from .loss_utils import group_consecutive, format_time, extract_packets
+from .loss_config import AllFrameLossConfig
+from .loss_inspector import InspectResult, Frame, LossInspector
+from .loss_utils import group_consecutive, format_time, extract_frames
 
 
-class SizeLossInspector(LossInspector):
-    def __init__(self, conf: SizeFrameLossConfig):
+class AllFrameLossInspector(LossInspector):
+    def __init__(self, conf: AllFrameLossConfig):
         super().__init__()
         self.threshold_byte = conf.threshold_byte
         self.list_capacity = conf.list_capacity
         self.weight_sec = conf.weight_sec
 
     def inspect(self, vid_path: str, csv_path: str) -> InspectResult:
-        extract_packets(vid_path, csv_path)
+        extract_frames(vid_path, csv_path, only_key_frames=False)
         return self.analyze(csv_path)
 
     def analyze(self, csv_path: str) -> InspectResult:
@@ -25,13 +25,13 @@ class SizeLossInspector(LossInspector):
 
         prev_sec = 0
         for row in csv.reader(file):
-            cur = Packet.from_row(row)
+            cur = Frame.from_row(row)
             if len(prev_size_list) > self.list_capacity:
                 prev_size_list.pop(0)
-            prev_size_list.append(cur.size)
+            prev_size_list.append(cur.pkt_size)
             avg = statistics.mean(prev_size_list)
             if avg < self.threshold_byte:
-                cur_sec = int(cur.dts_time)
+                cur_sec = int(cur.pkt_pts_time)
                 if prev_sec == cur_sec:
                     continue
                 result_times.append(cur_sec)

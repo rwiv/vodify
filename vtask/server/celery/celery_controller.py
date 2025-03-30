@@ -13,8 +13,8 @@ from ...celery import (
 
 
 class CeleryController:
-    def __init__(self, redis_broker: CeleryRedisBrokerClient):
-        self.redis_broker = redis_broker
+    def __init__(self, celery_redis: CeleryRedisBrokerClient):
+        self.redis_broker = celery_redis
         self.router = APIRouter(prefix="/api/celery")
         self.router.add_api_route("/shutdown", self.shutdown, methods=["POST"])
         self.router.add_api_route("/workers", self.get_workers, methods=["GET"])

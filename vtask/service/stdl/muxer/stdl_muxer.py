@@ -14,7 +14,7 @@ from ..schema.stdl_constrants import (
     STDL_COMPLETE_DIR_NAME,
     STDL_ARCHIVE_DIR_NAME,
 )
-from ...loss import TimeLossInspector, TimeFrameLossConfig
+from ...loss import KeyFrameLossInspector, KeyFrameLossConfig
 from ....common.fs import FsType
 
 
@@ -42,7 +42,7 @@ class StdlMuxer:
         self.complete_dir_path = path_join(base_path, STDL_COMPLETE_DIR_NAME)
         self.archive_dir_path = path_join(base_path, STDL_ARCHIVE_DIR_NAME)
         self.is_archive = is_archive
-        self.loss_inspector = TimeLossInspector(TimeFrameLossConfig())
+        self.loss_inspector = KeyFrameLossInspector(KeyFrameLossConfig())
 
     def clear(self, uid: str, video_name: str) -> StdlDoneTaskResult:
         self.helper.clear(uid=uid, video_name=video_name)

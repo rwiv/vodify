@@ -37,7 +37,6 @@ class CeleryTaskInfo(BaseModel):
         decoded = json.loads(self.__decode_body())
         if not isinstance(decoded, list) or len(decoded) < 3:
             raise ValueError("Expected list data")
-        print(decoded)
         return {
             "args": decoded[0],
             "kwargs": decoded[1],
@@ -54,10 +53,12 @@ class CeleryRedisBrokerClient:
     def __init__(self, conf: RedisConfig):
         self.__redis = Redis(host=conf.host, port=conf.port, password=conf.password, db=0)
 
-    def get_received_task_bodies(self, queue_name: str):
+    def get_received_tasks(self, queue_name: str):
         tasks = self.__redis.lrange(queue_name, 0, -1)
-        bodies = []
-        for task in tasks:  # type: ignore
-            info = CeleryTaskInfo(**json.loads(task.decode()))
-            bodies.append(info.get_parsed_body())
-        return bodies
+        if not isinstance(tasks, list):
+            raise ValueError("Expected list data")
+        return [CeleryTaskInfo(**json.loads(task.decode())) for task in tasks]
+
+    def get_received_task_bodies(self, queue_name: str):
+        tasks = self.get_received_tasks(queue_name=queue_name)
+        return [task.get_parsed_body() for task in tasks]

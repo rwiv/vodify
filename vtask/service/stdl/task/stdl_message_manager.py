@@ -42,6 +42,12 @@ class StdlMessageManager:
             raise ValueError("Expected bytes data")
         return StdlDoneMsg(**json.loads(txt.decode("utf-8")))
 
+    def publish(self, msg: StdlDoneMsg):
+        conn, chan = self.__amqp.connect()
+        self.__amqp.ensure_queue(chan, STDL_DONE_QUEUE, auto_delete=False)
+        self.__amqp.publish(chan, STDL_DONE_QUEUE, msg.model_dump_json(by_alias=True).encode("utf-8"))
+        self.__amqp.close(conn)
+
     def push_all(self):
         conn, chan = self.__amqp.connect()
         try:
