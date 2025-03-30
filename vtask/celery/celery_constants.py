@@ -1,4 +1,5 @@
 LOCAL_WORKER_NAME = "local"
 
-LOCAL_QUEUE_NAME = "local"
-REMOTE_QUEUE_NAME = "remote"
+DEFAULT_QUEUE_NAME = "celery"
+LOCAL_QUEUE_NAME = "local"  # TODO: rename to celery:vtask:stdl:local
+REMOTE_QUEUE_NAME = "remote"  # TODO: rename to celery:vtask:stdl:remote

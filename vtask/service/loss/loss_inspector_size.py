@@ -31,7 +31,7 @@ class SizeLossInspector(LossInspector):
             prev_size_list.append(cur.size)
             avg = statistics.mean(prev_size_list)
             if avg < self.threshold_byte:
-                cur_sec = int(cur.pts_time)
+                cur_sec = int(cur.dts_time)
                 if prev_sec == cur_sec:
                     continue
                 result_times.append(cur_sec)

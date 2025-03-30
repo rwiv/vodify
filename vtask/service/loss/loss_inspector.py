@@ -12,6 +12,7 @@ class Packet(BaseModel):
     codec_type: str
     stream_index: int
     pts: int
+    # pts_time is not guaranteed to be sorted in chronological order
     pts_time: float
     dts: int
     dts_time: float

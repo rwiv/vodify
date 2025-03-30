@@ -25,9 +25,9 @@ class TimeLossInspector(LossInspector):
             if prev is None:
                 prev = cur
                 continue
-            if cur.pts_time - prev.pts_time > self.threshold_sec:
-                loss_ranges.append(f"{format_time(prev.pts_time)}-{format_time(cur.pts_time)}")
-                sum += cur.pts_time - prev.pts_time
+            if cur.dts_time - prev.dts_time > self.threshold_sec:
+                loss_ranges.append(f"{format_time(prev.dts_time)}-{format_time(cur.dts_time)}")
+                sum += cur.dts_time - prev.dts_time
             prev = cur
 
         file.close()

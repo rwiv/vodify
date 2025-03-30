@@ -21,13 +21,14 @@ helper = StdlMessageHelper(amqp, mgr)
 
 def test_consume_all():
     print()
-    for message in mgr.consume_all(clear=True):
+    for message in mgr.consume_all():
         print(message)
+    mgr.clear_list()
 
 
 def test_stdl_archive_test():
-    for i in range(3):
-        publish_done_message(i)
+    # for i in range(3):
+    #     publish_done_message(i)
 
     out_file_path = path_join(find_project_root(), "dev", "out", "stdl_done.json")
     if not Path(dirpath(out_file_path)).exists():
@@ -41,7 +42,7 @@ def test_stdl_publish_by_archive():
     if not Path(dirpath(src_file_path)).exists():
         os.makedirs(dirpath(src_file_path), exist_ok=True)
 
-    helper.publish_by_archive(src_file_path, 2)
+    helper.publish_by_archive(src_file_path, 5)
 
 
 def publish_done_message(n: int):

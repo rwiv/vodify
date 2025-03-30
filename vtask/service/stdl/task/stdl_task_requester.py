@@ -9,7 +9,7 @@ class StdlTaskRequester:
     def __init__(self):
         pass
 
-    def request(self, msg: StdlDoneMsg):
+    def request_done(self, msg: StdlDoneMsg):
         msg_dict = msg.model_dump(mode="json", by_alias=True)
         if msg.fs_name == LOCAL_FILE_NAME:
             stdl_done_local.apply_async(args=[msg_dict], queue=LOCAL_QUEUE_NAME)  # type: ignore

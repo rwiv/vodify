@@ -12,8 +12,9 @@ class StdlMessageHelper:
         self.__manager = manager
 
     def archive(self, out_path: str):
-        messages = self.__manager.consume_all(clear=True)
+        messages = self.__manager.consume_all()
         _write_file(messages, out_path)
+        self.__manager.clear_list()
 
     def publish_by_archive(self, src_path: str, n: int):
         with open(src_path, "r") as f:
