@@ -9,7 +9,7 @@ load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env, get_celery_env
 from vtask.service.stdl.schema import StdlDoneStatus, StdlPlatformType, StdlDoneMsg, STDL_DONE_QUEUE
-from vtask.service.stdl.task import StdlDoneHelper, StdlDoneQueue
+from vtask.service.stdl.common import StdlDoneHelper, StdlDoneQueue
 
 server_env = get_server_env()
 celery_env = get_celery_env()

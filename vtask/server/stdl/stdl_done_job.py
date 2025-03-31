@@ -1,6 +1,6 @@
 from .stdl_task_requester import StdlTaskRequester
-from ...service.stdl.task import StdlDoneQueue
-from ...service.stdl.schema import STDL_DONE_QUEUE
+from ...service.stdl.common import StdlDoneQueue
+from ...service.stdl.schema import STDL_DONE_QUEUE, StdlDoneMsg
 from ...celery import CeleryRedisBrokerClient
 from ...common.amqp import AmqpHelper, AmqpRedisMigrator
 from ...common.job import Job
@@ -36,14 +36,14 @@ class StdlDoneJob(Job):
     def run(self):
         self.__mig.push_all_amqp_messages()
         for _ in range(self.__queue.size()):
-            stdl_msg = self.__queue.pop()
-            if stdl_msg is None:
+            msg: StdlDoneMsg | None = self.__queue.pop()
+            if msg is None:
                 raise Exception("stdl_done_queue is empty")
 
-            queue_name = self.__requester.resolve_queue(stdl_msg)
+            queue_name = self.__requester.resolve_queue(msg)
 
             received_tasks = self.__celery_redis.get_received_tasks(queue_name)
             if len(received_tasks) >= self.received_task_threshold:
-                self.__queue.push(stdl_msg)
+                self.__queue.push(msg)
             else:
-                self.__requester.request_done(stdl_msg, queue_name)
+                self.__requester.request_done(msg, queue_name)
