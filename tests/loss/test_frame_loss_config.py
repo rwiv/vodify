@@ -7,5 +7,4 @@ def test_frame_loss_config():
     conf_path = path_join(find_project_root(), "dev", "loss_conf_test.yaml")
     conf = read_loss_config(conf_path)
     print()
-    print(conf.key)
-    print(conf.all)
+    print(conf.size)

@@ -1,10 +1,10 @@
 import os
 import sys
 
-from .loss_config import KeyFrameLossConfig, AllFrameLossConfig, read_loss_config
+from .loss_config import LossCheckSizeConfig, read_loss_config
 from .loss_inspector import LossInspector
-from .loss_inspector_key import KeyFrameLossInspector
-from .loss_inspector_all import AllFrameLossInspector
+from .loss_inspector_time import TimeLossInspector
+from .loss_inspector_size import SizeLossInspector
 from .loss_executor import LossExecutor
 
 targets = [

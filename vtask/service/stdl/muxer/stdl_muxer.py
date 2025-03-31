@@ -14,7 +14,7 @@ from ..schema.stdl_constrants import (
     STDL_COMPLETE_DIR_NAME,
     STDL_ARCHIVE_DIR_NAME,
 )
-from ...loss import KeyFrameLossInspector, KeyFrameLossConfig
+from ...loss import TimeLossInspector
 from ....common.fs import FsType
 
 
@@ -42,7 +42,7 @@ class StdlMuxer:
         self.complete_dir_path = path_join(base_path, STDL_COMPLETE_DIR_NAME)
         self.archive_dir_path = path_join(base_path, STDL_ARCHIVE_DIR_NAME)
         self.is_archive = is_archive
-        self.loss_inspector = KeyFrameLossInspector(KeyFrameLossConfig())
+        self.loss_inspector = TimeLossInspector(keyframe_only=False)
 
     def clear(self, uid: str, video_name: str) -> StdlDoneTaskResult:
         self.helper.clear(uid=uid, video_name=video_name)
@@ -76,6 +76,7 @@ class StdlMuxer:
         # Inspect video
         tmp_csv_path = path_join(self.tmp_path, uid, f"{video_name}.csv")
         loss_result = self.loss_inspector.inspect(tmp_mp4_path, tmp_csv_path)
+        log.info("loss check done", loss_result.model_dump(mode="json"))
         os.remove(tmp_csv_path)
 
         # Move mp4 file
@@ -83,7 +84,7 @@ class StdlMuxer:
 
         # Write loss result file
         with open(path_join(self.complete_dir_path, uid, f"{video_name}.yaml"), "w") as file:
-            file.write(yaml.dump(loss_result.model_dump(by_alias=True), allow_unicode=True))
+            file.write(yaml.dump(loss_result.to_out_dict(), allow_unicode=True))
 
         # Organize files
         if self.is_archive and self.helper.fs_type is not FsType.LOCAL:

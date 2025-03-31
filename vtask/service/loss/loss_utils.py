@@ -20,12 +20,12 @@ def group_consecutive(nums: list[int]):
     return result
 
 
-def extract_frames(vid_path: str, csv_path: str, only_key_frames: bool, is_print: bool = False):
+def extract_frames(vid_path: str, csv_path: str, keyframe_only: bool, is_print: bool = False):
     if shutil.which("ffprobe") is None:
         raise FileNotFoundError("ffprobe not found")
 
     command = ["ffprobe", "-select_streams", "v", "-show_frames", "-print_format", "csv"]
-    if only_key_frames:
+    if keyframe_only:
         command.extend(["-skip_frame", "nokey"])
     command.append(vid_path)
 

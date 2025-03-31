@@ -6,9 +6,9 @@ import yaml
 from pyutils import path_join, get_ext, log, filename
 
 from .loss_config import read_loss_config, LossConfig, LossCommand, LossMethod
-from .loss_inspector import LossInspector
-from .loss_inspector_all import AllFrameLossInspector
-from .loss_inspector_key import KeyFrameLossInspector
+from .loss_inspector import LossInspector, InspectResult
+from .loss_inspector_size import SizeLossInspector
+from .loss_inspector_time import TimeLossInspector
 from ...common.env import BatchEnv
 from ...common.notifier import create_notifier
 from ...utils import check_dir, read_dir_recur
@@ -54,9 +54,9 @@ class LossExecutor:
 
                 check_dir(yaml_path)
                 with open(yaml_path, "w") as file:
-                    file.write(yaml.dump(result.model_dump(by_alias=True), allow_unicode=True))
+                    file.write(yaml.dump(result.to_out_dict(), allow_unicode=True))
 
-                log.info(f"video frame-loss check done: {file_path}")
+                log.info("one loss check done", get_result_dict(result, file_path))
             except Exception as e:
                 notify_msg = f"Directory Failed: {path_join(self.src_dir_path, src_sub_path)}, err: {e}"
                 self.notifier.notify(self.topic, notify_msg)
@@ -80,17 +80,25 @@ class LossExecutor:
             yaml_path = path_join(self.out_dir_path, src_sub_path.replace(f".{ext}", ".yaml"))
             check_dir(yaml_path)
             with open(yaml_path, "w") as file:
-                file.write(yaml.dump(result.model_dump(by_alias=True), allow_unicode=True))
+                file.write(yaml.dump(result.to_out_dict(), allow_unicode=True))
 
-            log.info(f"video frame-loss check done: {file_path}")
+            log.info("one loss check done", get_result_dict(result, file_path))
 
         log.info(f"directory frame-loss check done: {self.src_dir_path}")
 
 
+def get_result_dict(result: InspectResult, file_path: str) -> dict:
+    result_dict = result.model_dump(mode="json")
+    result_dict["file_path"] = file_path
+    return result_dict
+
+
 def create_inspector(conf: LossConfig) -> LossInspector:
-    if conf.command == LossCommand.KEY:
-        return KeyFrameLossInspector(conf.key)
-    elif conf.command == LossCommand.ALL:
-        return AllFrameLossInspector(conf.all)
+    if conf.command == LossCommand.TIME_KEY:
+        return TimeLossInspector(keyframe_only=True)
+    elif conf.command == LossCommand.TIME_ALL:
+        return TimeLossInspector(keyframe_only=False)
+    elif conf.command == LossCommand.SIZE:
+        return SizeLossInspector(conf.size)
     else:
         raise ValueError(f"Unknown command: {conf.command}")
