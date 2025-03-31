@@ -6,6 +6,7 @@ import pika
 from pika.adapters.blocking_connection import BlockingConnection, BlockingChannel
 from pika.exceptions import ChannelClosedByBroker
 from pika.spec import Basic, BasicProperties
+from pydantic import BaseModel
 from pyutils import log, error_dict
 
 from ..env import AmqpConfig
@@ -46,6 +47,10 @@ class AmqpHelper(ABC):
 
     @abstractmethod
     def publish(self, chan: BlockingChannel, queue_name: str, body: bytes):
+        pass
+
+    @abstractmethod
+    def instance_publish(self, queue_name: str, msg: BaseModel):
         pass
 
     @abstractmethod
@@ -100,6 +105,12 @@ class AmqpHelperBlocking(AmqpHelper):
     def publish(self, chan: BlockingChannel, queue_name: str, body: bytes):
         chan.basic_publish(exchange="", routing_key=queue_name, body=body)
 
+    def instance_publish(self, queue_name: str, msg: BaseModel):
+        conn, chan = self.connect()
+        self.ensure_queue(chan, queue_name, auto_delete=False)
+        self.publish(chan, queue_name, msg.model_dump_json(by_alias=True).encode("utf-8"))
+        self.close(conn)
+
     def close(self, conn: BlockingConnection):
         try:
             if not conn.is_closed:
@@ -136,6 +147,10 @@ class AmqpHelperMock(AmqpHelper):
 
     def publish(self, chan: BlockingChannel, queue_name: str, body: bytes):
         log.info(f"AmqpMock.publish({queue_name}, {body})")
+        pass
+
+    def instance_publish(self, queue_name: str, msg: BaseModel):
+        log.info(f"AmqpMock.instance_publish({queue_name}, {msg})")
         pass
 
     def close(self, conn: BlockingConnection):

@@ -5,7 +5,6 @@ from enum import Enum
 from pathlib import Path
 from typing import TypedDict
 
-import yaml
 from pyutils import log, path_join
 
 from .stdl_helper import StdlHelper
@@ -73,18 +72,10 @@ class StdlMuxer:
         _mux_video(merged_tmp_ts_path, tmp_mp4_path)
         os.remove(merged_tmp_ts_path)
 
-        # Inspect video
-        tmp_csv_path = path_join(self.tmp_path, uid, f"{video_name}.csv")
-        loss_result = self.loss_inspector.inspect(tmp_mp4_path, tmp_csv_path)
-        log.info("loss check done", loss_result.model_dump(mode="json"))
-        os.remove(tmp_csv_path)
-
         # Move mp4 file
-        self.move_mp4(tmp_mp4_path=tmp_mp4_path, uid=uid, video_name=video_name)
-
-        # Write loss result file
-        with open(path_join(self.complete_dir_path, uid, f"{video_name}.yaml"), "w") as file:
-            file.write(yaml.dump(loss_result.to_out_dict(), allow_unicode=True))
+        self.move_mp4(tmp_mp4_path=tmp_mp4_path, uid=uid, video_name=video_name)  # TODO: remove
+        # incomplete_mp4_path = path_join(self.incomplete_dir_path, uid, f"{video_name}.mp4")
+        # shutil.move(tmp_mp4_path, incomplete_mp4_path)
 
         # Organize files
         if self.is_archive and self.helper.fs_type is not FsType.LOCAL:
@@ -93,7 +84,7 @@ class StdlMuxer:
         else:
             shutil.rmtree(chunks_path)
 
-        self.__clear_incomplete_dir(uid)
+        self.__clear_incomplete_dir(uid)  # TODO: remove
         _clear_tmp_dir(self.tmp_path, uid)
 
         log.info(f"Convert file: {uid}/{video_name}")
@@ -115,6 +106,32 @@ class StdlMuxer:
         incomplete_uid_dir_path = path_join(self.incomplete_dir_path, uid)
         if len(os.listdir(incomplete_uid_dir_path)) == 0:
             os.rmdir(incomplete_uid_dir_path)
+
+    # def check_loss(self, uid: str, video_name: str) -> StdlDoneTaskResult:
+    #     incomplete_mp4_path = path_join(self.incomplete_dir_path, uid, f"{video_name}.mp4")
+    #     complete_mp4_path = path_join(self.complete_dir_path, uid, f"{video_name}.mp4")
+    #     complete_yaml_path = path_join(self.complete_dir_path, uid, f"{video_name}.yaml")
+    #     tmp_mp4_path = path_join(self.tmp_path, uid, f"{video_name}.mp4")
+    #     tmp_csv_path = path_join(self.tmp_path, uid, f"{video_name}.csv")
+    #
+    #     shutil.copy2(incomplete_mp4_path, tmp_mp4_path)
+    #
+    #     # Inspect video
+    #     loss_result = self.loss_inspector.inspect(tmp_mp4_path, tmp_csv_path)
+    #     log.info("loss check is done", {"elapsed_time": loss_result.elapsed_time})
+    #     os.remove(tmp_csv_path)
+    #     os.remove(tmp_mp4_path)
+    #
+    #     # Write loss result file
+    #     with open(complete_yaml_path, "w") as file:
+    #         file.write(yaml.dump(loss_result.to_out_dict(), allow_unicode=True))
+    #
+    #     shutil.move(incomplete_mp4_path, complete_mp4_path)
+    #
+    #     self.__clear_incomplete_dir(uid)
+    #     _clear_tmp_dir(self.tmp_path, uid)
+    #
+    #     return _get_success_result(f"Loss check success: {uid}/{video_name}")
 
 
 def _get_sorted_chunk_paths(chunks_path: str) -> list[str]:

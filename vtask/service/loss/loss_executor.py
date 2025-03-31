@@ -56,7 +56,7 @@ class LossExecutor:
                 with open(yaml_path, "w") as file:
                     file.write(yaml.dump(result.to_out_dict(), allow_unicode=True))
 
-                log.info("one loss check done", get_result_dict(result, file_path))
+                log.info("one loss check is done", get_done_log_attrs(result, file_path))
             except Exception as e:
                 notify_msg = f"Directory Failed: {path_join(self.src_dir_path, src_sub_path)}, err: {e}"
                 self.notifier.notify(self.topic, notify_msg)
@@ -82,15 +82,13 @@ class LossExecutor:
             with open(yaml_path, "w") as file:
                 file.write(yaml.dump(result.to_out_dict(), allow_unicode=True))
 
-            log.info("one loss check done", get_result_dict(result, file_path))
+            log.info("one loss check is done", get_done_log_attrs(result, file_path))
 
-        log.info(f"directory frame-loss check done: {self.src_dir_path}")
+        log.info(f"directory frame-loss check done", {"dir_path": self.src_dir_path})
 
 
-def get_result_dict(result: InspectResult, file_path: str) -> dict:
-    result_dict = result.model_dump(mode="json")
-    result_dict["file_path"] = file_path
-    return result_dict
+def get_done_log_attrs(inspect_result: InspectResult, file_path: str) -> dict:
+    return {"file_path": file_path, "elapsed_time": inspect_result.elapsed_time}
 
 
 def create_inspector(conf: LossConfig) -> LossInspector:

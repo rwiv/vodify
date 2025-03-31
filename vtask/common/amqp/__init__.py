@@ -2,6 +2,7 @@ import os
 import sys
 
 from .amqp import AmqpHelper, AmqpHelperBlocking, AmqpHelperMock
+from .amqp_redis import AmqpRedisMigrator
 
 targets = [
     "env_celery",

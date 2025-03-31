@@ -9,21 +9,14 @@ load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env, get_celery_env
 from vtask.service.stdl.schema import StdlDoneStatus, StdlPlatformType, StdlDoneMsg, STDL_DONE_QUEUE
-from vtask.service.stdl.task import StdlMessageManager, StdlMessageHelper
+from vtask.service.stdl.task import StdlDoneHelper, StdlDoneQueue
 
 server_env = get_server_env()
 celery_env = get_celery_env()
 amqp = AmqpHelperBlocking(server_env.amqp)
 
-mgr = StdlMessageManager(amqp, celery_env.redis)
-helper = StdlMessageHelper(amqp, mgr)
-
-
-def test_consume_all():
-    print()
-    for message in mgr.consume_all():
-        print(message)
-    mgr.clear_list()
+_queue = StdlDoneQueue(celery_env.redis)
+helper = StdlDoneHelper(amqp, _queue)
 
 
 def test_stdl_archive_test():

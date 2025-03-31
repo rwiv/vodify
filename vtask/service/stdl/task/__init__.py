@@ -1,8 +1,8 @@
 import os
 import sys
 
-from .stdl_message_manager import StdlMessageManager
-from .stdl_message_helper import StdlMessageHelper
+from .stdl_done_helper import StdlDoneHelper
+from .stdl_done_queue import StdlDoneQueue
 
 targets = [
     "stdl_done_job",

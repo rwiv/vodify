@@ -1,8 +1,8 @@
 from pyutils import log
 
-from ..schema import StdlDoneMsg
-from ....celery import stdl_done_local, stdl_done_remote, LOCAL_QUEUE_NAME, REMOTE_QUEUE_NAME
-from ....common.fs import LOCAL_FILE_NAME
+from ...service.stdl.schema import StdlDoneMsg
+from ...celery import stdl_done_local, stdl_done_remote, LOCAL_QUEUE_NAME, REMOTE_QUEUE_NAME
+from ...common.fs import LOCAL_FILE_NAME
 
 
 class StdlTaskRequester:

@@ -1,20 +1,28 @@
 import json
 from queue import Queue
 
-from vtask.common.amqp import AmqpHelper
-from .stdl_message_manager import StdlMessageManager
+from .stdl_done_queue import StdlDoneQueue
 from ..schema import StdlDoneMsg, STDL_DONE_QUEUE
+from ....common.amqp import AmqpHelper, AmqpRedisMigrator
 
 
-class StdlMessageHelper:
-    def __init__(self, amqp: AmqpHelper, manager: StdlMessageManager):
+class StdlDoneHelper:
+    def __init__(self, amqp: AmqpHelper, queue: StdlDoneQueue):
         self.__amqp = amqp
-        self.__manager = manager
+        self.__queue = queue
+        self.__mig = AmqpRedisMigrator(
+            amqp=amqp,
+            queue=queue.redis_queue,
+            amqp_queue_name=STDL_DONE_QUEUE,
+        )
 
     def archive(self, out_path: str):
-        messages = self.__manager.consume_all()
+        self.__mig.push_all_amqp_messages()
+        messages = self.__queue.list()
+        messages.reverse()
+
         _write_file(messages, out_path)
-        self.__manager.clear_list()
+        self.__queue.clear_queue()
 
     def publish_by_archive(self, src_path: str, n: int):
         with open(src_path, "r") as f:
