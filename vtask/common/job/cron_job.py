@@ -36,11 +36,11 @@ class CronJob:
     def start(self):
         if self.__thread is not None:
             raise ValueError("CronJob already started")
+        log.info("Start CronJob", {"job_name": self.__job.name})
         self.__thread = threading.Thread(target=self.__run)
         self.__thread.start()
 
     def __run(self):
-        log.info("Start CronJob", {"job_name": self.__job.name})
         self.status = CronJobStatus.RUNNING
         retry_cnt = 0
         while not self.__abort_flag:

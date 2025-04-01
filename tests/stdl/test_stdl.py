@@ -1,69 +1,75 @@
-import json
 import os
 
-import yaml
-from pyutils import load_dotenv, path_join, find_project_root
+from pyutils import path_join
 
-load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
+from tests.testutils.test_utils_conf import read_test_conf
+from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
+from tests.testutils.test_utils_misc import load_test_dotenv
+from vtask.utils import S3ObjectWriter
+
+load_test_dotenv(".env-server-dev")
 
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env
-from vtask.common.fs import FsType, read_fs_config
-from vtask.celery import stdl_done_local, LOCAL_QUEUE_NAME
 from vtask.service.stdl.muxer import StdlMuxer, StdlS3Helper
-from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, STDL_DONE_QUEUE
-from vtask.utils import LocalObjectWriter
+from vtask.service.stdl.schema import STDL_DONE_QUEUE, StdlDoneMsg, StdlDoneStatus
 
-with open(path_join(find_project_root(), "dev", "test_conf.yaml"), "r") as file:
-    test_conf = yaml.load(file.read(), Loader=yaml.FullLoader)
+test_conf = read_test_conf()
 
-fs_configs = read_fs_config(path_join(find_project_root(), "dev", "fs_conf_test.yaml"))
 
-targets = [
-    {
-        "uid": "test_uid",
-        "video_name": "test_video",
-    }
-]
+# fs_name = "local"
+fs_name = "minio"
 
-fs_name = "local"
-# fs_name = "minio"
 is_archive = True
 # is_archive = False
 
-fs_conf = None
-for conf in fs_configs:
-    if conf.name == fs_name:
-        fs_conf = conf
-        break
+done_messages = [
+    StdlDoneMsg(uid="test_uid1", videoName="test_video", fsName=fs_name, status=StdlDoneStatus.COMPLETE),
+    StdlDoneMsg(uid="test_uid2", videoName="test_video", fsName=fs_name, status=StdlDoneStatus.COMPLETE),
+    StdlDoneMsg(uid="test_uid3", videoName="test_video", fsName=fs_name, status=StdlDoneStatus.CANCELED),
+    StdlDoneMsg(uid="test_uid4", videoName="test_video", fsName=fs_name, status=StdlDoneStatus.COMPLETE),
+    StdlDoneMsg(uid="test_uid5", videoName="test_video", fsName=fs_name, status=StdlDoneStatus.COMPLETE),
+]
 
-src_writer = LocalObjectWriter()
-# src_writer = S3ObjectWriter(fs_conf.s3)  # type: ignore
+fs_configs = read_test_fs_configs(is_prod=False)
+fs_conf = find_test_fs_config(fs_configs, fs_name)
+# src_writer = LocalObjectWriter()
+src_writer = S3ObjectWriter(fs_conf.s3)  # type: ignore
 
-out_writer = LocalObjectWriter()
-# out_writer = S3ObjectWriter(fs_conf.s3)  # type: ignore
-
-base_dir_path = test_conf["local_base_dir_path"]
-tmp_dir_path = test_conf["tmp_dir_path"]
+local_chunks_path = test_conf.chunks_path
+base_dir_path = test_conf.local_base_dir_path
+tmp_dir_path = test_conf.tmp_dir_path
 
 
-def set_test_environment(uid: str, video_name: str):
-    src_dir_path = base_dir_path if src_writer.fs_type == FsType.LOCAL else ""
-    vid_dir_path = path_join(src_dir_path, "incomplete", uid, video_name)
+def write_test_context_files(uid: str, video_name: str):
+    incomplete_path = src_writer.normalize_base_path(path_join(base_dir_path, "incomplete"))
+    vid_dir_path = path_join(incomplete_path, uid, video_name)
 
-    local_chunks_path = test_conf["chunks_path"]
     for chunk_name in os.listdir(local_chunks_path):
         with open(path_join(local_chunks_path, chunk_name), mode="rb") as f:
             src_writer.write(path_join(vid_dir_path, chunk_name), f.read())
 
 
+def test_write_context_files():
+    for target in done_messages:
+        write_test_context_files(target.uid, target.video_name)
+
+
+def test_publish_amqp():
+    print()
+    env = get_server_env()
+    amqp = AmqpHelperBlocking(env.amqp)
+    for target in done_messages:
+        amqp.instance_publish(STDL_DONE_QUEUE, target)
+
+
 def test_mux():
     print()
-    target = targets[0]
-    uid = target["uid"]
-    video_name = target["video_name"]
+    target = done_messages[0]
+    uid = target.uid
+    video_name = target.video_name
 
-    set_test_environment(uid, video_name)
+    write_test_context_files(uid, video_name)
 
     # helper = StdlLocalChunksMover()
     helper = StdlS3Helper(
@@ -75,35 +81,3 @@ def test_mux():
     muxer = StdlMuxer(helper=helper, base_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive)
     result = muxer.mux(uid, video_name)
     print(result)
-
-
-def test_task():
-    for target in targets:
-        set_test_environment(target["uid"], target["video_name"])
-        dct = create_msg(target).to_json_dict()
-        result = stdl_done_local.apply_async(args=[dct], queue=LOCAL_QUEUE_NAME)  # type: ignore
-        # result = stdl_done_remote.apply_async(args=[dct], queue=REMOTE_QUEUE_NAME)  # type: ignore
-        print(result)
-
-
-def test_amqp():
-    print()
-    env = get_server_env()
-    amqp = AmqpHelperBlocking(env.amqp)
-    conn, chan = amqp.connect()
-    amqp.ensure_queue(chan, STDL_DONE_QUEUE)
-    for target in targets:
-        body = json.dumps(create_msg(target).to_json_dict()).encode("utf-8")
-        amqp.publish(chan, STDL_DONE_QUEUE, body)
-    amqp.close(conn)
-
-
-def create_msg(target):
-    return StdlDoneMsg(
-        status=StdlDoneStatus.COMPLETE,
-        # status=StdlDoneStatus.CANCELED,
-        platform=StdlPlatformType.CHZZK,
-        uid=target["uid"],
-        videoName=target["video_name"],
-        fsName="local",
-    )

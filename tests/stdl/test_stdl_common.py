@@ -1,22 +1,24 @@
 import os
 from pathlib import Path
 
-from pyutils import path_join, find_project_root, load_dotenv, dirpath
+from pyutils import path_join, find_project_root, dirpath
 
-load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
-# load_dotenv(path_join(find_project_root(), "dev", ".env-server-prod"))
-
+from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env, get_celery_env
-from vtask.service.stdl.schema import StdlDoneStatus, StdlPlatformType, StdlDoneMsg, STDL_DONE_QUEUE
 from vtask.service.stdl.common import StdlDoneHelper, StdlDoneQueue
+from vtask.service.stdl.schema import StdlDoneStatus, StdlPlatformType, StdlDoneMsg, STDL_DONE_QUEUE
+
+
+load_test_dotenv(".env-server-dev")
+# load_test_dotenv(".env-server-prod")
 
 server_env = get_server_env()
 celery_env = get_celery_env()
 amqp = AmqpHelperBlocking(server_env.amqp)
 
-_queue = StdlDoneQueue(celery_env.redis)
-helper = StdlDoneHelper(amqp, _queue)
+queue = StdlDoneQueue(celery_env.redis)
+helper = StdlDoneHelper(amqp, queue)
 
 
 def test_stdl_archive_test():

@@ -1,53 +1,44 @@
-import json
 import os
 import time
 
-import yaml
-from pyutils import path_join, find_project_root, load_dotenv, filename
+from pyutils import path_join, filename
 
-load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
-# load_dotenv(path_join(find_project_root(), "dev", ".env-server-prod"))
-
+from tests.testutils.test_utils_conf import read_test_conf
+from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
+from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env
-from vtask.common.fs import read_fs_config
-from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, STDL_DONE_QUEUE
+from vtask.service.stdl.schema import STDL_DONE_QUEUE
 from vtask.utils import S3Client
 
 
-with open(path_join(find_project_root(), "dev", "test_conf.yaml"), "r") as file:
-    test_conf = yaml.load(file.read(), Loader=yaml.FullLoader)["stdl"]
+load_test_dotenv(".env-server-dev")
+# load_test_dotenv(".env-server-prod")
 
-
-out_dir_path = test_conf["out_dir_path"]
-
-uid = test_conf["uid"]
-vid_name = test_conf["vid_name"]
-fs_name = test_conf["fs_name"]
-
-fs_configs = read_fs_config(path_join(find_project_root(), "dev", "fs_conf.yaml"))
-fs_conf = None
-for cur_conf in fs_configs:
-    if cur_conf.name == fs_name:
-        fs_conf = cur_conf
-if fs_conf is None or fs_conf.s3 is None:
-    raise ValueError("S3 config not found")
-s3 = S3Client(fs_conf.s3, retry_limit=3)
+test_conf = read_test_conf()
+fs_configs = read_test_fs_configs(is_prod=False)
 
 
 def test_backup():
     start_time = time.time()
-    res = s3.list(path_join("incomplete", uid, vid_name))
-    if res.contents is None:
-        raise ValueError("Files not found")
-    os.makedirs(out_dir_path, exist_ok=True)
-    for content in res.contents:
-        s3.write_file(
-            key=content.key,
-            file_path=path_join(out_dir_path, filename(content.key)),
-            network_io_delay_ms=0,
-            network_buf_size=65536,
-        )
+    out_dir_path = test_conf.stdl.out_dir_path
+
+    for target in test_conf.stdl.done_messages:
+        fs_conf = find_test_fs_config(fs_configs, target.fs_name)
+        s3_conf = S3Client(fs_conf.s3)  # type: ignore
+
+        res = s3_conf.list(path_join("incomplete", target.uid, target.video_name))
+        if res.contents is None:
+            raise ValueError("Files not found")
+        os.makedirs(out_dir_path, exist_ok=True)
+        for content in res.contents:
+            s3_conf.write_file(
+                key=content.key,
+                file_path=path_join(out_dir_path, filename(content.key)),
+                network_io_delay_ms=0,
+                network_buf_size=65536,
+            )
+
     print(f"Elapsed time: {time.time() - start_time:.6f} sec")
 
 
@@ -55,28 +46,5 @@ def test_publish_done_message():
     env = get_server_env()
     amqp = AmqpHelperBlocking(env.amqp)
 
-    conn, chan = amqp.connect()
-    amqp.ensure_queue(chan, STDL_DONE_QUEUE, auto_delete=False)
-    msg = StdlDoneMsg(
-        status=StdlDoneStatus.COMPLETE,
-        platform=StdlPlatformType.CHZZK,
-        uid=uid,
-        videoName=vid_name,
-        fsName=fs_name,
-    ).model_dump_json(by_alias=True)
-    amqp.publish(chan, STDL_DONE_QUEUE, msg.encode("utf-8"))
-    amqp.close(conn)
-
-
-def test_read_one():
-    print()
-    env = get_server_env()
-    amqp = AmqpHelperBlocking(env.amqp)
-    conn, chan = amqp.connect()
-    msg = amqp.read_one(chan, STDL_DONE_QUEUE)
-    if msg is None:
-        print("No message")
-        return
-    stdl_msg = StdlDoneMsg(**json.loads(msg.body))
-    print(stdl_msg)
-    # chan.basic_ack(delivery_tag=msg.method.delivery_tag)
+    for target in test_conf.stdl.done_messages:
+        amqp.instance_publish(STDL_DONE_QUEUE, target)

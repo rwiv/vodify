@@ -1,37 +1,27 @@
 from fastapi import APIRouter
-from pyutils import log
 
-from .stdl_listener import StdlListener
-from ...celery import stdl_done_local, stdl_done_remote, LOCAL_QUEUE_NAME, REMOTE_QUEUE_NAME
-from ...common.fs import LOCAL_FILE_NAME
-from ...service.stdl.schema import StdlDoneMsg
+from ...common.job import CronJob
+from ...service.stdl.common import StdlDoneQueue
 
 
 class StdlController:
-    def __init__(self, stdl_listener: StdlListener):
-        self.listener = stdl_listener
+    def __init__(self, queue: StdlDoneQueue, cron: CronJob):
+        self.queue = queue
+        self.cron = cron
+
         self.router = APIRouter(prefix="/api/stdl")
         self.router.add_api_route("/stats", self.get_stats, methods=["GET"])
-        self.router.add_api_route("/task", self.start_task, methods=["POST"])
-        self.router.add_api_route("/amqp/start", self.start_consume, methods=["POST"])
-        self.router.add_api_route("/amqp/stop", self.stop_consume, methods=["POST"])
+        self.router.add_api_route("/listening/start", self.start_listening, methods=["POST"])
+        self.router.add_api_route("/listening/stop", self.stop_listening, methods=["POST"])
 
     def get_stats(self):
         return {
-            "consuming": self.listener.listen_thread is not None,
+            "consuming": self.cron.is_running(),
+            "queue": self.queue.list(),
         }
 
-    def start_consume(self):
-        self.listener.start_consume()
+    def start_listening(self):
+        self.cron.start()
 
-    def stop_consume(self):
-        self.listener.stop_consume()
-
-    def start_task(self, msg: StdlDoneMsg):
-        dct = msg.to_json_dict()
-        if msg.fs_name == LOCAL_FILE_NAME:
-            stdl_done_local.apply_async(args=[dct], queue=LOCAL_QUEUE_NAME)  # type: ignore
-        else:
-            stdl_done_remote.apply_async(args=[dct], queue=REMOTE_QUEUE_NAME)  # type: ignore
-        log.info("stdl.done task sent", dct)
-        return "ok"
+    def stop_listening(self):
+        self.cron.stop()

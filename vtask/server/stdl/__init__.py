@@ -2,9 +2,14 @@ import os
 import sys
 
 from .stdl_controller import StdlController
-from .stdl_listener import StdlListener
+from .stdl_done_job import StdlDoneJob
+from .stdl_task_requester import StdlTaskRequester
 
-targets = ["stdl_constants", "stdl_controller", "stdl_listener"]
+targets = [
+    "stdl_controller",
+    "stdl_done_job",
+    "stdl_task_requester",
+]
 if os.getenv("PY_ENV") != "prod":
     for name in list(sys.modules.keys()):
         for target in targets:

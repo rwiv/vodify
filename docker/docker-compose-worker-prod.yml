@@ -1,18 +1,18 @@
 services:
-  vtask-worker-local:
+  vtask-default:
     image: harbor.rwiv.xyz/private/vtask:0.1.1
-    container_name: vtask-worker-local
+    container_name: vtask-default
     working_dir: /app
     entrypoint: python -m vtask worker
     restart: always
     environment:
       PY_ENV: prod
-      WORKER_NAME: local
+      WORKER_NAME: default
       TMP_DIR_PATH: "/app/tmp"
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
       FS_CONFIG_PATH: "/mnt/app_conf/fs_conf.yaml"
-      STDL_BASE_DIR_PATH: "/mnt/stdl/src"
+      STDL_BASE_DIR_PATH: "/mnt/stdl"
       STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
       NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
@@ -20,26 +20,26 @@ services:
       REDIS_HOST: "${REDIS_HOST}"
       REDIS_PORT: "${REDIS_PORT}"
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
-      CELERY_WORKER_CONCURRENCY: "${CELERY_LOCAL_WORKER_CONCURRENCY}"
+      CELERY_WORKER_CONCURRENCY: "${CELERY_DEFAULT_WORKER_CONCURRENCY}"
       CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
     volumes:
       - "${TMP_DIR_PATH}:/app/tmp"
-      - "${STDL_BASE_DIR_PATH}:/mnt/stdl/src"
+      - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
-  vtask-worker-remote:
+  vtask-io-lfs:
     image: harbor.rwiv.xyz/private/vtask:0.1.1
-    container_name: vtask-worker-remote
+    container_name: vtask-io-lfs
     working_dir: /app
     entrypoint: python -m vtask worker
     restart: always
     environment:
       PY_ENV: prod
-      WORKER_NAME: remote
+      WORKER_NAME: io.lfs
       TMP_DIR_PATH: "/app/tmp"
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
       FS_CONFIG_PATH: "/mnt/app_conf/fs_conf.yaml"
-      STDL_BASE_DIR_PATH: "/mnt/stdl/src"
+      STDL_BASE_DIR_PATH: "/mnt/stdl"
       STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
       NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
@@ -47,9 +47,63 @@ services:
       REDIS_HOST: "${REDIS_HOST}"
       REDIS_PORT: "${REDIS_PORT}"
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
-      CELERY_WORKER_CONCURRENCY: "${CELERY_REMOTE_WORKER_CONCURRENCY}"
+      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_LFS_WORKER_CONCURRENCY}"
       CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
     volumes:
       - "${TMP_DIR_PATH}:/app/tmp"
-      - "${STDL_BASE_DIR_PATH}:/mnt/stdl/src"
+      - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
+      - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
+  vtask-io-net:
+    image: harbor.rwiv.xyz/private/vtask:0.1.1
+    container_name: vtask-io-net
+    working_dir: /app
+    entrypoint: python -m vtask worker
+    restart: always
+    environment:
+      PY_ENV: prod
+      WORKER_NAME: io.net
+      TMP_DIR_PATH: "/app/tmp"
+
+      OUT_FS_NAME: "${OUT_FS_NAME}"
+      FS_CONFIG_PATH: "/mnt/app_conf/fs_conf.yaml"
+      STDL_BASE_DIR_PATH: "/mnt/stdl"
+      STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
+      NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
+      NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
+
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_NET_WORKER_CONCURRENCY}"
+      CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
+    volumes:
+      - "${TMP_DIR_PATH}:/app/tmp"
+      - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
+      - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
+  vtask-cpu-single:
+    image: harbor.rwiv.xyz/private/vtask:0.1.1
+    container_name: vtask-cpu-single
+    working_dir: /app
+    entrypoint: python -m vtask worker
+    restart: always
+    environment:
+      PY_ENV: prod
+      WORKER_NAME: cpu.single
+      TMP_DIR_PATH: "/app/tmp"
+
+      OUT_FS_NAME: "${OUT_FS_NAME}"
+      FS_CONFIG_PATH: "/mnt/app_conf/fs_conf.yaml"
+      STDL_BASE_DIR_PATH: "/mnt/stdl"
+      STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
+      NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
+      NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
+
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      CELERY_WORKER_CONCURRENCY: "${CELERY_CPU_SINGLE_WORKER_CONCURRENCY}"
+      CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
+    volumes:
+      - "${TMP_DIR_PATH}:/app/tmp"
+      - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"

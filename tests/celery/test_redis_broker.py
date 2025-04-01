@@ -2,9 +2,11 @@ import redis
 from pyutils import load_dotenv, path_join, find_project_root
 from redis import Redis
 
+from vtask.celery.celery_constants import DEFAULT_QUEUE_NAME
+
 load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
 
-from vtask.celery import CeleryRedisBrokerClient, LOCAL_QUEUE_NAME, REMOTE_QUEUE_NAME
+from vtask.celery import CeleryRedisBrokerClient
 from vtask.common.env import get_celery_env
 
 env = get_celery_env()
@@ -23,8 +25,7 @@ def test_all_redis_keys():
 
 def test_queue():
     print()
-    print(client.get_received_task_bodies(LOCAL_QUEUE_NAME))
-    print(client.get_received_task_bodies(REMOTE_QUEUE_NAME))
+    print(client.get_received_task_bodies(DEFAULT_QUEUE_NAME))
 
 
 def get_all_keys(client: Redis, pattern: str) -> list[str]:

@@ -108,7 +108,8 @@ class AmqpHelperBlocking(AmqpHelper):
     def instance_publish(self, queue_name: str, msg: BaseModel):
         conn, chan = self.connect()
         self.ensure_queue(chan, queue_name, auto_delete=False)
-        self.publish(chan, queue_name, msg.model_dump_json(by_alias=True).encode("utf-8"))
+        msg_bytes = msg.model_dump_json(by_alias=True, exclude_none=True).encode("utf-8")
+        self.publish(chan, queue_name, msg_bytes)
         self.close(conn)
 
     def close(self, conn: BlockingConnection):
