@@ -47,13 +47,17 @@ class LossExecutor:
 
             try:
                 ext = get_ext(src_sub_path)
-                csv_path = path_join(self.out_dir_path, src_sub_path.replace(f".{ext}", ".csv"))
+                tmp_csv_path = path_join(self.tmp_dir_path, src_sub_path.replace(f".{ext}", ".csv"))
                 yaml_path = path_join(self.out_dir_path, src_sub_path.replace(f".{ext}", ".yaml"))
 
-                result = self.inspector.inspect(tmp_file_path, csv_path)
+                result = self.inspector.inspect(tmp_file_path, tmp_csv_path)
+
                 os.remove(tmp_file_path)
-                if not self.conf.archive_csv:
-                    os.remove(csv_path)
+                if self.conf.archive_csv:
+                    out_csv_path = path_join(self.out_dir_path, src_sub_path.replace(f".{ext}", ".csv"))
+                    shutil.move(tmp_csv_path, out_csv_path)
+                else:
+                    os.remove(tmp_csv_path)
 
                 check_dir(yaml_path)
                 with open(yaml_path, "w") as file:

@@ -30,15 +30,18 @@ class SoopVideoDownloader:
     def download_one(self, title_no: int) -> str:
         info = self.client.get_video_info(title_no)
         bj_id = info.bj_id
+        chunks_paths = []
         for i, m3u8_url in enumerate(info.m3u8_urls):
             if self.ctx.is_parallel:
-                asyncio.run(self.hls.download_parallel(m3u8_url, bj_id, str(i)))
+                chunks_path = asyncio.run(self.hls.download_parallel(m3u8_url, bj_id, str(i)))
             else:
-                asyncio.run(self.hls.download_non_parallel(m3u8_url, bj_id, str(i)))
+                chunks_path = asyncio.run(self.hls.download_non_parallel(m3u8_url, bj_id, str(i)))
+            chunks_paths.append(chunks_path)
 
-        if len(info.m3u8_urls) == 1:
-            chunks_path = path_join(self.tmp_dir_path, bj_id, "0")
-            tmp_mp4_path = merge_to_mp4(chunks_path)
+        if len(chunks_paths) == 0:
+            raise Exception("No chunks downloaded")
+        elif len(chunks_paths) == 1:
+            tmp_mp4_path = merge_to_mp4(chunks_paths[0])
             out_mp4_path = path_join(self.out_dir_path, bj_id, f"{title_no}.mp4")
 
             os.makedirs(path_join(self.out_dir_path, bj_id), exist_ok=True)
@@ -48,22 +51,18 @@ class SoopVideoDownloader:
                 os.rmdir(path_join(self.tmp_dir_path, bj_id))
             return out_mp4_path
         else:
-            out_mp4_path = self.merge_video_parts(title_no, info)
+            out_mp4_path = self.merge_video_parts(title_no, info, chunks_paths)
             return out_mp4_path
 
-    def merge_video_parts(self, title_no: int, info: SoopVideoInfo):
+    def merge_video_parts(self, title_no: int, info: SoopVideoInfo, chunks_paths: list[str]) -> str:
         bj_id = info.bj_id
         os.makedirs(path_join(self.out_dir_path, bj_id), exist_ok=True)
         os.makedirs(path_join(self.tmp_dir_path, bj_id), exist_ok=True)
 
-        out_mp4_part_paths = [
-            path_join(self.out_dir_path, bj_id, f"{i}.mp4") for i in range(len(info.m3u8_urls))
-        ]
-        tmp_mp4_part_paths = [
-            path_join(self.tmp_dir_path, bj_id, f"{i}.mp4") for i in range(len(info.m3u8_urls))
-        ]
-        for i, out_mp4_part_path in enumerate(out_mp4_part_paths):
-            shutil.move(out_mp4_part_path, tmp_mp4_part_paths[i])
+        tmp_mp4_part_paths = []
+        for chunks_path in chunks_paths:
+            tmp_mp4_path = merge_to_mp4(chunks_path)
+            tmp_mp4_part_paths.append(tmp_mp4_path)
 
         list_file_path = path_join(self.tmp_dir_path, bj_id, "list.txt")
         write_file(list_file_path, "\n".join([f"file '{f}'" for f in tmp_mp4_part_paths]))
@@ -79,5 +78,7 @@ class SoopVideoDownloader:
         os.remove(list_file_path)
         for tmp_mp4_part_path in tmp_mp4_part_paths:
             os.remove(tmp_mp4_part_path)
+        if len(os.listdir(path_join(self.tmp_dir_path, bj_id))) == 0:
+            os.rmdir(path_join(self.tmp_dir_path, bj_id))
 
         return out_mp4_path
