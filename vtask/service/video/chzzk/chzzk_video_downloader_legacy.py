@@ -6,29 +6,28 @@ from xml.etree.ElementTree import fromstring, Element
 import requests
 from pyutils import get_base_url
 
-from ..schema.video_schema import VideoDownloadRequest
+from ..schema.video_schema import VideoDownloadContext
 from ....utils import get_headers
 from ....utils.hls.downloader import HlsDownloader
 
 
 class ChzzkVideoDownloaderLegacy:
-    def __init__(self, tmp_dir: str, out_dir: str, req: VideoDownloadRequest):
-        self.req = req
+    def __init__(self, tmp_dir: str, out_dir: str, ctx: VideoDownloadContext):
+        self.ctx = ctx
         self.hls = HlsDownloader(
-            tmp_dir,
-            out_dir,
-            get_headers(req.cookie_str),
-            req.parallel_num,
-            req.non_parallel_delay_ms,
+            out_dir_path=tmp_dir,
+            headers=get_headers(ctx.cookie_str),
+            parallel_num=ctx.parallel_num,
+            non_parallel_delay_ms=ctx.non_parallel_delay_ms,
         )
 
-    def download_one(self, video_no: int):
+    def download_one(self, video_no: int) -> str:
         m3u_url, qs, title, channelId = self.__get_info(video_no)
         file_title = str(video_no)
-        if self.req.is_parallel:
-            asyncio.run(self.hls.download_parallel(m3u_url, channelId, file_title, qs))
+        if self.ctx.is_parallel:
+            return asyncio.run(self.hls.download_parallel(m3u_url, channelId, file_title, qs))
         else:
-            asyncio.run(self.hls.download_non_parallel(m3u_url, channelId, file_title, qs))
+            return asyncio.run(self.hls.download_non_parallel(m3u_url, channelId, file_title, qs))
 
     def __get_info(self, video_no: int) -> tuple[str, str, str, str]:
         res = self.__request_video_info(video_no)
@@ -42,12 +41,12 @@ class ChzzkVideoDownloaderLegacy:
 
     def __request_video_info(self, video_no: int) -> dict[str, Any]:
         url = f"https://api.chzzk.naver.com/service/v3/videos/{video_no}"
-        res = requests.get(url, headers=get_headers(self.req.cookie_str, "application/json"))
+        res = requests.get(url, headers=get_headers(self.ctx.cookie_str, "application/json"))
         return res.json()
 
     def __request_play_info(self, video_id: str, key: str):
         url = f"https://apis.naver.com/neonplayer/vodplay/v1/playback/{video_id}?key={key}"
-        res = requests.get(url, headers=get_headers(self.req.cookie_str, "application/xml")).text
+        res = requests.get(url, headers=get_headers(self.ctx.cookie_str, "application/xml")).text
         root: Element = fromstring(res)
         if len(root) != 1:
             raise ValueError("root element should be 1")

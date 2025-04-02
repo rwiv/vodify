@@ -1,8 +1,16 @@
-from pydantic import BaseModel
+from enum import Enum
+
+from pydantic import BaseModel, Field
 
 
-class VideoDownloadRequest(BaseModel):
-    cookie_str: str | None = None
-    is_parallel: bool
-    parallel_num: int
-    non_parallel_delay_ms: int
+class VideoPlatform(Enum):
+    CHZZK = "chzzk"
+    SOOP = "soop"
+    MISC = "misc"
+
+
+class VideoDownloadContext(BaseModel):
+    cookie_str: str | None = Field(alias="cookieStr", default=None)
+    is_parallel: bool = Field(alias="isParallel")
+    parallel_num: int = Field(alias="parallelNum")
+    non_parallel_delay_ms: int = Field(alias="nonParallelDelayMs")

@@ -16,7 +16,10 @@ from ...utils import check_dir, read_dir_recur
 
 class LossExecutor:
     def __init__(self, env: BatchEnv):
-        self.conf = read_loss_config(env.loss_config_path)
+        conf_path = env.loss_config_path
+        if conf_path is None:
+            raise ValueError("loss_config_path is required")
+        self.conf = read_loss_config(conf_path)
         self.inspector = create_inspector(self.conf)
         self.src_dir_path = self.conf.src_dir_path
         self.out_dir_path = self.conf.out_dir_path
@@ -59,10 +62,12 @@ class LossExecutor:
                 log.info("one loss check is done", get_done_log_attrs(result, file_path))
             except Exception as e:
                 notify_msg = f"Directory Failed: {path_join(self.src_dir_path, src_sub_path)}, err: {e}"
-                self.notifier.notify(self.topic, notify_msg)
+                self.notifier.notify(topic=self.topic, message=notify_msg)
                 raise
 
-        self.notifier.notify(self.topic, f"directory frame-loss check done: {self.src_dir_path}")
+        self.notifier.notify(
+            topic=self.topic, message=f"directory frame-loss check done: {self.src_dir_path}"
+        )
         log.info(f"directory frame-loss check done: {self.src_dir_path}")
 
     def __analyze(self):

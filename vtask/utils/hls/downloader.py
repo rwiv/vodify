@@ -22,7 +22,6 @@ class HttpError(Exception):
 class HlsDownloader:
     def __init__(
         self,
-        tmp_dir_path: str,
         out_dir_path: str,
         headers: dict | None = None,
         parallel_num: int = 3,
@@ -30,8 +29,7 @@ class HlsDownloader:
         url_extractor=HlsUrlExtractor(),
     ):
         self.headers = headers
-        self.tmp_dir_path = tmp_dir_path
-        self.out_dir_path = out_dir_path
+        self.tmp_dir_path = out_dir_path
         self.parallel_num = parallel_num
         self.non_parallel_delay_ms = non_parallel_delay_ms
         self.url_extractor = url_extractor
@@ -42,7 +40,7 @@ class HlsDownloader:
         name: str,
         title: str,
         qs: str | None = None,
-    ):
+    ) -> str:
         title_name = sanitize_filename(title)
         chunks_path = path_join(self.tmp_dir_path, name, title_name)
         urls = self.url_extractor.get_urls(m3u8_url, qs)
@@ -53,7 +51,8 @@ class HlsDownloader:
 
             tasks = [_download_file_wrapper(elem.value, self.headers, elem.idx, chunks_path) for elem in sub]
             await asyncio.gather(*tasks)
-        merge_hls_chunks(chunks_path)
+        mp4_path = merge_hls_chunks(chunks_path)
+        return mp4_path
 
     async def download_non_parallel(
         self,
@@ -61,7 +60,7 @@ class HlsDownloader:
         name: str,
         title: str,
         qs: str | None = None,
-    ):
+    ) -> str:
         title_name = sanitize_filename(title)
         chunks_path = path_join(self.tmp_dir_path, name, title_name)
         os.makedirs(chunks_path, exist_ok=True)
@@ -75,7 +74,8 @@ class HlsDownloader:
             if self.non_parallel_delay_ms > 0:
                 time.sleep(self.non_parallel_delay_ms / 1000)
             cnt += 1
-        merge_hls_chunks(chunks_path)
+        mp4_path = merge_hls_chunks(chunks_path)
+        return mp4_path
 
 
 async def _download_file_wrapper(url: str, headers: dict[str, str] | None, num: int, out_dir_path: str):
