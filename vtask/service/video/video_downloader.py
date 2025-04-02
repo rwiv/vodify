@@ -2,10 +2,11 @@ import asyncio
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pyutils import get_query_string
+from pyutils import get_query_string, log
 
+from .chzzk.chzzk_video_client_1 import ChzzkVideoClient1
+from .chzzk.chzzk_video_client_2 import ChzzkVideoClient2
 from .chzzk.chzzk_video_downloader import ChzzkVideoDownloader
-from .chzzk.chzzk_video_downloader_legacy import ChzzkVideoDownloaderLegacy
 from .schema.video_schema import VideoPlatform, VideoDownloadContext
 from .soop.soop_video_downloader import SoopVideoDownloader
 from .ytdl.ytdl_downloader import YtdlDownloader
@@ -51,13 +52,15 @@ class VideoDownloader:
         YtdlDownloader(self.out_dir_path).download([url])
 
     def __download_chzzk_video(self, url: str):
-        dl = ChzzkVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx)
-        dl_l = ChzzkVideoDownloaderLegacy(self.tmp_dir_path, self.out_dir_path, self.ctx)
         video_no = int(url.split("/")[-1])
         try:
+            c = ChzzkVideoClient1(self.ctx.cookie_str)
+            dl = ChzzkVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx, c)
             dl.download_one(video_no)
         except TypeError:
-            dl_l.download_one(video_no)
+            c = ChzzkVideoClient2(self.ctx.cookie_str)
+            dl = ChzzkVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx, c)
+            dl.download_one(video_no)
 
     def __download_soop_video(self, url: str):
         dl = SoopVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx)

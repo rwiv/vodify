@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 from pyutils import path_join
@@ -19,3 +20,15 @@ def merge_ts(chunks_path: str) -> str:
 def convert_vid(src_path: str, out_path: str):
     command = ["ffmpeg", "-i", src_path, "-c", "copy", out_path]
     subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+def merge_to_mp4(chunks_path: str):
+    # merge ts files
+    merged_ts_path = merge_ts(chunks_path)
+    shutil.rmtree(chunks_path)
+
+    # convert ts to mp4
+    mp4_path = f"{chunks_path}.mp4"
+    convert_vid(merged_ts_path, mp4_path)
+    os.remove(merged_ts_path)
+    return mp4_path
