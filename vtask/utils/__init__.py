@@ -2,6 +2,7 @@ import os
 import sys
 
 from .file import check_dir, read_dir_recur
+from .http import get_headers
 from .s3 import S3Client
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
 from .s3_utils import disable_warning_log
