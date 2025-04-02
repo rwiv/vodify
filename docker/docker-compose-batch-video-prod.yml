@@ -15,6 +15,6 @@ services:
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
-      - "${SRC_DIR_PATH}:/mnt/volume"
+      - "${SRC_DIR_PATH}/video:/mnt/volume"
       - "${TMP_DIR_PATH}:/app/tmp"
       - "${VIDEO_DOWNLOAD_CONFIG_PATH}:/mnt/app/video_conf.yaml"

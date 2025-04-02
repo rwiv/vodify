@@ -15,6 +15,6 @@ services:
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
-      - "${SRC_DIR_PATH}:/mnt/volume"
+      - "${SRC_DIR_PATH}/loss:/mnt/volume"
       - "${TMP_DIR_PATH}:/app/tmp"
       - "${LOSS_CONFIG_PATH}:/mnt/app/loss_conf.yaml"
