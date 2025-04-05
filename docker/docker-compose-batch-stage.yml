@@ -18,6 +18,5 @@ services:
     volumes:
       - ../vtask:/app/vtask
       - "${SRC_DIR_PATH}:/mnt/volume"
-      - "${TMP_DIR_PATH}:/app/tmp"
       - "${LOSS_CONFIG_PATH}:/mnt/app/loss_conf.yaml"
       - "${VIDEO_DOWNLOAD_CONFIG_PATH}:/mnt/app/video_conf.yaml"
