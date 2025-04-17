@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, constr
 class StdlPlatformType(Enum):
     CHZZK = "chzzk"
     SOOP = "soop"
+    TWITCH = "twitch"
 
 
 class StdlDoneStatus(Enum):
@@ -15,7 +16,7 @@ class StdlDoneStatus(Enum):
 
 class StdlDoneMsg(BaseModel):
     status: StdlDoneStatus
-    platform: StdlPlatformType | None = None  # TODO: remove
+    platform: StdlPlatformType
     uid: constr(min_length=1)
     video_name: constr(min_length=1) = Field(alias="videoName")
     fs_name: constr(min_length=1) = Field(alias="fsName")

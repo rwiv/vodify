@@ -2,6 +2,7 @@ import os
 import sys
 
 from .stdl_muxer import StdlMuxer
+from .stdl_muxer_seg import StdlSegmentedMuxer
 from .stdl_helper import StdlHelper
 from .stdl_helper_utils import create_stdl_helper
 from .stdl_helper_s3 import StdlS3Helper
@@ -13,6 +14,7 @@ targets = [
     "stdl_helper_s3",
     "stdl_helper_utils",
     "stdl_muxer",
+    "stdl_muxer_seg",
 ]
 if os.getenv("PY_ENV") != "prod":
     for name in list(sys.modules.keys()):
