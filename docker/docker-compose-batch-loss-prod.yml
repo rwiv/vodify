@@ -17,3 +17,11 @@ services:
     volumes:
       - "${SRC_DIR_PATH}/loss:/mnt/volume"
       - "${LOSS_CONFIG_PATH}:/mnt/app/loss_conf.yaml"
+    labels:
+      app: vtask
+      host: ${HOSTNAME}
+    logging:
+      driver: json-file
+      options:
+        labels: app,host
+        tag: "container_image={{.ImageName}},container_name={{.Name}}"
