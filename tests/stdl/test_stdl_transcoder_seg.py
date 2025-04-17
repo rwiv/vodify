@@ -9,7 +9,7 @@ from vtask.utils import S3ObjectWriter
 
 load_test_dotenv(".env-server-dev")
 
-from vtask.service.stdl.muxer import StdlMuxer, StdlS3Helper
+from vtask.service.stdl.transcoder import StdlSegmentedMuxer, StdlS3Helper
 from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType
 
 test_conf = read_test_conf()
@@ -53,7 +53,7 @@ def write_test_context_files(platform: str, uid: str, video_name: str):
             src_writer.write(path_join(vid_dir_path, chunk_name), f.read())
 
 
-def test_mux():
+def test_transcode():
     print()
     target = done_messages[0]
 
@@ -65,6 +65,8 @@ def test_mux():
         network_io_delay_ms=1,
         network_buf_size=65536,
     )
-    muxer = StdlSegmentedMuxer(helper=helper, base_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive)
-    # result = muxer.mux(target.uid, target.video_name)
+    transcoder = StdlSegmentedMuxer(
+        helper=helper, base_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive
+    )
+    # result = transcoder.transcode(target.uid, target.video_name)
     # print(result)

@@ -11,7 +11,7 @@ load_test_dotenv(".env-server-dev")
 
 from vtask.common.amqp import AmqpHelperBlocking
 from vtask.common.env import get_server_env
-from vtask.service.stdl.muxer import StdlMuxer, StdlS3Helper
+from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3Helper
 from vtask.service.stdl.schema import STDL_DONE_QUEUE, StdlDoneMsg, StdlDoneStatus, StdlPlatformType
 
 test_conf = read_test_conf()
@@ -68,7 +68,7 @@ def test_publish_amqp():
         amqp.instance_publish(STDL_DONE_QUEUE, target)
 
 
-def test_mux():
+def test_transcode():
     print()
     target = done_messages[0]
 
@@ -80,6 +80,8 @@ def test_mux():
         network_io_delay_ms=1,
         network_buf_size=65536,
     )
-    muxer = StdlMuxer(helper=helper, base_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive)
-    result = muxer.mux(target.uid, target.video_name)
+    transcoder = StdlTranscoder(
+        helper=helper, base_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive
+    )
+    result = transcoder.transcode(target.uid, target.video_name)
     print(result)

@@ -7,7 +7,7 @@ from typing import TypedDict
 
 from pyutils import log, path_join
 
-from .stdl_helper import StdlHelper
+from .helper.stdl_helper import StdlHelper
 from ..schema.stdl_constrants import (
     STDL_INCOMPLETE_DIR_NAME,
     STDL_COMPLETE_DIR_NAME,
@@ -47,7 +47,7 @@ class StdlSegmentedMuxer:
         self.helper.clear(uid=uid, video_name=video_name)
         return _get_success_result("Clear success")
 
-    def mux(self, uid: str, video_name: str) -> StdlDoneTaskResult:
+    def transcode(self, uid: str, video_name: str) -> StdlDoneTaskResult:
         self.helper.move(uid=uid, video_name=video_name)
 
         # Convert video
@@ -69,7 +69,7 @@ class StdlSegmentedMuxer:
 
         # Mux video
         tmp_mp4_path = path_join(self.tmp_path, uid, f"{video_name}.mp4")
-        _mux_video(merged_tmp_ts_path, tmp_mp4_path)
+        _remux_video(merged_tmp_ts_path, tmp_mp4_path)
         os.remove(merged_tmp_ts_path)
 
         # Move mp4 file
@@ -122,7 +122,7 @@ def _clear_tmp_dir(tmp_dir_path: str, uid: str):
         os.rmdir(tmp_uid_dir_path)
 
 
-def _mux_video(src_path: str, out_path: str):
+def _remux_video(src_path: str, out_path: str):
     if shutil.which("ffmpeg") is None:
         raise FileNotFoundError("ffmpeg not found")
     command = ["ffmpeg", "-i", src_path, "-c", "copy", out_path]
