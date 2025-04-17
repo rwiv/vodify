@@ -27,6 +27,7 @@ class StdlDoneTaskResult(TypedDict):
     message: str
 
 
+# TODO: delete this code file
 class StdlTranscoder:
     def __init__(
         self,
@@ -44,13 +45,13 @@ class StdlTranscoder:
         self.loss_inspector = TimeLossInspector(keyframe_only=False)
 
     def clear(self, uid: str, video_name: str) -> StdlDoneTaskResult:
-        self.helper.clear(uid=uid, video_name=video_name)
+        self.helper.clear(channel_id=uid, video_name=video_name)
         return _get_success_result("Clear success")
 
     def transcode(self, uid: str, video_name: str) -> StdlDoneTaskResult:
-        self.helper.move(uid=uid, video_name=video_name)
+        self.helper.move(channel_id=uid, video_name=video_name)
 
-        # Convert video
+        # Check segments
         chunks_path = path_join(self.incomplete_dir_path, uid, video_name)
         if not Path(chunks_path).exists():
             return _get_failure_result("No video segments")
@@ -67,7 +68,7 @@ class StdlTranscoder:
                 with open(file_path, "rb") as infile:
                     outfile.write(infile.read())
 
-        # Mux video
+        # Remux video
         tmp_mp4_path = path_join(self.tmp_path, uid, f"{video_name}.mp4")
         _remux_video(merged_tmp_ts_path, tmp_mp4_path)
         os.remove(merged_tmp_ts_path)

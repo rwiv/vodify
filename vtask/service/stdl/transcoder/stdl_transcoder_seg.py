@@ -1,10 +1,13 @@
 import os
 import shutil
 import subprocess
+import tarfile
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import TypedDict
 
+from pydantic import BaseModel
 from pyutils import log, path_join
 
 from .helper.stdl_helper import StdlHelper
@@ -27,7 +30,13 @@ class StdlDoneTaskResult(TypedDict):
     message: str
 
 
-class StdlSegmentedMuxer:
+class StdlSegmentsInfo(BaseModel):
+    platform_name: str
+    channel_id: str
+    video_name: str
+
+
+class StdlSegmentedTranscoder:
     def __init__(
         self,
         helper: StdlHelper,
@@ -43,83 +52,165 @@ class StdlSegmentedMuxer:
         self.is_archive = is_archive
         self.loss_inspector = TimeLossInspector(keyframe_only=False)
 
-    def clear(self, uid: str, video_name: str) -> StdlDoneTaskResult:
-        self.helper.clear(uid=uid, video_name=video_name)
+    def clear(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
+        self.helper.clear(
+            platform_name=info.platform_name, channel_id=info.channel_id, video_name=info.video_name
+        )
         return _get_success_result("Clear success")
 
-    def transcode(self, uid: str, video_name: str) -> StdlDoneTaskResult:
-        self.helper.move(uid=uid, video_name=video_name)
+    def transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
+        platform_name = info.platform_name
+        channel_id = info.channel_id
+        video_name = info.video_name
 
-        # Convert video
-        chunks_path = path_join(self.incomplete_dir_path, uid, video_name)
-        if not Path(chunks_path).exists():
+        # Download segments from remote storage
+        self.helper.move(platform_name=platform_name, channel_id=channel_id, video_name=video_name)
+
+        # Preprocess tar files
+        base_dir_path = path_join(self.incomplete_dir_path, platform_name, channel_id, video_name)
+        if not Path(base_dir_path).exists():
             return _get_failure_result("No video segments")
 
-        chunk_paths = _get_sorted_chunk_paths(chunks_path=chunks_path)
-        if len(chunk_paths) == 0:
+        tar_names = os.listdir(base_dir_path)
+        if len(tar_names) == 0:
             return _get_failure_result("No video segments")
 
-        # Merge chunks
-        os.makedirs(path_join(self.tmp_path, uid), exist_ok=True)
-        merged_tmp_ts_path = path_join(self.tmp_path, uid, f"{video_name}.ts")
+        tars_dir_path = path_join(self.incomplete_dir_path, platform_name, channel_id, video_name, "tars")
+        os.makedirs(tars_dir_path, exist_ok=True)
+
+        for file in tar_names:
+            if file.endswith(".tar"):
+                shutil.move(path_join(base_dir_path, file), path_join(tars_dir_path, file))
+            else:
+                raise ValueError(f"Invalid file type: {file}")
+
+        # Extract tar files
+        extract_dir_path = path_join(
+            self.incomplete_dir_path, platform_name, channel_id, video_name, "extract"
+        )
+        os.makedirs(extract_dir_path, exist_ok=True)
+
+        for tar_filename in os.listdir(tars_dir_path):
+            src_path = path_join(tars_dir_path, tar_filename)
+            out_path = path_join(extract_dir_path, Path(tar_filename).stem)
+            os.makedirs(out_path, exist_ok=True)
+            with tarfile.open(src_path, "r:*") as tar:
+                tar.extractall(path=out_path)
+
+        extract_seg_paths = []
+        for root, _, files in os.walk(extract_dir_path):
+            for file in files:
+                if not file.endswith(".ts"):
+                    raise ValueError(f"Invalid file type: {file}")
+                extract_seg_paths.append(path_join(root, file))
+
+        seg_map: dict[int, str] = {}
+        for seg_path in extract_seg_paths:
+            seg_num = int(Path(seg_path).stem)
+            if seg_num in seg_map:
+                prev_size = Path(seg_map[seg_num]).stat().st_size
+                cur_size = Path(seg_path).stat().st_size
+                if prev_size != cur_size:
+                    dct = {
+                        "path1": seg_map[seg_num],
+                        "path2": seg_path,
+                        "size1": prev_size,
+                        "size2": cur_size,
+                    }
+                    log.error(f"File size mismatch", dct)
+            else:
+                seg_map[seg_num] = seg_path
+
+        for _, seg_path in seg_map.items():
+            shutil.move(seg_path, path_join(base_dir_path, Path(seg_path).name))
+
+        shutil.rmtree(extract_dir_path)
+
+        # Check for missing segments
+        segment_paths = _get_sorted_segment_paths(segments_path=base_dir_path)
+        if len(segment_paths) == 0:
+            return _get_failure_result("No video segments")
+
+        loss_seg_nums: list[tuple[int, int]] = []
+        prev_num = int(Path(segment_paths[0]).stem)
+        for seg_path in segment_paths:
+            seg_num = int(Path(seg_path).stem)
+            if prev_num == 0:
+                prev_num = seg_num
+                continue
+            if seg_num - prev_num != 1:
+                loss_seg_nums.append((prev_num, seg_num))
+            prev_num = seg_num
+        log.info(f"Missing segments: {loss_seg_nums}")
+
+        # Merge segments
+        os.makedirs(path_join(self.tmp_path, platform_name, channel_id), exist_ok=True)
+        merged_tmp_ts_path = path_join(self.tmp_path, platform_name, channel_id, f"{video_name}.ts")
         with open(merged_tmp_ts_path, "wb") as outfile:
-            for file_path in chunk_paths:
+            for file_path in segment_paths:
                 with open(file_path, "rb") as infile:
                     outfile.write(infile.read())
 
-        # Mux video
-        tmp_mp4_path = path_join(self.tmp_path, uid, f"{video_name}.mp4")
+        # Remux video
+        tmp_mp4_path = path_join(self.tmp_path, platform_name, channel_id, f"{video_name}.mp4")
         _remux_video(merged_tmp_ts_path, tmp_mp4_path)
         os.remove(merged_tmp_ts_path)
 
         # Move mp4 file
-        self.move_mp4(tmp_mp4_path=tmp_mp4_path, uid=uid, video_name=video_name)  # TODO: remove
-        # incomplete_mp4_path = path_join(self.incomplete_dir_path, uid, f"{video_name}.mp4")
-        # shutil.move(tmp_mp4_path, incomplete_mp4_path)
+        self.move_mp4(tmp_mp4_path=tmp_mp4_path, info=info)
 
         # Organize files
         if self.is_archive and self.helper.fs_type is not FsType.LOCAL:
-            os.makedirs(path_join(self.archive_dir_path, uid), exist_ok=True)
-            shutil.move(chunks_path, path_join(self.archive_dir_path, uid, video_name))
+            archive_dir_path = path_join(self.archive_dir_path, platform_name, channel_id)
+            os.makedirs(archive_dir_path, exist_ok=True)
+            shutil.move(tars_dir_path, path_join(archive_dir_path, video_name))
         else:
-            shutil.rmtree(chunks_path)
+            shutil.rmtree(tars_dir_path)
 
-        self.__clear_incomplete_dir(uid)  # TODO: remove
-        _clear_tmp_dir(self.tmp_path, uid)
+        shutil.rmtree(base_dir_path)
+        _clear_dir(self.incomplete_dir_path, platform_name, channel_id)
+        _clear_dir(self.tmp_path, platform_name, channel_id)
 
-        log.info(f"Convert file: {uid}/{video_name}")
-        return _get_success_result(f"Convert success: {uid}/{video_name}")
+        log.info(f"Convert file: {channel_id}/{video_name}")
+        return _get_success_result(f"Convert success: {channel_id}/{video_name}")
 
-    def move_mp4(self, tmp_mp4_path: str, uid: str, video_name: str):
-        incomplete_mp4_path = path_join(self.incomplete_dir_path, uid, f"{video_name}.mp4")
-        complete_mp4_path = path_join(self.complete_dir_path, uid, f"{video_name}.mp4")
+    def move_mp4(self, tmp_mp4_path: str, info: StdlSegmentsInfo):
+        platform_name = info.platform_name
+        channel_id = info.channel_id
+        video_name = info.video_name
+
+        incomplete_mp4_path = path_join(
+            self.incomplete_dir_path, platform_name, channel_id, f"{video_name}.mp4"
+        )
+        suffix = datetime.now().strftime("%Y%m%d_%H%M%S")
+        complete_mp4_path = path_join(
+            self.complete_dir_path, platform_name, channel_id, f"{video_name}_{suffix}.mp4"
+        )
 
         # write 도중인 파일이 complete directory에 들어가면 안되기 때문에 먼저 incomplete directory로 이동
-        os.makedirs(path_join(self.incomplete_dir_path, uid), exist_ok=True)
+        os.makedirs(path_join(self.incomplete_dir_path, platform_name, channel_id), exist_ok=True)
         shutil.move(tmp_mp4_path, incomplete_mp4_path)
 
         # incomplete directory에 있는 파일을 complete directory로 이동
-        os.makedirs(path_join(self.complete_dir_path, uid), exist_ok=True)
+        os.makedirs(path_join(self.complete_dir_path, platform_name, channel_id), exist_ok=True)
         shutil.move(incomplete_mp4_path, complete_mp4_path)
 
-    def __clear_incomplete_dir(self, uid: str):
-        incomplete_uid_dir_path = path_join(self.incomplete_dir_path, uid)
-        if len(os.listdir(incomplete_uid_dir_path)) == 0:
-            os.rmdir(incomplete_uid_dir_path)
 
-
-def _get_sorted_chunk_paths(chunks_path: str) -> list[str]:
+def _get_sorted_segment_paths(segments_path: str) -> list[str]:
     paths = []
-    for filename in os.listdir(chunks_path):
+    for filename in os.listdir(segments_path):
         if filename.endswith(".ts"):
-            paths.append(path_join(chunks_path, filename))
-    return sorted(paths, key=lambda x: int(x.split("/")[-1].split(".")[0]))
+            paths.append(path_join(segments_path, filename))
+    return sorted(paths, key=lambda x: int(Path(x).stem))
 
 
-def _clear_tmp_dir(tmp_dir_path: str, uid: str):
-    tmp_uid_dir_path = path_join(tmp_dir_path, uid)
-    if len(os.listdir(tmp_uid_dir_path)) == 0:
-        os.rmdir(tmp_uid_dir_path)
+def _clear_dir(tmp_dir_path: str, platform_name: str, channel_id: str):
+    platform_dir_path = path_join(tmp_dir_path, platform_name)
+    channel_dir_path = path_join(platform_dir_path, channel_id)
+    if len(os.listdir(channel_dir_path)) == 0:
+        os.rmdir(channel_dir_path)
+    if len(os.listdir(platform_dir_path)) == 0:
+        os.rmdir(platform_dir_path)
 
 
 def _remux_video(src_path: str, out_path: str):

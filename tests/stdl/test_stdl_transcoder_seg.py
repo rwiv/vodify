@@ -9,7 +9,7 @@ from vtask.utils import S3ObjectWriter
 
 load_test_dotenv(".env-server-dev")
 
-from vtask.service.stdl.transcoder import StdlSegmentedMuxer, StdlS3Helper
+from vtask.service.stdl.transcoder import StdlSegmentedTranscoder, StdlS3Helper, StdlSegmentsInfo
 from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType
 
 test_conf = read_test_conf()
@@ -65,8 +65,13 @@ def test_transcode():
         network_io_delay_ms=1,
         network_buf_size=65536,
     )
-    transcoder = StdlSegmentedMuxer(
+    transcoder = StdlSegmentedTranscoder(
         helper=helper, base_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive
     )
-    # result = transcoder.transcode(target.uid, target.video_name)
-    # print(result)
+    info = StdlSegmentsInfo(
+        platform_name=target.platform.value,
+        channel_id=target.uid,
+        video_name=target.video_name,
+    )
+    result = transcoder.transcode(info)
+    print(result)

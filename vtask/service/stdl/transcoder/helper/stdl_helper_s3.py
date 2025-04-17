@@ -23,12 +23,14 @@ class StdlS3Helper(StdlHelper):
         self.network_io_delay_ms = network_io_delay_ms
         self.network_buf_size = network_buf_size
 
-    def move(self, uid: str, video_name: str):
-        keys = self.__get_keys(uid, video_name)
+    def move(self, channel_id: str, video_name: str, platform_name: str | None = None):
+        keys = self.__get_keys(platform_name=platform_name, channel_id=channel_id, video_name=video_name)
         if len(keys) == 0:
             return
 
-        dir_path = path_join(self.local_incomplete_dir_path, uid, video_name)
+        dir_path = path_join(self.local_incomplete_dir_path, channel_id, video_name)
+        if platform_name is not None:
+            dir_path = path_join(self.local_incomplete_dir_path, platform_name, channel_id, video_name)
         os.makedirs(dir_path, exist_ok=True)
 
         for key in keys:
@@ -41,15 +43,16 @@ class StdlS3Helper(StdlHelper):
         for key in keys:
             self.__s3.delete(key)
 
-    def __get_keys(self, uid: str, video_name: str):
-        chunks_path = path_join(STDL_INCOMPLETE_DIR_NAME, uid, video_name)
+    def __get_keys(self, channel_id: str, video_name: str, platform_name: str | None = None):
+        chunks_path = path_join(STDL_INCOMPLETE_DIR_NAME, channel_id, video_name)
+        if platform_name is not None:
+            chunks_path = path_join(STDL_INCOMPLETE_DIR_NAME, platform_name, channel_id, video_name)
         keys = []
         for obj in self.__s3.list_all_objects(prefix=chunks_path):
-            if obj.key.endswith(".ts"):
-                keys.append(obj.key)
-        return sorted(keys, key=lambda x: int(x.split("/")[-1].split(".")[0]))
+            keys.append(obj.key)
+        return keys
 
-    def clear(self, uid: str, video_name: str):
-        keys = self.__get_keys(uid, video_name)
+    def clear(self, channel_id: str, video_name: str, platform_name: str | None = None):
+        keys = self.__get_keys(platform_name=platform_name, channel_id=channel_id, video_name=video_name)
         for key in keys:
             self.__s3.delete(key)

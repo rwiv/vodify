@@ -8,9 +8,9 @@ class StdlHelper(ABC):
         self.fs_type = fs_type
 
     @abstractmethod
-    def move(self, uid: str, video_name: str):
+    def move(self, channel_id: str, video_name: str, platform_name: str | None = None):
         pass
 
     @abstractmethod
-    def clear(self, uid: str, video_name: str):
+    def clear(self, channel_id: str, video_name: str, platform_name: str | None = None):
         pass
