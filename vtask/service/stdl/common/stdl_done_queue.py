@@ -19,6 +19,12 @@ class StdlDoneQueue:
     def push(self, value: StdlDoneMsg):
         self.redis_queue.push(value.model_dump_json(by_alias=True))
 
+    def get(self) -> StdlDoneMsg | None:
+        txt = self.redis_queue.get()
+        if txt is None:
+            return None
+        return StdlDoneMsg(**json.loads(txt))
+
     def pop(self) -> StdlDoneMsg | None:
         txt = self.redis_queue.pop()
         if txt is None:

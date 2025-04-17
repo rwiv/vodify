@@ -4,7 +4,7 @@ from celery.result import AsyncResult
 from .celery_task_types import TaskDict, TaskResult, TaskInfo
 
 
-def find_active_workers(app: Celery):
+def find_active_worker_names(app: Celery):
     inspector = app.control.inspect()
     active_workers = inspector.ping()  # 연결된 모든 worker의 상태를 가져옴
     if not active_workers:

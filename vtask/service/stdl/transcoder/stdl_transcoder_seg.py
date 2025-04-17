@@ -182,10 +182,7 @@ class StdlSegmentedTranscoder:
         incomplete_mp4_path = path_join(
             self.incomplete_dir_path, platform_name, channel_id, f"{video_name}.mp4"
         )
-        suffix = datetime.now().strftime("%Y%m%d_%H%M%S")
-        complete_mp4_path = path_join(
-            self.complete_dir_path, platform_name, channel_id, f"{video_name}_{suffix}.mp4"
-        )
+        complete_mp4_path = path_join(self.complete_dir_path, platform_name, channel_id, f"{video_name}.mp4")
 
         # write 도중인 파일이 complete directory에 들어가면 안되기 때문에 먼저 incomplete directory로 이동
         os.makedirs(path_join(self.incomplete_dir_path, platform_name, channel_id), exist_ok=True)

@@ -1,11 +1,12 @@
 from pyutils import load_dotenv, path_join, find_project_root
 
-load_dotenv(path_join(find_project_root(), "dev", ".env-worker-dev"))
+# load_dotenv(path_join(find_project_root(), "dev", ".env-worker-dev"))
+load_dotenv(path_join(find_project_root(), "dev", ".env-worker-prod"))
 
-from vtask.celery import app, get_running_tasks
+from vtask.celery import app, get_running_tasks, find_active_worker_names
 
 
-def test_inspect():
+def test_inspect_tasks():
     print()
     for task in get_running_tasks(app):
         print(task)
@@ -24,3 +25,9 @@ def test_inspect():
     # print(result)
     # done_result: StdlDoneTaskResult = result.result
     # print(done_result["message"])
+
+
+def test_inspect_worker_names():
+    print()
+    for worker in find_active_worker_names(app):
+        print(worker)

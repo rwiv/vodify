@@ -6,7 +6,7 @@ from ...celery import (
     app,
     CeleryRedisBrokerClient,
     shutdown_workers,
-    find_active_workers,
+    find_active_worker_names,
     get_running_tasks,
     get_prefetched_tasks,
 )
@@ -32,7 +32,7 @@ class CeleryController:
         return "ok"
 
     def get_workers(self):
-        return find_active_workers(app)
+        return find_active_worker_names(app)
 
     def get_running_tasks(self):
         return get_running_tasks(app)

@@ -17,6 +17,14 @@ class RedisQueue:
             raise ValueError("Expected bytes data")
         return txt.decode("utf-8")
 
+    def get(self):
+        txt = self.__redis.lindex(self.__key, -1)
+        if txt is None:
+            return None
+        if not isinstance(txt, bytes):
+            raise ValueError("Expected bytes data")
+        return txt.decode("utf-8")
+
     def list(self) -> list[str]:
         items = self.__redis.lrange(self.__key, 0, -1)
         if not isinstance(items, list):

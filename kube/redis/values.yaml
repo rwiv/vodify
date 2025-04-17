@@ -1,0 +1,24 @@
+metadata:
+  name: vtask-redis
+  namespace: media
+vault:
+  mount: kube
+  path: media/vtask/redis
+  version: 1
+  secretName: vtask-redis
+  refreshAfter: 30s
+
+redis:
+  global:
+    storageClass: rook-ceph-block
+  auth:
+    existingSecret: vtask-redis
+    existingSecretPasswordKey: password
+  master:
+    count: 1
+    service:
+      type: NodePort
+      nodePorts:
+        redis: 30285
+  replica:
+    replicaCount: 0
