@@ -1,11 +1,9 @@
 import os
 import sys
 
-from .stdl_done_helper import StdlDoneHelper
 from .stdl_done_queue import StdlDoneQueue
 
 targets = [
-    "stdl_message_helper",
     "stdl_message_queue",
 ]
 if os.getenv("PY_ENV") != "prod":

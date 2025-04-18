@@ -52,7 +52,7 @@ class StdlController:
             if msg is None:
                 raise Exception("stdl_done_queue is empty")
 
-            if msg.video_name != video_name:
+            if msg.video_name == video_name:
                 new_msg = msg.model_copy()
                 new_msg.status = StdlDoneStatus.CANCELED
                 queue_name = self.__requester.resolve_queue(new_msg)
