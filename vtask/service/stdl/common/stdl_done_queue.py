@@ -31,8 +31,8 @@ class StdlDoneQueue:
             return None
         return StdlDoneMsg(**json.loads(txt))
 
-    def list(self) -> list[StdlDoneMsg]:
-        messages = self.redis_queue.list()
+    def list_items(self) -> list[StdlDoneMsg]:
+        messages = self.redis_queue.list_items()
         return [StdlDoneMsg(**json.loads(msg)) for msg in messages]
 
     def size(self) -> int:

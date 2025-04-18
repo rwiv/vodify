@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter
 
 from .stdl_task_requester import StdlTaskRequester
@@ -22,10 +24,12 @@ class StdlController:
         )
 
     def get_stats(self):
+        items = self.__queue.list_items()
+        items.reverse()
         return {
             "listening": self.__cron.is_running(),
             "queue_size": self.__queue.size(),
-            "queue_items": self.__queue.list(),
+            "queue_items": items,
         }
 
     def start_listening(self):
@@ -35,27 +39,21 @@ class StdlController:
         self.__cron.stop()
 
     def extract_cancel_requests(self):
-        for _ in range(self.__queue.size()):
-            msg: StdlDoneMsg | None = self.__queue.pop()
-            if msg is None:
-                raise Exception("stdl_done_queue is empty")
-
+        for value in self.__queue.redis_queue.list_items():
+            msg = StdlDoneMsg(**json.loads(value))
             if msg.status == StdlDoneStatus.CANCELED:
                 queue_name = self.__requester.resolve_queue(msg)
+                self.__queue.redis_queue.remove_by_value(value)
                 self.__requester.request_done(msg, queue_name)
-            else:
-                self.__queue.push(msg)
+        return "ok"
 
     def convert_to_cancel_by_video_name(self, video_name: str):
-        for _ in range(self.__queue.size()):
-            msg: StdlDoneMsg | None = self.__queue.pop()
-            if msg is None:
-                raise Exception("stdl_done_queue is empty")
-
+        for value in self.__queue.redis_queue.list_items():
+            msg = StdlDoneMsg(**json.loads(value))
             if msg.video_name == video_name:
                 new_msg = msg.model_copy()
                 new_msg.status = StdlDoneStatus.CANCELED
                 queue_name = self.__requester.resolve_queue(new_msg)
+                self.__queue.redis_queue.remove_by_value(value)
                 self.__requester.request_done(new_msg, queue_name)
-            else:
-                self.__queue.push(msg)
+                return new_msg

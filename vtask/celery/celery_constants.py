@@ -4,7 +4,7 @@ IO_NET_WORKER_NAME = "io.net"
 CPU_SINGLE_WORKER_NAME = "cpu.single"
 CPU_MULTIPLE_WORKER_NAME = "cpu.multiple"
 
-DEFAULT_QUEUE_NAME = "celery:vtask"
+DEFAULT_QUEUE_NAME = "celery:vtask:default"
 IO_LFS_QUEUE_NAME = "celery:vtask:io:lfs"
 IO_NET_QUEUE_NAME = "celery:vtask:io:net"
 CPU_SINGLE_QUEUE_NAME = "celery:vtask:cpu:single"
