@@ -27,7 +27,7 @@ services:
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
     labels:
-      app: vtask
+      app: vtask-worker
       host: ${HOSTNAME}
     logging:
       driver: json-file
@@ -62,7 +62,7 @@ services:
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
     labels:
-      app: vtask
+      app: vtask-worker
       host: ${HOSTNAME}
     logging:
       driver: json-file
@@ -97,7 +97,7 @@ services:
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
     labels:
-      app: vtask
+      app: vtask-worker
       host: ${HOSTNAME}
     logging:
       driver: json-file
