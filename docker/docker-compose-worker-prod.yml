@@ -104,38 +104,3 @@ services:
       options:
         labels: app,host
         tag: "container_image={{.ImageName}},container_name={{.Name}}"
-  vtask-cpu-single:
-    image: harbor.rwiv.xyz/private/vtask:0.2.5
-    container_name: vtask-cpu-single
-    working_dir: /app
-    entrypoint: python -m vtask worker
-    restart: always
-    environment:
-      PY_ENV: prod
-      WORKER_NAME: cpu.single
-      TMP_DIR_PATH: "/app/tmp"
-
-      OUT_FS_NAME: "${OUT_FS_NAME}"
-      FS_CONFIG_PATH: "/mnt/app_conf/fs_conf.yaml"
-      STDL_BASE_DIR_PATH: "/mnt/stdl"
-      STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
-      NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
-      NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
-
-      REDIS_HOST: "${REDIS_HOST}"
-      REDIS_PORT: "${REDIS_PORT}"
-      REDIS_PASSWORD: "${REDIS_PASSWORD}"
-      CELERY_WORKER_CONCURRENCY: "${CELERY_CPU_SINGLE_WORKER_CONCURRENCY}"
-      CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
-    volumes:
-      - "${TMP_DIR_PATH}:/app/tmp"
-      - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
-      - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
-    labels:
-      app: vtask
-      host: ${HOSTNAME}
-    logging:
-      driver: json-file
-      options:
-        labels: app,host
-        tag: "container_image={{.ImageName}},container_name={{.Name}}"
