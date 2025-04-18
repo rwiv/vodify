@@ -18,7 +18,7 @@ class StdlController:
         self.router.add_api_route("/listening/stop", self.stop_listening, methods=["POST"])
         self.router.add_api_route("/command/cancel-extract", self.extract_cancel_requests, methods=["POST"])
         self.router.add_api_route(
-            "/command/cancel-convert", self.convert_to_cancel_by_video_name, methods=["POST"]
+            "/command/cancel-convert/{video_name}", self.convert_to_cancel_by_video_name, methods=["POST"]
         )
 
     def get_stats(self):
