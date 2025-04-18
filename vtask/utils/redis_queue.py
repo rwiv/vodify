@@ -29,6 +29,7 @@ class RedisQueue:
         items = self.__redis.lrange(self.__key, 0, -1)
         if not isinstance(items, list):
             raise ValueError("Expected list data")
+        items.reverse()
         return [item.decode("utf-8") for item in items]
 
     def empty(self) -> bool:

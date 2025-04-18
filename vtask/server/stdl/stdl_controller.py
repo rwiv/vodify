@@ -24,8 +24,8 @@ class StdlController:
     def get_stats(self):
         return {
             "listening": self.__cron.is_running(),
-            "queue": self.__queue.list(),
             "queue_size": self.__queue.size(),
+            "queue_items": self.__queue.list(),
         }
 
     def start_listening(self):
