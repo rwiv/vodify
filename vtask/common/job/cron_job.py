@@ -20,10 +20,12 @@ class CronJob:
         job: Job,
         interval_sec: float = 1,
         retry_limit: int = 3,
+        unstoppable: bool = False,
     ):
         self.__job = job
         self.__interval_sec = interval_sec
         self.__retry_limit = retry_limit
+        self.__unstoppable = unstoppable
 
         self.__abort_flag = False
         self.__thread: threading.Thread | None = None
@@ -41,6 +43,12 @@ class CronJob:
         self.__thread.start()
 
     def __run(self):
+        if self.__unstoppable:
+            self.__run_unstoppable()
+        else:
+            self.__run_with_retry()
+
+    def __run_with_retry(self):
         self.status = CronJobStatus.RUNNING
         retry_cnt = 0
         while not self.__abort_flag:
@@ -56,12 +64,24 @@ class CronJob:
                     log.error("CronJob failed", err_info)
                     break
 
-                log.error("Retry CronJob", err_info)
+                log.warn("Retry CronJob", err_info)
                 retry_cnt += 1
 
             time.sleep(self.__interval_sec)
 
         log.info("Stop CronJob", {"job_name": self.__job.name})
+
+    def __run_unstoppable(self):
+        self.status = CronJobStatus.RUNNING
+        while not self.__abort_flag:
+            try:
+                self.__job.run()
+            except Exception as e:
+                err_info = error_dict(e)
+                err_info["job_name"] = self.__job.name
+                log.error("CronJob Failed", err_info)
+
+            time.sleep(self.__interval_sec)
 
     def stop(self):
         if self.__thread is None:

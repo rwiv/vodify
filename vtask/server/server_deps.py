@@ -20,7 +20,7 @@ class ServerDependencyManager:
         stdl_requester = StdlTaskRequester()
         stdl_queue = StdlDoneQueue(self.celery_env.redis)
         stdl_job = StdlDoneJob(stdl_queue, self.amqp, stdl_requester, celery_redis_broker)
-        self.stdl_cron = CronJob(stdl_job, interval_sec=5)
+        self.stdl_cron = CronJob(job=stdl_job, interval_sec=5, unstoppable=True)
         stdl_controller = StdlController(stdl_queue, self.stdl_cron, stdl_requester)
         self.stdl_router = stdl_controller.router
 
