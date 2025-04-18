@@ -39,13 +39,12 @@ class StdlDoneJob(Job):
     def run(self):
         workers = find_active_worker_names(app)
         if len(workers) == 0:
-            log.info("no active workers")
             return
 
         self.__mig.push_all_amqp_messages()
         msg: StdlDoneMsg | None = self.__queue.get()
         if msg is None:
-            raise Exception("stdl_done_queue is empty")
+            return
 
         queue_name = self.__requester.resolve_queue(msg)
 
