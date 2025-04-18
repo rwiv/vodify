@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from ...schema import StdlSegmentsInfo
 from .....common.fs import FsType
 
 
@@ -8,9 +9,9 @@ class StdlHelper(ABC):
         self.fs_type = fs_type
 
     @abstractmethod
-    def move(self, channel_id: str, video_name: str, platform_name: str | None = None):
+    def move(self, info: StdlSegmentsInfo):
         pass
 
     @abstractmethod
-    def clear(self, channel_id: str, video_name: str, platform_name: str | None = None):
+    def clear(self, info: StdlSegmentsInfo):
         pass

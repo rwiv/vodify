@@ -9,10 +9,8 @@ from vtask.utils import S3ObjectWriter
 
 load_test_dotenv(".env-server-dev")
 
-from vtask.common.amqp import AmqpHelperBlocking
-from vtask.common.env import get_server_env
 from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3Helper
-from vtask.service.stdl.schema import STDL_DONE_QUEUE, StdlDoneMsg, StdlDoneStatus, StdlPlatformType
+from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, StdlSegmentsInfo
 
 test_conf = read_test_conf()
 
@@ -46,33 +44,20 @@ base_dir_path = test_conf.local_base_dir_path
 tmp_dir_path = test_conf.tmp_dir_path
 
 
-def write_test_context_files(uid: str, video_name: str):
+def write_test_context_files(platform: str, uid: str, video_name: str):
     incomplete_path = src_writer.normalize_base_path(path_join(base_dir_path, "incomplete"))
-    vid_dir_path = path_join(incomplete_path, uid, video_name)
+    vid_dir_path = path_join(incomplete_path, platform, uid, video_name)
 
     for chunk_name in os.listdir(local_chunks_path):
         with open(path_join(local_chunks_path, chunk_name), mode="rb") as f:
             src_writer.write(path_join(vid_dir_path, chunk_name), f.read())
 
 
-def test_write_context_files():
-    for target in done_messages:
-        write_test_context_files(target.uid, target.video_name)
-
-
-def test_publish_amqp():
-    print()
-    env = get_server_env()
-    amqp = AmqpHelperBlocking(env.amqp)
-    for target in done_messages:
-        amqp.instance_publish(STDL_DONE_QUEUE, target)
-
-
 def test_transcode():
     print()
     target = done_messages[0]
 
-    write_test_context_files(target.uid, target.video_name)
+    write_test_context_files(target.platform.value, target.uid, target.video_name)
 
     helper = StdlS3Helper(
         local_incomplete_dir_path=path_join(base_dir_path, "incomplete"),
@@ -83,5 +68,10 @@ def test_transcode():
     transcoder = StdlTranscoder(
         helper=helper, base_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive
     )
-    result = transcoder.transcode(target.uid, target.video_name)
+    info = StdlSegmentsInfo(
+        platform_name=target.platform.value,
+        channel_id=target.uid,
+        video_name=target.video_name,
+    )
+    result = transcoder.transcode(info)
     print(result)

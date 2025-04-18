@@ -3,7 +3,7 @@ import os
 from pyutils import path_join, filename
 
 from .stdl_helper import StdlHelper
-from ...schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
+from ...schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
 from .....common.fs import S3Config, FsType
 from .....utils import S3Client
 
@@ -23,7 +23,11 @@ class StdlS3Helper(StdlHelper):
         self.network_io_delay_ms = network_io_delay_ms
         self.network_buf_size = network_buf_size
 
-    def move(self, channel_id: str, video_name: str, platform_name: str | None = None):
+    def move(self, info: StdlSegmentsInfo):
+        platform_name = info.platform_name
+        channel_id = info.channel_id
+        video_name = info.video_name
+
         keys = self.__get_keys(platform_name=platform_name, channel_id=channel_id, video_name=video_name)
         if len(keys) == 0:
             return
@@ -52,7 +56,9 @@ class StdlS3Helper(StdlHelper):
             keys.append(obj.key)
         return keys
 
-    def clear(self, channel_id: str, video_name: str, platform_name: str | None = None):
-        keys = self.__get_keys(platform_name=platform_name, channel_id=channel_id, video_name=video_name)
+    def clear(self, info: StdlSegmentsInfo):
+        keys = self.__get_keys(
+            platform_name=info.platform_name, channel_id=info.channel_id, video_name=info.video_name
+        )
         for key in keys:
             self.__s3.delete(key)

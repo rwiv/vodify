@@ -14,6 +14,12 @@ class StdlDoneStatus(Enum):
     CANCELED = "canceled"
 
 
+class StdlSegmentsInfo(BaseModel):
+    platform_name: str
+    channel_id: str
+    video_name: str
+
+
 class StdlDoneMsg(BaseModel):
     status: StdlDoneStatus
     platform: StdlPlatformType
@@ -27,3 +33,10 @@ class StdlDoneMsg(BaseModel):
     @staticmethod
     def from_dict(dct: dict):
         return StdlDoneMsg(**dct)
+
+    def to_segments_info(self) -> StdlSegmentsInfo:
+        return StdlSegmentsInfo(
+            platform_name=self.platform.value,
+            channel_id=self.uid,
+            video_name=self.video_name,
+        )

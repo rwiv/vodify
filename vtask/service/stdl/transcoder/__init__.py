@@ -2,7 +2,6 @@ import os
 import sys
 
 from .stdl_transcoder import StdlTranscoder
-from .stdl_transcoder_seg import StdlSegmentedTranscoder, StdlSegmentsInfo
 from .helper.stdl_helper import StdlHelper
 from .helper.stdl_helper_utils import create_stdl_helper
 from .helper.stdl_helper_s3 import StdlS3Helper

@@ -2,7 +2,7 @@ import os
 import sys
 
 from .stdl_constrants import *
-from .stdl_types import StdlDoneMsg, StdlDoneStatus, StdlPlatformType
+from .stdl_types import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, StdlSegmentsInfo
 
 targets = [
     "stdl_constants",

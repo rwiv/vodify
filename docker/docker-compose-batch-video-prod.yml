@@ -1,6 +1,6 @@
 services:
   vtask-video:
-    image: harbor.rwiv.xyz/private/vtask:0.2.6
+    image: harbor.rwiv.xyz/private/vtask:0.2.7
     container_name: vtask-video
     working_dir: /app
     entrypoint: python -m vtask batch
