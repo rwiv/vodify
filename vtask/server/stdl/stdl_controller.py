@@ -16,6 +16,7 @@ class StdlController:
 
         self.router = APIRouter(prefix="/api/stdl")
         self.router.add_api_route("/stats", self.get_stats, methods=["GET"])
+        self.router.add_api_route("/tasks", self.push_task, methods=["POST"])
         self.router.add_api_route("/listening/start", self.start_listening, methods=["POST"])
         self.router.add_api_route("/listening/stop", self.stop_listening, methods=["POST"])
         self.router.add_api_route("/command/cancel-extract", self.extract_cancel_requests, methods=["POST"])
@@ -37,6 +38,10 @@ class StdlController:
 
     def stop_listening(self):
         self.__cron.stop()
+
+    def push_task(self, msg: StdlDoneMsg):
+        self.__queue.push(msg)
+        return "ok"
 
     def extract_cancel_requests(self):
         for value in self.__queue.redis_queue.list_items():
