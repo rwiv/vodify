@@ -57,7 +57,7 @@ class VideoDownloader:
             c = ChzzkVideoClient1(self.ctx.cookie_str)
             dl = ChzzkVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx, c)
             dl.download_one(video_no)
-        except TypeError:
+        except Exception:
             c = ChzzkVideoClient2(self.ctx.cookie_str)
             dl = ChzzkVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx, c)
             dl.download_one(video_no)
