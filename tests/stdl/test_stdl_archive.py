@@ -18,12 +18,16 @@ celery_env = get_celery_env()
 queue = StdlDoneQueue(celery_env.redis)
 
 
-def test_stdl_publish_by_archive():
+def test_publish():
     src_file_path = path_join(find_project_root(), "dev", "archive", "stdl_done.json")
     if not Path(dirpath(src_file_path)).exists():
         os.makedirs(dirpath(src_file_path), exist_ok=True)
 
     publish_by_archive(src_file_path, queue)
+
+
+def test_clear_queue():
+    queue.clear_queue()
 
 
 class StdlQueueState(BaseModel):
