@@ -142,7 +142,7 @@ class StdlTranscoder:
         seg_nums = set([int(Path(path).stem) for path in segment_paths])
         missing_seg_nums: list[int] = []
         start_num = int(Path(segment_paths[0]).stem)
-        if start_num == 0 and len(segment_paths) > 0:
+        if start_num in (0, -1) and len(segment_paths) > 0:
             start_num = int(Path(segment_paths[1]).stem)
         end_num = int(Path(segment_paths[-1]).stem)
         for cur_num in range(start_num, end_num + 1):
