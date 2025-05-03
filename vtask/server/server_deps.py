@@ -1,3 +1,5 @@
+from fastapi import APIRouter
+
 from .celery import CeleryController
 from .stdl import StdlController, StdlDoneJob, StdlTaskRequester
 from ..celery import CeleryRedisBrokerClient
@@ -6,10 +8,22 @@ from ..common.job import CronJob
 from ..service.stdl.common import StdlDoneQueue
 
 
+class DefaultController:
+    def __init__(self):
+        self.router = APIRouter(prefix="/api")
+        self.router.add_api_route("/health", self.health, methods=["GET"])
+
+    def health(self):
+        return {"status": "UP"}
+
+
 class ServerDependencyManager:
     def __init__(self):
         self.env = get_server_env()
         self.celery_env = get_celery_env()
+
+        default_controller = DefaultController()
+        self.default_router = default_controller.router
 
         celery_redis_broker = CeleryRedisBrokerClient(self.celery_env.redis)
         celery_controller = CeleryController(celery_redis_broker)

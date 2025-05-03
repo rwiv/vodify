@@ -3,7 +3,10 @@ import sys
 
 from .server import run
 
-targets = ["server", "server_deps"]
+targets = [
+    "server",
+    "server_deps",
+]
 if os.getenv("PY_ENV") != "prod":
     for name in list(sys.modules.keys()):
         for target in targets:

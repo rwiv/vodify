@@ -15,6 +15,7 @@ class StdlController:
         self.__requester = requester
 
         self.router = APIRouter(prefix="/api/stdl")
+        self.router.add_api_route("/health", self.health, methods=["GET"])
         self.router.add_api_route("/stats", self.get_stats, methods=["GET"])
         self.router.add_api_route("/tasks", self.push_task, methods=["POST"])
         self.router.add_api_route("/listening/start", self.start_listening, methods=["POST"])
@@ -23,6 +24,9 @@ class StdlController:
         self.router.add_api_route(
             "/command/cancel-convert/{video_name}", self.convert_to_cancel_by_video_name, methods=["POST"]
         )
+
+    def health(self):
+        return {"status": "UP"}
 
     def get_stats(self):
         items = self.__queue.list_items()

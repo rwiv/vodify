@@ -10,9 +10,10 @@ def run():
 
     app = FastAPI()
 
+    app.include_router(deps.default_router)
     app.include_router(deps.celery_router)
     app.include_router(deps.stdl_router)
 
     deps.stdl_cron.start()
 
-    uvicorn.run(app, port=env.server.port, host="0.0.0.0")
+    uvicorn.run(app, port=env.server.port, host="0.0.0.0", access_log=False)
