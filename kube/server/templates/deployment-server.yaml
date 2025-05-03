@@ -37,17 +37,6 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: {{ .Values.redis.passwordKey }}
-            - name: AMQP_HOST
-              value: {{ .Values.rabbitmq.host }}
-            - name: AMQP_PORT
-              value: "{{ .Values.rabbitmq.port }}"
-            - name: AMQP_USERNAME
-              value: {{ .Values.rabbitmq.username }}
-            - name: AMQP_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.rabbitmq.secretName }}
-                  key: {{ .Values.rabbitmq.passwordKey }}
       imagePullSecrets:
         - name: {{ .Values.image.pullSecret }}
       {{- with .Values.affinity }}

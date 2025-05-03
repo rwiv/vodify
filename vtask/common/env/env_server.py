@@ -2,8 +2,6 @@ import os
 
 from pydantic import BaseModel, conint, constr
 
-from .env_common_configs import AmqpConfig, read_amqp_config
-
 
 class ServerConfig(BaseModel):
     port: conint(ge=1)
@@ -12,7 +10,6 @@ class ServerConfig(BaseModel):
 class ServerEnv(BaseModel):
     env: constr(min_length=1)
     server: ServerConfig
-    amqp: AmqpConfig
 
 
 def get_server_env() -> ServerEnv:
@@ -25,5 +22,4 @@ def get_server_env() -> ServerEnv:
     return ServerEnv(
         env=env,
         server=server_config,
-        amqp=read_amqp_config(),
     )

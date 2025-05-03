@@ -18,8 +18,8 @@ def test_loss_check():
 
     for file_name in os.listdir(path_join(base_path, "src")):
         with open(path_join(base_path, "src", file_name), "r") as file:
-            text = yaml.load(file.read(), Loader=yaml.FullLoader)
-            result = inspector.inspect(YamlFile(**text).missing_segments)
+            dct = yaml.load(file.read(), Loader=yaml.FullLoader)
+            result = inspector.inspect(YamlFile(**dct).missing_segments)
             os.makedirs(path_join(base_path, "out"), exist_ok=True)
             with open(path_join(base_path, "out", file_name), "w") as dst_file:
                 dst_file.write(yaml.dump(result.to_out_dict(), allow_unicode=True))

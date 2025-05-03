@@ -13,12 +13,6 @@ redis:
   port: 6379
   secretName: vtask-redis
   passwordKey: password
-rabbitmq:
-  host: rabbitmq.infra.svc.cluster.local
-  port: 5672
-  username: admin
-  secretName: rabbitmq-main
-  passwordKey: password
 server:
   replicas: 1
   service:

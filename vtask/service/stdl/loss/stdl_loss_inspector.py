@@ -27,15 +27,15 @@ def format_ranges(nums):
         else:
             # End current range
             if start == prev:
-                ranges.append(f"{start}")
+                ranges.append(f"1 ({start})")
             else:
-                ranges.append(f"{start}-{prev}")
+                ranges.append(f"{prev-start+1} ({start}-{prev})")
             start = prev = num
 
     # Handle the final range
     if start == prev:
-        ranges.append(f"{start}")
+        ranges.append(f"1 ({start})")
     else:
-        ranges.append(f"{start}-{prev}")
+        ranges.append(f"{prev - start + 1} ({start}-{prev})")
 
     return ranges

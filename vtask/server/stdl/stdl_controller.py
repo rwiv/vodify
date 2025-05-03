@@ -40,7 +40,11 @@ class StdlController:
         self.__cron.stop()
 
     def push_task(self, msg: StdlDoneMsg):
-        self.__queue.push(msg)
+        if msg.status == StdlDoneStatus.COMPLETE:
+            self.__queue.push(msg)
+        elif msg.status == StdlDoneStatus.CANCELED:
+            queue_name = self.__requester.resolve_queue(msg)
+            self.__requester.request_done(msg, queue_name)
         return "ok"
 
     def extract_cancel_requests(self):
