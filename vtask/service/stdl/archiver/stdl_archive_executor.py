@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 
 import yaml
@@ -9,8 +10,15 @@ from ....common.fs import S3Config
 from ....utils import S3Client
 
 
+class ArchiveMode(Enum):
+    ARCHIVE = "archive"
+    TRANSCODE = "transcode"
+
+
 class StdlArchiveConfig(BaseModel):
+    mode: ArchiveMode
     out_dir_path: str
+    tmp_dir_path: str
     s3_config: S3Config
     targets: list[ArchiveTarget]
 
@@ -28,10 +36,18 @@ class StdlArchiveExecutor:
         conf_path = env.archive_config_path
         if conf_path is None:
             raise ValueError("archive_config_path is required")
-        conf = read_archive_config(conf_path)
-        s3_client = S3Client(conf.s3_config)
-        self.archiver = StdlArchiver(s3_client, conf.out_dir_path)
-        self.targets = conf.targets
+        self.conf = read_archive_config(conf_path)
+        self.archiver = StdlArchiver(
+            s3_client=S3Client(self.conf.s3_config),
+            out_dir_path=self.conf.out_dir_path,
+            tmp_dir_path=self.conf.tmp_dir_path,
+        )
+        self.targets = self.conf.targets
 
     def run(self):
-        self.archiver.archive(self.targets)
+        if self.conf.mode == ArchiveMode.ARCHIVE:
+            self.archiver.archive(self.targets)
+        elif self.conf.mode == ArchiveMode.TRANSCODE:
+            self.archiver.transcode()
+        else:
+            raise ValueError(f"Unknown command: {self.conf.mode}")

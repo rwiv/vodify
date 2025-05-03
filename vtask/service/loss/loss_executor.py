@@ -23,7 +23,7 @@ class LossExecutor:
         self.inspector = create_inspector(self.conf)
         self.src_dir_path = self.conf.src_dir_path
         self.out_dir_path = self.conf.out_dir_path
-        self.tmp_dir_path = env.tmp_dir_path
+        self.tmp_dir_path = self.conf.tmp_dir_path
         self.notifier = create_notifier(env)
         self.topic = env.untf.topic
 

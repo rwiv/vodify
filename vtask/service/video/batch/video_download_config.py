@@ -10,6 +10,7 @@ class VideoDownloadConfig(BaseModel):
     urls: list[str]
     is_m3u8_url: bool = Field(alias="isM3u8Url")
     out_dir_path: constr(min_length=1) = Field(alias="outDirPath")
+    tmp_dir_path: constr(min_length=1) = Field(alias="tmpDirPath")
     context: VideoDownloadContext
 
 

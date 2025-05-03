@@ -14,7 +14,7 @@ class VideoDownloadExecutor:
         self.conf = read_video_download_config(conf_path)
         self.downloader = VideoDownloader(
             out_dir_path=self.conf.out_dir_path,
-            tmp_dir_path=env.tmp_dir_path,
+            tmp_dir_path=self.conf.tmp_dir_path,
             ctx=self.conf.context,
         )
         self.notifier = create_notifier(env)

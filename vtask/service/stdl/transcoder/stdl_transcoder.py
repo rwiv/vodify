@@ -129,14 +129,13 @@ class StdlTranscoder:
 
         shutil.rmtree(extract_dir_path)
 
-        # check for missing segments
+        # Check for missing segments
         segment_paths = _get_sorted_segment_paths(segments_path=base_dir_path)
         if len(segment_paths) == 0:
             return _get_failure_result("No video segments")
 
-        # check if segment sorted order is valid
         seg_nums = [int(Path(path).stem) for path in segment_paths]
-        if -1 in seg_nums and seg_nums[0] != -1:
+        if -1 in seg_nums and seg_nums[0] != -1:  # check if segment sorted order is valid
             return _get_failure_result("Invalid segment sorted order")
 
         seg_nums = set([int(Path(path).stem) for path in segment_paths])

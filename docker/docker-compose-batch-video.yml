@@ -1,22 +1,22 @@
 services:
-  vtask-loss:
+  vtask-video:
     image: harbor.rwiv.xyz/private/vtask:0.3.5
-    container_name: vtask-loss
+    container_name: vtask-video
     working_dir: /app
     entrypoint: python -m vtask batch
     environment:
       PY_ENV: prod
-      BATCH_COMMAND: loss
-      TMP_DIR_PATH: /app/tmp
+      BATCH_COMMAND: video
 
-      LOSS_CONFIG_PATH: /mnt/app/loss_conf.yaml
+      VIDEO_DOWNLOAD_CONFIG_PATH: /mnt/app/video_conf.yaml
 
       UNTF_ENDPOINT: "${UNTF_ENDPOINT}"
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
-      - "${SRC_DIR_PATH}/loss:/mnt/volume"
-      - "${LOSS_CONFIG_PATH}:/mnt/app/loss_conf.yaml"
+      - "${VIDEO_OUT_DIR_PATH}:/mnt/volume/out"
+      - "${VIDEO_TMP_DIR_PATH}:/mnt/volume/tmp"
+      - "${VIDEO_DOWNLOAD_CONFIG_PATH}:/mnt/app/video_conf.yaml"
     labels:
       app: vtask
       host: ${HOSTNAME}

@@ -28,6 +28,7 @@ class LossConfig(BaseModel):
     archive_csv: bool = Field(alias="archiveCsv")
     src_dir_path: constr(min_length=1) = Field(alias="srcDirPath")
     out_dir_path: constr(min_length=1) = Field(alias="outDirPath")
+    tmp_dir_path: constr(min_length=1) = Field(alias="tmpDirPath")
     size: LossCheckSizeConfig
 
 
