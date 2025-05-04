@@ -10,8 +10,8 @@ from vtask.common.env import get_celery_env
 from vtask.service.stdl.common import StdlDoneQueue
 from vtask.service.stdl.schema import StdlDoneMsg
 
-# load_test_dotenv(".env-worker-dev")
-load_test_dotenv(".env-worker-prod")
+load_test_dotenv(".env-worker-dev")
+# load_test_dotenv(".env-worker-prod")
 
 celery_env = get_celery_env()
 

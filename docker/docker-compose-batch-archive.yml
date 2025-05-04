@@ -1,22 +1,22 @@
 services:
-  vtask-video:
+  vtask-archive:
     image: harbor.rwiv.xyz/private/vtask:0.3.6
-    container_name: vtask-video
+    container_name: vtask-archive
     working_dir: /app
     entrypoint: python -m vtask batch
     environment:
       PY_ENV: prod
-      BATCH_COMMAND: video
+      BATCH_COMMAND: archive
 
-      VIDEO_DOWNLOAD_CONFIG_PATH: /mnt/app/video_conf.yaml
+      ARCHIVE_CONFIG_PATH: /mnt/app/archive_conf.yaml
 
       UNTF_ENDPOINT: "${UNTF_ENDPOINT}"
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
-      - "${VIDEO_OUT_DIR_PATH}:/mnt/volume/out"
-      - "${VIDEO_TMP_DIR_PATH}:/mnt/volume/tmp"
-      - "${VIDEO_DOWNLOAD_CONFIG_PATH}:/mnt/app/video_conf.yaml"
+      - "${ARCHIVE_OUT_DIR_PATH}:/mnt/volume/out"
+      - "${ARCHIVE_TMP_DIR_PATH}:/mnt/volume/tmp"
+      - "${ARCHIVE_CONFIG_PATH}:/mnt/app/archive_conf.yaml"
     labels:
       app: vtask
       host: ${HOSTNAME}
