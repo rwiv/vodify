@@ -81,8 +81,7 @@ class StdlTranscoder:
             raise ValueError(message)
 
         # Copy segments from remote storage
-        # base_dir_path, tars_dir_path = self.__copy_direct(info, src_paths)
-        base_dir_path, tars_dir_path = self.__copy_pass_by_out_dir(info, src_paths)
+        base_dir_path, tars_dir_path = self.__copy_direct(info, src_paths)
 
         # Preprocess tar files
         if not Path(tars_dir_path).exists():
