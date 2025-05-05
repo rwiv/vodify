@@ -2,6 +2,7 @@ import os
 
 from pydantic import BaseModel, constr
 
+from .env_configs import UntfConfig, read_untf_env
 
 DEFAULT_NETWORK_IO_DELAY_MS = 0
 DEFAULT_BUFFER_SIZE = 65536
@@ -26,6 +27,7 @@ class WorkerEnv(BaseModel):
     network_buf_size: int
     worker: WorkerConfig
     stdl: StdlConfig
+    untf: UntfConfig
 
 
 def get_worker_env() -> WorkerEnv:
@@ -48,4 +50,5 @@ def get_worker_env() -> WorkerEnv:
         network_io_delay_ms=os.getenv("NETWORK_IO_DELAY_MS") or DEFAULT_NETWORK_IO_DELAY_MS,  # type: ignore
         network_buf_size=os.getenv("NETWORK_BUF_SIZE") or DEFAULT_BUFFER_SIZE,  # type: ignore
         stdl=stdl_config,
+        untf=read_untf_env(),
     )

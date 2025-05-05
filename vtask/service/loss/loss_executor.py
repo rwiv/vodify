@@ -24,8 +24,7 @@ class LossExecutor:
         self.src_dir_path = self.conf.src_dir_path
         self.out_dir_path = self.conf.out_dir_path
         self.tmp_dir_path = self.conf.tmp_dir_path
-        self.notifier = create_notifier(env)
-        self.topic = env.untf.topic
+        self.notifier = create_notifier(env=env.env, conf=env.untf)
 
     def run(self):
         if self.conf.method == LossMethod.INSPECT:
@@ -66,12 +65,10 @@ class LossExecutor:
                 log.info("one loss check is done", get_done_log_attrs(result, file_path))
             except Exception as e:
                 notify_msg = f"Directory Failed: {path_join(self.src_dir_path, src_sub_path)}, err: {e}"
-                self.notifier.notify(topic=self.topic, message=notify_msg)
+                self.notifier.notify(notify_msg)
                 raise
 
-        self.notifier.notify(
-            topic=self.topic, message=f"directory frame-loss check done: {self.src_dir_path}"
-        )
+        self.notifier.notify(f"directory frame-loss check done: {self.src_dir_path}")
         log.info(f"directory frame-loss check done: {self.src_dir_path}")
 
     def __analyze(self):

@@ -1,9 +1,9 @@
 from .notifier import UntfNotifier, MockNotifier
-from ..env import BatchEnv
+from ..env import UntfConfig
 
 
-def create_notifier(env: BatchEnv):
-    if env.env == "prod":
-        return UntfNotifier(env.untf)
+def create_notifier(env: str, conf: UntfConfig):
+    if env == "prod":
+        return UntfNotifier(conf)
     else:
         return MockNotifier()

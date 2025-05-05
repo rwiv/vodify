@@ -7,6 +7,7 @@ from pyutils import path_join, filename, log
 
 from ..schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
 from ..transcoder import StdlTranscoder, StdlLocalAccessor
+from ....common.notifier import Notifier
 from ....utils import S3Client
 
 
@@ -17,12 +18,20 @@ class ArchiveTarget(BaseModel):
 
 
 class StdlArchiver:
-    def __init__(self, s3_client: S3Client, out_dir_path: str, tmp_dir_path: str):
+    def __init__(
+        self,
+        s3_client: S3Client,
+        notifier: Notifier,
+        out_dir_path: str,
+        tmp_dir_path: str,
+    ):
         self.s3_client = s3_client
+        self.notifier = notifier
         self.out_dir_path = out_dir_path
         self.incomplete_dir_path = path_join(out_dir_path, STDL_INCOMPLETE_DIR_NAME)
         self.trans = StdlTranscoder(
             accessor=StdlLocalAccessor(local_incomplete_dir_path=self.incomplete_dir_path),
+            notifier=self.notifier,
             out_dir_path=path_join(out_dir_path, "complete"),
             tmp_path=tmp_dir_path,
             is_archive=False,
@@ -35,20 +44,17 @@ class StdlArchiver:
                 channel_dir_path = checked_dir_path(platform_dir_path, channel_id)
                 for video_name in os.listdir(channel_dir_path):
                     checked_dir_path(channel_dir_path, video_name)
-                    result = self.trans.transcode(
-                        StdlSegmentsInfo(
-                            platform_name=platform_name,
-                            channel_id=channel_id,
-                            video_name=video_name,
-                        )
+                    info = StdlSegmentsInfo(
+                        platform_name=platform_name,
+                        channel_id=channel_id,
+                        video_name=video_name,
                     )
-                    log.info(
-                        "End transcode",
-                        {
-                            "status": result["status"],
-                            "message": result["message"],
-                        },
-                    )
+                    self.trans.transcode(info)
+                    log.info(f"End transcode video", {video_name: video_name})
+
+        message = "All transcoding is done"
+        log.info(message)
+        self.notifier.notify(message)
 
     def archive(self, targets: list[ArchiveTarget]):
         start_time = time.time()

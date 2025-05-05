@@ -8,7 +8,7 @@ from ...common.env import UntfConfig
 
 class Notifier(ABC):
     @abstractmethod
-    def notify(self, topic: str, message: str):
+    def notify(self, message: str):
         pass
 
 
@@ -21,10 +21,11 @@ class UntfNotifier(Notifier):
     def __init__(self, conf: UntfConfig):
         self.endpoint = conf.endpoint
         self.api_key = conf.api_key
+        self.topic = conf.topic
 
-    def notify(self, topic: str, message: str) -> None:
+    def notify(self, message: str) -> None:
         url = f"{self.endpoint}/api/send/v1"
-        body = UntfSendRequest(topic=topic, message=message).model_dump(by_alias=True)
+        body = UntfSendRequest(topic=self.topic, message=message).model_dump(by_alias=True)
         headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.api_key}"}
         response = requests.post(url, json=body, headers=headers)
 
@@ -33,5 +34,5 @@ class UntfNotifier(Notifier):
 
 
 class MockNotifier(Notifier):
-    def notify(self, topic: str, message: str) -> None:
-        print(f"MockNotifier.notify({topic}, {message})")
+    def notify(self, message: str) -> None:
+        print(f"MockNotifier.notify({message})")

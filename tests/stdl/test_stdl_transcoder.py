@@ -5,6 +5,7 @@ from pyutils import path_join
 from tests.testutils.test_utils_conf import read_test_conf
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
 from tests.testutils.test_utils_misc import load_test_dotenv
+from vtask.common.notifier import MockNotifier
 from vtask.utils import S3ObjectWriter
 
 load_test_dotenv(".env-server-dev")
@@ -65,7 +66,11 @@ def test_transcode():
         network_buf_size=65536,
     )
     transcoder = StdlTranscoder(
-        accessor=helper, out_dir_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive
+        accessor=helper,
+        notifier=MockNotifier(),
+        out_dir_path=base_dir_path,
+        tmp_path=tmp_dir_path,
+        is_archive=is_archive,
     )
     info = StdlSegmentsInfo(
         platform_name=target.platform.value,

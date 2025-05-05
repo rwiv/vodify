@@ -17,7 +17,7 @@ class VideoDownloadExecutor:
             tmp_dir_path=self.conf.tmp_dir_path,
             ctx=self.conf.context,
         )
-        self.notifier = create_notifier(env)
+        self.notifier = create_notifier(env=env.env, conf=env.untf)
         self.topic = env.untf.topic
 
     def run(self):
@@ -28,8 +28,8 @@ class VideoDownloadExecutor:
                 log.info("End video download", {"url": url})
         except Exception as e:
             log.error("Video download failed", error_dict(e))
-            self.notifier.notify(topic=self.topic, message="Video download failed")
+            self.notifier.notify("Video download failed")
             raise
 
         log.info("All video downloads are done")
-        self.notifier.notify(topic=self.topic, message="All video downloads are done")
+        self.notifier.notify("All video downloads are done")

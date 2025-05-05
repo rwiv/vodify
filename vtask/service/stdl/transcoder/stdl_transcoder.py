@@ -13,6 +13,7 @@ from pyutils import log, path_join
 from .accessor.stdl_accessor import StdlAccessor
 from ..schema import StdlSegmentsInfo
 from ...loss import TimeLossInspector
+from ....common.notifier import Notifier
 
 
 class StdlDoneTaskStatus(Enum):
@@ -42,11 +43,14 @@ class StdlTranscoder:
     def __init__(
         self,
         accessor: StdlAccessor,
+        notifier: Notifier,
         out_dir_path: str,
         tmp_path: str,
         is_archive: bool,
+        # notifier: Notifier | None = None,
     ):
         self.accessor = accessor
+        self.notifier = notifier
         self.tmp_path = tmp_path
         # self.incomplete_dir_path = path_join(base_path, STDL_INCOMPLETE_DIR_NAME)
         self.out_tmp_dir_path = path_join(out_dir_path, "_tmp")
@@ -66,7 +70,9 @@ class StdlTranscoder:
         tars_size_sum = self.accessor.get_size_sum(info)
         log.info(f"Video size: {round(tars_size_sum / 1024 / 1024 / 1024, 4)}GB")
         if tars_size_sum > VIDEO_SIZE_THRESHOLD:
-            raise ValueError(f"Video size is too large: {tars_size_sum} > {VIDEO_SIZE_THRESHOLD}")
+            message = f"Video size is too large: {tars_size_sum} > {VIDEO_SIZE_THRESHOLD}"
+            self.notifier.notify(message)
+            raise ValueError(message)
 
         # Copy segments from remote storage
         base_dir_path = path_join(self.tmp_path, platform_name, channel_id, video_name)

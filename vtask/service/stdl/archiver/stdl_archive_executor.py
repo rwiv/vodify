@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from .stdl_archiver import ArchiveTarget, StdlArchiver
 from ....common.env import BatchEnv
 from ....common.fs import S3Config
+from ....common.notifier import create_notifier
 from ....utils import S3Client
 
 
@@ -37,8 +38,10 @@ class StdlArchiveExecutor:
         if conf_path is None:
             raise ValueError("archive_config_path is required")
         self.conf = read_archive_config(conf_path)
+        self.notifier = create_notifier(env=env.env, conf=env.untf)
         self.archiver = StdlArchiver(
             s3_client=S3Client(self.conf.s3_config),
+            notifier=self.notifier,
             out_dir_path=self.conf.out_dir_path,
             tmp_dir_path=self.conf.tmp_dir_path,
         )
