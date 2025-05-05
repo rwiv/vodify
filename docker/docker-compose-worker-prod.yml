@@ -9,11 +9,11 @@ services:
       PY_ENV: prod
       WORKER_NAME: default
       WORKER_QUEUES: celery:vtask:default
-      TMP_DIR_PATH: "/app/tmp"
+      TMP_DIR_PATH: /app/tmp
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
-      FS_CONFIG_PATH: "/mnt/app_conf/fs_conf.yaml"
-      STDL_BASE_DIR_PATH: "/mnt/stdl"
+      FS_CONFIG_PATH: /mnt/app_conf/fs_conf.yaml
+      STDL_BASE_DIR_PATH: /mnt/stdl
       STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
       NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
@@ -29,7 +29,6 @@ services:
       CELERY_WORKER_CONCURRENCY: "${CELERY_DEFAULT_WORKER_CONCURRENCY}"
       CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
     volumes:
-      - "${TMP_DIR_PATH}:/app/tmp"
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
     labels:
