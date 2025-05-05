@@ -19,14 +19,16 @@ class StdlS3Accessor(StdlAccessor):
         self.network_io_delay_ms = network_io_delay_ms
         self.network_buf_size = network_buf_size
 
+    def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
+        return self.__get_keys(info)
+
     def get_size_sum(self, info: StdlSegmentsInfo) -> int:
         keys = self.__get_keys(info)
         size_sum = 0
         for key in keys:
             head = self.__s3.head(key)
-            if head is None:
-                continue
-            size_sum += head.content_length
+            if head is not None:
+                size_sum += head.content_length
         return size_sum
 
     def copy(self, info: StdlSegmentsInfo, dest_dir_path: str):

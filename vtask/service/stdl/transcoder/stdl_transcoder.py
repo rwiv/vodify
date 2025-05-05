@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import tarfile
+import time
 from enum import Enum
 from pathlib import Path
 from typing import TypedDict
@@ -36,6 +37,10 @@ class InspectResult(BaseModel):
         return self.model_dump(by_alias=True, exclude_none=True)
 
 
+TAR_SIZE_MB = 18
+SEG_SIZE_MB = 2
+
+
 class StdlTranscoder:
     def __init__(
         self,
@@ -49,7 +54,6 @@ class StdlTranscoder:
         self.accessor = accessor
         self.notifier = notifier
         self.tmp_path = tmp_path
-        # self.incomplete_dir_path = path_join(base_path, STDL_INCOMPLETE_DIR_NAME)
         self.out_tmp_dir_path = path_join(out_dir_path, "_tmp")
         self.out_dir_path = out_dir_path
         self.is_archive = is_archive
@@ -65,10 +69,9 @@ class StdlTranscoder:
         channel_id = info.channel_id
         video_name = info.video_name
 
-        tars_size_sum = self.accessor.get_size_sum(info)
-        tars_size_sum_gb = round(tars_size_sum / 1024 / 1024 / 1024, 4)
-        log.info(f"Video size: {tars_size_sum_gb}GB")
-        if tars_size_sum > (self.video_size_limit_gb * 1024 * 1024 * 1024):
+        too_large, tars_size_sum_gb = self.__check_video_size_by_cnt(info)
+        log.info(f"{tars_size_sum_gb}")
+        if too_large:
             message = f"Video size is too large: platform={platform_name}, channel_id={channel_id}, video_name={video_name}, size={tars_size_sum_gb}GB"
             self.notifier.notify(message)
             raise ValueError(message)
@@ -128,15 +131,17 @@ class StdlTranscoder:
             else:
                 seg_map[seg_num] = seg_path
 
+        seg_dir_path = path_join(base_dir_path, "segments")
+        os.makedirs(seg_dir_path, exist_ok=True)
         for _, seg_path in seg_map.items():
-            shutil.move(seg_path, path_join(base_dir_path, Path(seg_path).name))
+            shutil.move(seg_path, path_join(seg_dir_path, Path(seg_path).name))
 
         shutil.rmtree(extract_dir_path)
 
         # Check for missing segments
-        segment_paths = _get_sorted_segment_paths(segments_path=base_dir_path)
+        segment_paths = _get_sorted_segment_paths(segments_path=seg_dir_path)
         if len(segment_paths) == 0:
-            raise ValueError(f"Source path {base_dir_path} is empty.")
+            raise ValueError(f"Source path {seg_dir_path} is empty.")
 
         seg_nums = [int(Path(path).stem) for path in segment_paths]
         if -1 in seg_nums and seg_nums[0] != -1:  # check if segment sorted order is valid
@@ -158,14 +163,16 @@ class StdlTranscoder:
 
         # Merge segments
         merged_tmp_ts_path = path_join(base_dir_path, f"{video_name}.ts")
-        with open(merged_tmp_ts_path, "wb") as outfile:
-            for file_path in segment_paths:
-                with open(file_path, "rb") as infile:
-                    outfile.write(infile.read())
+        with open(merged_tmp_ts_path, "wb") as merged_file:
+            for seg_file_path in segment_paths:
+                with open(seg_file_path, "rb") as seg_file:
+                    merged_file.write(seg_file.read())
+                os.remove(seg_file_path)
+        os.rmdir(seg_dir_path)
 
         # Remux video
         tmp_mp4_path = path_join(base_dir_path, f"{video_name}.mp4")
-        _remux_video(merged_tmp_ts_path, tmp_mp4_path)
+        _remux_video(merged_tmp_ts_path, tmp_mp4_path, info)
         os.remove(merged_tmp_ts_path)
 
         # Move mp4 file
@@ -202,6 +209,22 @@ class StdlTranscoder:
         os.makedirs(path_join(self.out_dir_path, platform_name, channel_id), exist_ok=True)
         shutil.move(out_tmp_mp4_path, complete_mp4_path)
 
+    def __check_video_size_by_cnt(self, info: StdlSegmentsInfo) -> tuple[bool, float]:
+        paths = self.accessor.get_paths(info)
+        stems = [Path(path).stem for path in paths]
+        tars_size_sum_mb = 0
+        for stem in stems:
+            if len(stem.split("_")) == 3:
+                tars_size_sum_mb += TAR_SIZE_MB
+            elif len(stem.split("_")) == 2:
+                tars_size_sum_mb += SEG_SIZE_MB
+            else:
+                raise ValueError(f"Invalid tar name: {stem}")
+        tars_size_sum_b = tars_size_sum_mb * 1024 * 1024
+        tars_size_sum_gb = round(tars_size_sum_b / 1024 / 1024 / 1024, 2)
+        is_too_large = tars_size_sum_b > (self.video_size_limit_gb * 1024 * 1024 * 1024)
+        return is_too_large, tars_size_sum_gb
+
 
 def clear_dir(
     base_dir_path: str, info: StdlSegmentsInfo, delete_platform: bool = False, delete_self: bool = False
@@ -226,11 +249,19 @@ def _get_sorted_segment_paths(segments_path: str) -> list[str]:
     return sorted(paths, key=lambda x: int(Path(x).stem))
 
 
-def _remux_video(src_path: str, out_path: str):
+def _remux_video(src_path: str, out_path: str, info: StdlSegmentsInfo):
+    start = time.time()
     if shutil.which("ffmpeg") is None:
         raise FileNotFoundError("ffmpeg not found")
     command = ["ffmpeg", "-i", src_path, "-c", "copy", out_path]
     subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    attr = {
+        "platform": info.platform_name,
+        "channel_id": info.channel_id,
+        "video_name": info.video_name,
+        "elapsed_time": f"{round(time.time() - start, 2)} sec",
+    }
+    log.debug("Complete Remuxing", attr)
 
 
 def _get_success_result(message: str) -> StdlDoneTaskResult:

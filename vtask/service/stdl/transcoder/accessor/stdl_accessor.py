@@ -9,6 +9,10 @@ class StdlAccessor(ABC):
         self.fs_type = fs_type
 
     @abstractmethod
+    def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
+        pass
+
+    @abstractmethod
     def get_size_sum(self, info: StdlSegmentsInfo) -> int:
         pass
 

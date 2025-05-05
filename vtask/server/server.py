@@ -1,10 +1,15 @@
+import logging
+
 import uvicorn
 from fastapi import FastAPI
+from pyutils import log
 
 from .server_deps import ServerDependencyManager
 
 
 def run():
+    log.set_level(logging.DEBUG)
+
     deps = ServerDependencyManager()
     env = deps.env
 

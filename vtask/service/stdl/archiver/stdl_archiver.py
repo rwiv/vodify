@@ -17,7 +17,7 @@ class ArchiveTarget(BaseModel):
     video_name: str
 
 
-VIDEO_SIZE_LIMIT_GB = 1000
+VIDEO_SIZE_LIMIT_GB = 1024
 
 
 class StdlArchiver:
