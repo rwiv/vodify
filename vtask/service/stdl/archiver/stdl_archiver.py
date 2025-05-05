@@ -17,6 +17,9 @@ class ArchiveTarget(BaseModel):
     video_name: str
 
 
+VIDEO_SIZE_LIMIT_GB = 1000
+
+
 class StdlArchiver:
     def __init__(
         self,
@@ -35,6 +38,7 @@ class StdlArchiver:
             out_dir_path=path_join(out_dir_path, "complete"),
             tmp_path=tmp_dir_path,
             is_archive=False,
+            video_size_limit_gb=VIDEO_SIZE_LIMIT_GB,
         )
 
     def transcode(self):

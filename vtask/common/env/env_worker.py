@@ -16,6 +16,7 @@ class WorkerConfig(BaseModel):
 class StdlConfig(BaseModel):
     base_dir_path: constr(min_length=1)
     is_archive: bool
+    video_size_limit_gb: int
 
 
 class WorkerEnv(BaseModel):
@@ -39,6 +40,7 @@ def get_worker_env() -> WorkerEnv:
     stdl_config = StdlConfig(
         base_dir_path=os.getenv("STDL_BASE_DIR_PATH"),
         is_archive=os.getenv("STDL_IS_ARCHIVE") == "true",
+        video_size_limit_gb=os.getenv("STDL_VIDEO_SIZE_LIMIT_GB"),  # type: ignore
     )
 
     return WorkerEnv(

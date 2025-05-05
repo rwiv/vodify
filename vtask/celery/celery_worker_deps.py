@@ -15,6 +15,7 @@ class WorkerDependencyManager:
             out_dir_path=env.stdl.base_dir_path,
             tmp_path=env.tmp_dir_path,
             is_archive=env.stdl.is_archive,
+            video_size_limit_gb=env.stdl.video_size_limit_gb,
         )
 
     def read_env(self):

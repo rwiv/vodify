@@ -11,4 +11,4 @@ env = get_batch_env()
 def test_untf():
     print(env)
     notifier = UntfNotifier(env.untf)
-    notifier.notify(env.untf.topic, "test")
+    notifier.notify("test")

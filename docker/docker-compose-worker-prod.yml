@@ -54,10 +54,12 @@ services:
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
       FS_CONFIG_PATH: /mnt/app_conf/fs_conf.yaml
-      STDL_BASE_DIR_PATH: /mnt/stdl
-      STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
       NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
+      
+      STDL_BASE_DIR_PATH: /mnt/stdl
+      STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
+      STDL_VIDEO_SIZE_LIMIT_GB: "${STDL_VIDEO_SIZE_LIMIT_GB}"
 
       REDIS_HOST: "${REDIS_HOST}"
       REDIS_PORT: "${REDIS_PORT}"
@@ -94,10 +96,12 @@ services:
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
       FS_CONFIG_PATH: /mnt/app_conf/fs_conf.yaml
-      STDL_BASE_DIR_PATH: /mnt/stdl
-      STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
       NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
+      
+      STDL_BASE_DIR_PATH: /mnt/stdl
+      STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
+      STDL_VIDEO_SIZE_LIMIT_GB: "${STDL_VIDEO_SIZE_LIMIT_GB}"
 
       REDIS_HOST: "${REDIS_HOST}"
       REDIS_PORT: "${REDIS_PORT}"

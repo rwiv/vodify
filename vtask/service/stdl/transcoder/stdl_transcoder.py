@@ -36,9 +36,6 @@ class InspectResult(BaseModel):
         return self.model_dump(by_alias=True, exclude_none=True)
 
 
-VIDEO_SIZE_THRESHOLD = 30 * 1024 * 1024 * 1024  # 30GB
-
-
 class StdlTranscoder:
     def __init__(
         self,
@@ -47,7 +44,7 @@ class StdlTranscoder:
         out_dir_path: str,
         tmp_path: str,
         is_archive: bool,
-        # notifier: Notifier | None = None,
+        video_size_limit_gb: int,
     ):
         self.accessor = accessor
         self.notifier = notifier
@@ -56,6 +53,7 @@ class StdlTranscoder:
         self.out_tmp_dir_path = path_join(out_dir_path, "_tmp")
         self.out_dir_path = out_dir_path
         self.is_archive = is_archive
+        self.video_size_limit_gb = video_size_limit_gb
         self.loss_inspector = TimeLossInspector(keyframe_only=False)
 
     def clear(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
@@ -68,9 +66,10 @@ class StdlTranscoder:
         video_name = info.video_name
 
         tars_size_sum = self.accessor.get_size_sum(info)
-        log.info(f"Video size: {round(tars_size_sum / 1024 / 1024 / 1024, 4)}GB")
-        if tars_size_sum > VIDEO_SIZE_THRESHOLD:
-            message = f"Video size is too large: {tars_size_sum} > {VIDEO_SIZE_THRESHOLD}"
+        tars_size_sum_gb = round(tars_size_sum / 1024 / 1024 / 1024, 4)
+        log.info(f"Video size: {tars_size_sum_gb}GB")
+        if tars_size_sum > (self.video_size_limit_gb * 1024 * 1024 * 1024):
+            message = f"Video size is too large: platform={platform_name}, channel_id={channel_id}, video_name={video_name}, size={tars_size_sum_gb}GB"
             self.notifier.notify(message)
             raise ValueError(message)
 

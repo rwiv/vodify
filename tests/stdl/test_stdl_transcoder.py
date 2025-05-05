@@ -71,6 +71,7 @@ def test_transcode():
         out_dir_path=base_dir_path,
         tmp_path=tmp_dir_path,
         is_archive=is_archive,
+        video_size_limit_gb=1024,
     )
     info = StdlSegmentsInfo(
         platform_name=target.platform.value,
