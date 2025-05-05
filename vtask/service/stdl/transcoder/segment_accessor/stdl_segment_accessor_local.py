@@ -47,7 +47,6 @@ class StdlLocalSegmentAccessor(StdlSegmentAccessor):
         video_dir_path = path_join(channel_dir_path, info.video_name)
         if not Path(video_dir_path).exists():
             return
-
         shutil.rmtree(video_dir_path)
         if len(os.listdir(channel_dir_path)) == 0:
             os.rmdir(channel_dir_path)

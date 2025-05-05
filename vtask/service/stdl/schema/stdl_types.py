@@ -18,6 +18,14 @@ class StdlSegmentsInfo(BaseModel):
     platform_name: str
     channel_id: str
     video_name: str
+    video_size_gb: float | None = None
+
+    def to_dict(self, extra: dict | None = None) -> dict:
+        result = self.model_dump(mode="json", by_alias=True)
+        if extra:
+            for k, v in extra.items():
+                result[k] = v
+        return result
 
 
 class StdlDoneMsg(BaseModel):

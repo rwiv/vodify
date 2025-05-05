@@ -1,6 +1,7 @@
+import logging
 import os
 
-from pyutils import path_join
+from pyutils import path_join, log
 
 from tests.testutils.test_utils_conf import read_test_conf
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
@@ -56,6 +57,7 @@ def write_test_context_files(platform: str, uid: str, video_name: str):
 
 def test_transcode():
     print()
+    log.set_level(logging.DEBUG)
     target = done_messages[0]
 
     write_test_context_files(target.platform.value, target.uid, target.video_name)

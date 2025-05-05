@@ -65,23 +65,23 @@ class StdlTranscoder:
         return _get_success_result("Clear success")
 
     def transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
+        transcode_start = time.time()
         platform = info.platform_name
         channel_id = info.channel_id
         video_name = info.video_name
 
         src_paths = self.__accessor.get_paths(info)
 
-        too_large, video_size_sum_gb = self.__check_video_size_by_cnt(src_paths)
+        too_large, video_size_gb = self.__check_video_size_by_cnt(src_paths)
+        info.video_size_gb = video_size_gb
         if too_large:
-            message = f"Video size is too large: platform={platform}, channel_id={channel_id}, video_name={video_name}, size={video_size_sum_gb}GB"
+            message = f"Video size is too large: platform={platform}, channel_id={channel_id}, video_name={video_name}, size={video_size_gb}GB"
             self.__notifier.notify(message)
+            log.error(message)
             raise ValueError(message)
 
         # Copy segments from remote storage
-        base_dir_path = path_join(self.__tmp_path, platform, channel_id, video_name)
-        tars_dir_path = path_join(base_dir_path, "tars")
-        os.makedirs(tars_dir_path, exist_ok=True)
-        self.__accessor.copy(src_paths, tars_dir_path)
+        base_dir_path, tars_dir_path = self.__copy_pass_by_out_dir(info, src_paths)
 
         # Preprocess tar files
         if not Path(tars_dir_path).exists():
@@ -122,13 +122,10 @@ class StdlTranscoder:
                 prev_size = Path(seg_map[seg_num]).stat().st_size
                 cur_size = Path(seg_path).stat().st_size
                 if prev_size != cur_size:
-                    dct = {
-                        "path1": seg_map[seg_num],
-                        "path2": seg_path,
-                        "size1": prev_size,
-                        "size2": cur_size,
-                    }
-                    log.error(f"File size mismatch", dct)
+                    attr = info.to_dict(
+                        {"path1": seg_map[seg_num], "path2": seg_path, "size1": prev_size, "size2": cur_size}
+                    )
+                    log.error(f"File size mismatch", attr)
             else:
                 seg_map[seg_num] = seg_path
 
@@ -183,16 +180,54 @@ class StdlTranscoder:
             file.write(yaml.dump(inspect_result.to_out_dict(), allow_unicode=True))
 
         shutil.rmtree(base_dir_path)
-        clear_dir(self.__tmp_path, info, delete_platform=True)
-        clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=True)
+        clear_dir(self.__tmp_path, info, delete_platform=True, delete_self=False)
+        clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=False)
 
         if not self.__is_archive:
             self.__accessor.clear(info)
 
-        log.info(f"Convert file: {channel_id}/{video_name}")
-        return _get_success_result(f"Convert success: {channel_id}/{video_name}")
+        result_msg = "Complete Transcoding"
+        log.info(result_msg, info.to_dict({"elapsed_time_sec": round(time.time() - transcode_start, 2)}))
+        return _get_success_result(f"{result_msg}: {platform}/{channel_id}/{video_name}")
+
+    def __copy_direct(self, info: StdlSegmentsInfo, src_paths: list[str]) -> tuple[str, str]:
+        start = time.time()
+        base_dir_path = path_join(self.__tmp_path, info.platform_name, info.channel_id, info.video_name)
+        tars_dir_path = path_join(base_dir_path, "tars")
+        os.makedirs(tars_dir_path, exist_ok=True)
+        self.__accessor.copy(src_paths, tars_dir_path)
+        log.debug("Download segments", info.to_dict({"elapsed_time_sec": round(time.time() - start, 2)}))
+        return base_dir_path, tars_dir_path
+
+    def __copy_pass_by_out_dir(self, info: StdlSegmentsInfo, src_paths: list[str]) -> tuple[str, str]:
+        dl_start = time.time()
+        out_tars_dir_path = path_join(
+            self.__out_tmp_dir_path, info.platform_name, info.channel_id, info.video_name
+        )
+        os.makedirs(out_tars_dir_path, exist_ok=True)
+        self.__accessor.copy(src_paths, out_tars_dir_path)
+        log.debug(
+            "Download segments to out directory",
+            info.to_dict({"elapsed_time_sec": round(time.time() - dl_start, 2)}),
+        )
+
+        move_start = time.time()
+        base_dir_path = path_join(self.__tmp_path, info.platform_name, info.channel_id, info.video_name)
+        tars_dir_path = path_join(base_dir_path, "tars")
+        os.makedirs(tars_dir_path, exist_ok=True)
+        for out_tar_path in os.listdir(out_tars_dir_path):
+            out_tar_full_path = path_join(out_tars_dir_path, out_tar_path)
+            if os.path.isfile(out_tar_full_path):
+                shutil.move(out_tar_full_path, path_join(tars_dir_path, out_tar_path))
+        log.debug(
+            "Move segments to tmp directory",
+            info.to_dict({"elapsed_time_sec": round(time.time() - move_start, 2)}),
+        )
+        clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=False)
+        return base_dir_path, tars_dir_path
 
     def move_mp4(self, tmp_mp4_path: str, info: StdlSegmentsInfo):
+        start = time.time()
         platform_name = info.platform_name
         channel_id = info.channel_id
         video_name = info.video_name
@@ -209,6 +244,7 @@ class StdlTranscoder:
         # incomplete directory에 있는 파일을 complete directory로 이동
         os.makedirs(path_join(self.__out_dir_path, platform_name, channel_id), exist_ok=True)
         shutil.move(out_tmp_mp4_path, complete_mp4_path)
+        log.debug("Move mp4 file", info.to_dict({"elapsed_time_sec": round(time.time() - start, 2)}))
 
     def __check_video_size_by_cnt(self, paths: list[str]) -> tuple[bool, float]:
         stems = [Path(path).stem for path in paths]
@@ -231,13 +267,16 @@ def clear_dir(
 ):
     platform_dir_path = path_join(base_dir_path, info.platform_name)
     channel_dir_path = path_join(platform_dir_path, info.channel_id)
-    if len(os.listdir(channel_dir_path)) == 0:
+    video_dir_path = path_join(channel_dir_path, info.video_name)
+    if Path(video_dir_path).exists() and len(os.listdir(video_dir_path)) == 0:
+        os.rmdir(video_dir_path)
+    if Path(channel_dir_path).exists() and len(os.listdir(channel_dir_path)) == 0:
         os.rmdir(channel_dir_path)
     if delete_platform:
-        if len(os.listdir(platform_dir_path)) == 0:
+        if Path(platform_dir_path).exists() and len(os.listdir(platform_dir_path)) == 0:
             os.rmdir(platform_dir_path)
         if delete_self:
-            if len(os.listdir(base_dir_path)) == 0:
+            if Path(base_dir_path).exists() and len(os.listdir(base_dir_path)) == 0:
                 os.rmdir(base_dir_path)
 
 
@@ -255,13 +294,7 @@ def _remux_video(src_path: str, out_path: str, info: StdlSegmentsInfo):
         raise FileNotFoundError("ffmpeg not found")
     command = ["ffmpeg", "-i", src_path, "-c", "copy", out_path]
     subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    attr = {
-        "platform": info.platform_name,
-        "channel_id": info.channel_id,
-        "video_name": info.video_name,
-        "elapsed_time": f"{round(time.time() - start, 2)} sec",
-    }
-    log.debug("Complete Remuxing", attr)
+    log.debug("Remux from ts to mp4", info.to_dict({"elapsed_time_sec": round(time.time() - start, 2)}))
 
 
 def _get_success_result(message: str) -> StdlDoneTaskResult:
