@@ -45,11 +45,11 @@ services:
       PY_ENV: prod
       WORKER_NAME: io-01
       WORKER_QUEUES: celery:vtask:io:lfs,celery:vtask:io:net
-      TMP_DIR_PATH: "/app/tmp"
+      TMP_DIR_PATH: /app/tmp
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
-      FS_CONFIG_PATH: "/mnt/app_conf/fs_conf.yaml"
-      STDL_BASE_DIR_PATH: "/mnt/stdl"
+      FS_CONFIG_PATH: /mnt/app_conf/fs_conf.yaml
+      STDL_BASE_DIR_PATH: /mnt/stdl
       STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
       NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
@@ -57,10 +57,9 @@ services:
       REDIS_HOST: "${REDIS_HOST}"
       REDIS_PORT: "${REDIS_PORT}"
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
-      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_CONCURRENCY}"
+      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_01_CONCURRENCY}"
       CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
     volumes:
-      - "${TMP_DIR_PATH}:/app/tmp"
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
     labels:
@@ -81,11 +80,11 @@ services:
       PY_ENV: prod
       WORKER_NAME: io-02
       WORKER_QUEUES: celery:vtask:io:lfs,celery:vtask:io:net
-      TMP_DIR_PATH: "/app/tmp"
+      TMP_DIR_PATH: /app/tmp
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
-      FS_CONFIG_PATH: "/mnt/app_conf/fs_conf.yaml"
-      STDL_BASE_DIR_PATH: "/mnt/stdl"
+      FS_CONFIG_PATH: /mnt/app_conf/fs_conf.yaml
+      STDL_BASE_DIR_PATH: /mnt/stdl
       STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
       NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
@@ -93,10 +92,9 @@ services:
       REDIS_HOST: "${REDIS_HOST}"
       REDIS_PORT: "${REDIS_PORT}"
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
-      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_CONCURRENCY}"
+      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_02_CONCURRENCY}"
       CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
     volumes:
-      - "${TMP_DIR_PATH}:/app/tmp"
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
     labels:

@@ -8,8 +8,8 @@ class WorkerDependencyManager:
         env = self.read_env()
         fs_configs = read_fs_config(env.fs_config_path)
         return StdlTranscoder(
-            helper=create_stdl_helper(fs_name=src_fs_name, fs_configs=fs_configs, env=env),
-            base_path=env.stdl.base_dir_path,
+            accessor=create_stdl_helper(fs_name=src_fs_name, fs_configs=fs_configs, env=env),
+            out_dir_path=env.stdl.base_dir_path,
             tmp_path=env.tmp_dir_path,
             is_archive=env.stdl.is_archive,
         )

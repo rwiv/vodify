@@ -2,10 +2,10 @@ import os
 import sys
 
 from .stdl_transcoder import StdlTranscoder, StdlDoneTaskResult
-from .helper.stdl_helper import StdlHelper
-from .helper.stdl_helper_utils import create_stdl_helper
-from .helper.stdl_helper_s3 import StdlS3Helper
-from .helper.stdl_helper_local import StdlLocalHelper
+from .accessor.stdl_accessor import StdlAccessor
+from .accessor.stdl_accessor_utils import create_stdl_helper
+from .accessor.stdl_accessor_s3 import StdlS3Accessor
+from .accessor.stdl_accessor_local import StdlLocalAccessor
 
 
 targets = [

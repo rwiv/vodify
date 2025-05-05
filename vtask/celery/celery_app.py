@@ -14,7 +14,6 @@ app = Celery(
 )
 
 app.conf.update(
-    # result_expires=3600,  # 1 hour
     result_expires=86400,  # 1 day
     task_serializer="json",
     result_serializer="json",

@@ -4,12 +4,16 @@ from ...schema import StdlSegmentsInfo
 from .....common.fs import FsType
 
 
-class StdlHelper(ABC):
+class StdlAccessor(ABC):
     def __init__(self, fs_type: FsType):
         self.fs_type = fs_type
 
     @abstractmethod
-    def move(self, info: StdlSegmentsInfo):
+    def get_size_sum(self, info: StdlSegmentsInfo) -> int:
+        pass
+
+    @abstractmethod
+    def copy(self, info: StdlSegmentsInfo, dest_dir_path: str):
         pass
 
     @abstractmethod

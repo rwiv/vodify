@@ -9,7 +9,7 @@ from vtask.utils import S3ObjectWriter
 
 load_test_dotenv(".env-server-dev")
 
-from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3Helper
+from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3Accessor
 from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, StdlSegmentsInfo
 
 test_conf = read_test_conf()
@@ -18,8 +18,8 @@ test_conf = read_test_conf()
 # fs_name = "local"
 fs_name = "minio"
 
-is_archive = True
-# is_archive = False
+# is_archive = True
+is_archive = False
 
 platform = StdlPlatformType.CHZZK
 video_name = "test_video"
@@ -59,14 +59,13 @@ def test_transcode():
 
     write_test_context_files(target.platform.value, target.uid, target.video_name)
 
-    helper = StdlS3Helper(
-        local_incomplete_dir_path=path_join(base_dir_path, "incomplete"),
+    helper = StdlS3Accessor(
         conf=fs_conf.s3,  # type: ignore
         network_io_delay_ms=1,
         network_buf_size=65536,
     )
     transcoder = StdlTranscoder(
-        helper=helper, base_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive
+        accessor=helper, out_dir_path=base_dir_path, tmp_path=tmp_dir_path, is_archive=is_archive
     )
     info = StdlSegmentsInfo(
         platform_name=target.platform.value,
