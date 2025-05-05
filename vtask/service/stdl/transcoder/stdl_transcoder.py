@@ -238,15 +238,13 @@ class StdlTranscoder:
         complete_mp4_path = path_join(self.__out_dir_path, platform_name, channel_id, f"{video_name}.mp4")
 
         # write 도중인 파일이 complete directory에 들어가면 안되기 때문에 먼저 incomplete directory로 이동
-        tmp_start = time.time()
+        start = time.time()
         shutil.move(tmp_mp4_path, out_tmp_mp4_path)
-        log.debug("Move mp4 (tmp)", info.to_dict({"elapsed_time_sec": round(time.time() - tmp_start, 2)}))
 
         # incomplete directory에 있는 파일을 complete directory로 이동
-        out_start = time.time()
         os.makedirs(path_join(self.__out_dir_path, platform_name, channel_id), exist_ok=True)
         shutil.move(out_tmp_mp4_path, complete_mp4_path)
-        log.debug("Move mp4 (out)", info.to_dict({"elapsed_time_sec": round(time.time() - out_start, 2)}))
+        log.debug("Move mp4", info.to_dict({"elapsed_time_sec": round(time.time() - start, 2)}))
 
     def __check_video_size_by_cnt(self, paths: list[str]) -> tuple[bool, float]:
         stems = [Path(path).stem for path in paths]
