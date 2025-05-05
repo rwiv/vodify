@@ -4,12 +4,12 @@ from pathlib import Path
 
 from pyutils import path_join
 
-from .stdl_accessor import StdlAccessor
+from .stdl_segment_accessor import StdlSegmentAccessor
 from ...schema import StdlSegmentsInfo
 from .....common.fs import FsType
 
 
-class StdlLocalAccessor(StdlAccessor):
+class StdlLocalSegmentAccessor(StdlSegmentAccessor):
     def __init__(self, local_incomplete_dir_path: str):
         super().__init__(FsType.LOCAL)
         self.src_incomplete_dir_path = local_incomplete_dir_path
@@ -34,17 +34,12 @@ class StdlLocalAccessor(StdlAccessor):
             size_sum += os.path.getsize(file_path)
         return size_sum
 
-    def copy(self, info: StdlSegmentsInfo, dest_dir_path: str):
-        src_video_dir_path = path_join(
-            self.src_incomplete_dir_path, info.platform_name, info.channel_id, info.video_name
-        )
-        os.makedirs(src_video_dir_path, exist_ok=True)
-
-        for file_name in os.listdir(src_video_dir_path):
-            src_file_path = path_join(src_video_dir_path, file_name)
+    def copy(self, paths: list[str], dest_dir_path: str):
+        for src_file_path in paths:
             if not os.path.isfile(src_file_path):
                 raise ValueError(f"Source path {src_file_path} is not a file.")
-            shutil.copy(src_file_path, path_join(dest_dir_path, file_name))
+            out_file_path = path_join(dest_dir_path, Path(src_file_path).name)
+            shutil.copy(src_file_path, out_file_path)
 
     def clear(self, info: StdlSegmentsInfo):
         platform_dir_path = path_join(self.src_incomplete_dir_path, info.platform_name)

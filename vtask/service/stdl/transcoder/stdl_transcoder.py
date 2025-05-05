@@ -11,7 +11,7 @@ import yaml
 from pydantic import BaseModel, Field
 from pyutils import log, path_join
 
-from .accessor.stdl_accessor import StdlAccessor
+from .segment_accessor.stdl_segment_accessor import StdlSegmentAccessor
 from ..schema import StdlSegmentsInfo
 from ...loss import TimeLossInspector
 from ....common.notifier import Notifier
@@ -44,43 +44,44 @@ SEG_SIZE_MB = 2
 class StdlTranscoder:
     def __init__(
         self,
-        accessor: StdlAccessor,
+        accessor: StdlSegmentAccessor,
         notifier: Notifier,
         out_dir_path: str,
         tmp_path: str,
         is_archive: bool,
         video_size_limit_gb: int,
     ):
-        self.accessor = accessor
-        self.notifier = notifier
-        self.tmp_path = tmp_path
-        self.out_tmp_dir_path = path_join(out_dir_path, "_tmp")
-        self.out_dir_path = out_dir_path
-        self.is_archive = is_archive
-        self.video_size_limit_gb = video_size_limit_gb
-        self.loss_inspector = TimeLossInspector(keyframe_only=False)
+        self.__accessor = accessor
+        self.__notifier = notifier
+        self.__tmp_path = tmp_path
+        self.__out_tmp_dir_path = path_join(out_dir_path, "_tmp")
+        self.__out_dir_path = out_dir_path
+        self.__is_archive = is_archive
+        self.__video_size_limit_gb = video_size_limit_gb
+        self.__loss_inspector = TimeLossInspector(keyframe_only=False)
 
     def clear(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
-        self.accessor.clear(info)
+        self.__accessor.clear(info)
         return _get_success_result("Clear success")
 
     def transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
-        platform_name = info.platform_name
+        platform = info.platform_name
         channel_id = info.channel_id
         video_name = info.video_name
 
-        too_large, tars_size_sum_gb = self.__check_video_size_by_cnt(info)
-        log.info(f"{tars_size_sum_gb}")
+        src_paths = self.__accessor.get_paths(info)
+
+        too_large, video_size_sum_gb = self.__check_video_size_by_cnt(src_paths)
         if too_large:
-            message = f"Video size is too large: platform={platform_name}, channel_id={channel_id}, video_name={video_name}, size={tars_size_sum_gb}GB"
-            self.notifier.notify(message)
+            message = f"Video size is too large: platform={platform}, channel_id={channel_id}, video_name={video_name}, size={video_size_sum_gb}GB"
+            self.__notifier.notify(message)
             raise ValueError(message)
 
         # Copy segments from remote storage
-        base_dir_path = path_join(self.tmp_path, platform_name, channel_id, video_name)
+        base_dir_path = path_join(self.__tmp_path, platform, channel_id, video_name)
         tars_dir_path = path_join(base_dir_path, "tars")
         os.makedirs(tars_dir_path, exist_ok=True)
-        self.accessor.copy(info, tars_dir_path)
+        self.__accessor.copy(src_paths, tars_dir_path)
 
         # Preprocess tar files
         if not Path(tars_dir_path).exists():
@@ -177,16 +178,16 @@ class StdlTranscoder:
 
         # Move mp4 file
         self.move_mp4(tmp_mp4_path=tmp_mp4_path, info=info)
-        complete_loss_path = path_join(self.out_dir_path, platform_name, channel_id, f"{video_name}.yaml")
+        complete_loss_path = path_join(self.__out_dir_path, platform, channel_id, f"{video_name}.yaml")
         with open(complete_loss_path, "w") as file:
             file.write(yaml.dump(inspect_result.to_out_dict(), allow_unicode=True))
 
         shutil.rmtree(base_dir_path)
-        clear_dir(self.tmp_path, info, delete_platform=True)
-        clear_dir(self.out_tmp_dir_path, info, delete_platform=True, delete_self=True)
+        clear_dir(self.__tmp_path, info, delete_platform=True)
+        clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=True)
 
-        if not self.is_archive:
-            self.accessor.clear(info)
+        if not self.__is_archive:
+            self.__accessor.clear(info)
 
         log.info(f"Convert file: {channel_id}/{video_name}")
         return _get_success_result(f"Convert success: {channel_id}/{video_name}")
@@ -197,20 +198,19 @@ class StdlTranscoder:
         video_name = info.video_name
 
         # Move mp4 file to complete directory
-        out_tmp_channel_dir_path = path_join(self.out_tmp_dir_path, platform_name, channel_id)
+        out_tmp_channel_dir_path = path_join(self.__out_tmp_dir_path, platform_name, channel_id)
         os.makedirs(out_tmp_channel_dir_path, exist_ok=True)
         out_tmp_mp4_path = path_join(out_tmp_channel_dir_path, f"{video_name}.mp4")
-        complete_mp4_path = path_join(self.out_dir_path, platform_name, channel_id, f"{video_name}.mp4")
+        complete_mp4_path = path_join(self.__out_dir_path, platform_name, channel_id, f"{video_name}.mp4")
 
         # write 도중인 파일이 complete directory에 들어가면 안되기 때문에 먼저 incomplete directory로 이동
         shutil.move(tmp_mp4_path, out_tmp_mp4_path)
 
         # incomplete directory에 있는 파일을 complete directory로 이동
-        os.makedirs(path_join(self.out_dir_path, platform_name, channel_id), exist_ok=True)
+        os.makedirs(path_join(self.__out_dir_path, platform_name, channel_id), exist_ok=True)
         shutil.move(out_tmp_mp4_path, complete_mp4_path)
 
-    def __check_video_size_by_cnt(self, info: StdlSegmentsInfo) -> tuple[bool, float]:
-        paths = self.accessor.get_paths(info)
+    def __check_video_size_by_cnt(self, paths: list[str]) -> tuple[bool, float]:
         stems = [Path(path).stem for path in paths]
         tars_size_sum_mb = 0
         for stem in stems:
@@ -222,7 +222,7 @@ class StdlTranscoder:
                 raise ValueError(f"Invalid tar name: {stem}")
         tars_size_sum_b = tars_size_sum_mb * 1024 * 1024
         tars_size_sum_gb = round(tars_size_sum_b / 1024 / 1024 / 1024, 2)
-        is_too_large = tars_size_sum_b > (self.video_size_limit_gb * 1024 * 1024 * 1024)
+        is_too_large = tars_size_sum_b > (self.__video_size_limit_gb * 1024 * 1024 * 1024)
         return is_too_large, tars_size_sum_gb
 
 

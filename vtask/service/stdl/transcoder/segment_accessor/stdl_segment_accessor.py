@@ -4,7 +4,7 @@ from ...schema import StdlSegmentsInfo
 from .....common.fs import FsType
 
 
-class StdlAccessor(ABC):
+class StdlSegmentAccessor(ABC):
     def __init__(self, fs_type: FsType):
         self.fs_type = fs_type
 
@@ -17,7 +17,7 @@ class StdlAccessor(ABC):
         pass
 
     @abstractmethod
-    def copy(self, info: StdlSegmentsInfo, dest_dir_path: str):
+    def copy(self, paths: list[str], dest_dir_path: str):
         pass
 
     @abstractmethod

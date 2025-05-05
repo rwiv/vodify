@@ -10,7 +10,7 @@ from vtask.utils import S3ObjectWriter
 
 load_test_dotenv(".env-server-dev")
 
-from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3Accessor
+from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3SegmentAccessor
 from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, StdlSegmentsInfo
 
 test_conf = read_test_conf()
@@ -60,7 +60,7 @@ def test_transcode():
 
     write_test_context_files(target.platform.value, target.uid, target.video_name)
 
-    helper = StdlS3Accessor(
+    helper = StdlS3SegmentAccessor(
         conf=fs_conf.s3,  # type: ignore
         network_io_delay_ms=1,
         network_buf_size=65536,

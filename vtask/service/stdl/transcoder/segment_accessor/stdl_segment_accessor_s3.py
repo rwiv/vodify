@@ -1,12 +1,12 @@
 from pyutils import path_join, filename
 
-from .stdl_accessor import StdlAccessor
+from .stdl_segment_accessor import StdlSegmentAccessor
 from ...schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
 from .....common.fs import S3Config, FsType
 from .....utils import S3Client
 
 
-class StdlS3Accessor(StdlAccessor):
+class StdlS3SegmentAccessor(StdlSegmentAccessor):
     def __init__(
         self,
         conf: S3Config,
@@ -31,11 +31,8 @@ class StdlS3Accessor(StdlAccessor):
                 size_sum += head.content_length
         return size_sum
 
-    def copy(self, info: StdlSegmentsInfo, dest_dir_path: str):
-        keys = self.__get_keys(info)
-        if len(keys) == 0:
-            return
-        for key in keys:
+    def copy(self, paths: list[str], dest_dir_path: str):
+        for key in paths:
             self.__s3.write_file(
                 key=key,
                 file_path=path_join(dest_dir_path, filename(key)),

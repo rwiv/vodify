@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from pyutils import path_join, filename, log
 
 from ..schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
-from ..transcoder import StdlTranscoder, StdlLocalAccessor
+from ..transcoder import StdlTranscoder, StdlLocalSegmentAccessor
 from ....common.notifier import Notifier
 from ....utils import S3Client
 
@@ -33,7 +33,7 @@ class StdlArchiver:
         self.out_dir_path = out_dir_path
         self.incomplete_dir_path = path_join(out_dir_path, STDL_INCOMPLETE_DIR_NAME)
         self.trans = StdlTranscoder(
-            accessor=StdlLocalAccessor(local_incomplete_dir_path=self.incomplete_dir_path),
+            accessor=StdlLocalSegmentAccessor(local_incomplete_dir_path=self.incomplete_dir_path),
             notifier=self.notifier,
             out_dir_path=path_join(out_dir_path, "complete"),
             tmp_path=tmp_dir_path,
