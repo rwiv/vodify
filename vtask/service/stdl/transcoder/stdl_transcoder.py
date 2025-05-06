@@ -69,13 +69,14 @@ class StdlTranscoder:
         platform = info.platform_name
         channel_id = info.channel_id
         video_name = info.video_name
+        attr_str = f"platform={platform}, channel_id={channel_id}, video_name={video_name}"
 
         src_paths = self.__accessor.get_paths(info)
 
-        too_large, video_size_gb = self.__check_video_size_by_cnt(src_paths)
+        too_large, video_size_gb = self.__check_video_size_by_cnt2(src_paths)
         info.video_size_gb = video_size_gb
         if too_large:
-            message = f"Video size is too large: platform={platform}, channel_id={channel_id}, video_name={video_name}, size={video_size_gb}GB"
+            message = f"Video size is too large: {attr_str}, size={video_size_gb}GB"
             self.__notifier.notify(message)
             log.error(message)
             raise ValueError(message)
@@ -115,6 +116,7 @@ class StdlTranscoder:
                 extract_seg_paths.append(path_join(root, file))
 
         # Check for deplicate segments
+        is_mismatched = False
         seg_map: dict[int, str] = {}
         for seg_path in extract_seg_paths:
             seg_num = int(Path(seg_path).stem)
@@ -126,8 +128,12 @@ class StdlTranscoder:
                         {"path1": seg_map[seg_num], "path2": seg_path, "size1": prev_size, "size2": cur_size}
                     )
                     log.error(f"File size mismatch", attr)
+                    is_mismatched = True
             else:
                 seg_map[seg_num] = seg_path
+
+        if is_mismatched:
+            self.__notifier.notify(f"File size mismatch: {attr_str}")
 
         seg_dir_path = path_join(base_dir_path, "segments")
         os.makedirs(seg_dir_path, exist_ok=True)
@@ -183,7 +189,7 @@ class StdlTranscoder:
         clear_dir(self.__tmp_path, info, delete_platform=True, delete_self=False)
         clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=False)
 
-        if not self.__is_archive:
+        if not self.__is_archive or not is_mismatched:
             self.__accessor.clear(info)
 
         result_msg = "Complete Transcoding"
@@ -246,7 +252,14 @@ class StdlTranscoder:
         shutil.move(out_tmp_mp4_path, complete_mp4_path)
         log.debug("Move mp4", info.to_dict({"elapsed_time_sec": round(time.time() - start, 2)}))
 
-    def __check_video_size_by_cnt(self, paths: list[str]) -> tuple[bool, float]:
+    def __check_video_size_by_cnt1(self, paths: list[str]) -> tuple[bool, float]:
+        tars_size_sum_mb = len(paths) * TAR_SIZE_MB
+        tars_size_sum_b = tars_size_sum_mb * 1024 * 1024
+        tars_size_sum_gb = round(tars_size_sum_b / 1024 / 1024 / 1024, 2)
+        is_too_large = tars_size_sum_b > (self.__video_size_limit_gb * 1024 * 1024 * 1024)
+        return is_too_large, tars_size_sum_gb
+
+    def __check_video_size_by_cnt2(self, paths: list[str]) -> tuple[bool, float]:
         stems = [Path(path).stem for path in paths]
         tars_size_sum_mb = 0
         for stem in stems:
