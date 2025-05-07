@@ -81,6 +81,8 @@ class StdlTranscoder:
             log.error(message)
             raise ValueError(message)
 
+        log.info("Start Transcoding", info.to_dict())
+
         # Copy segments from remote storage
         base_dir_path, tars_dir_path = self.__copy_direct(info, src_paths)
 

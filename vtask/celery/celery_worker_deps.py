@@ -1,12 +1,18 @@
-from ..common.env import get_worker_env
+from ..common.env import get_worker_env, get_celery_env
 from ..common.fs import read_fs_config
 from ..common.notifier import create_notifier
+from ..common.status import TaskStatusRepository
 from ..service.stdl.transcoder import StdlTranscoder, create_stdl_helper
 
 
 class WorkerDependencyManager:
+    def __init__(self):
+        self.celery_env = get_celery_env()
+        self.worker_env = get_worker_env()
+        self.task_status_repository = TaskStatusRepository(self.celery_env.redis)
+
     def create_stdl_transcoder(self, src_fs_name: str) -> StdlTranscoder:
-        env = self.read_env()
+        env = self.worker_env
         fs_configs = read_fs_config(env.fs_config_path)
         notifier = create_notifier(env=env.env, conf=env.untf)
         return StdlTranscoder(
@@ -20,6 +26,3 @@ class WorkerDependencyManager:
 
     def read_env(self):
         return get_worker_env()
-
-
-deps = WorkerDependencyManager()

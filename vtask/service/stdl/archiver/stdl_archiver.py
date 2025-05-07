@@ -7,6 +7,8 @@ from pyutils import path_join, filename, log
 
 from ..schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
 from ..transcoder import StdlTranscoder, StdlLocalSegmentAccessor
+from ..transcoder.segment_accessor.stdl_segment_accessor_s3 import StdlS3SegmentAccessor
+from ....common.fs import S3Config
 from ....common.notifier import Notifier
 from ....utils import S3Client
 
@@ -23,25 +25,54 @@ VIDEO_SIZE_LIMIT_GB = 1024
 class StdlArchiver:
     def __init__(
         self,
-        s3_client: S3Client,
+        s3_conf: S3Config,
         notifier: Notifier,
         out_dir_path: str,
         tmp_dir_path: str,
+        is_archive: bool,
     ):
-        self.s3_client = s3_client
+        self.s3_conf = s3_conf
+        self.s3_client = S3Client(self.s3_conf)
         self.notifier = notifier
+        self.tmp_dir_path = tmp_dir_path
         self.out_dir_path = out_dir_path
         self.incomplete_dir_path = path_join(out_dir_path, STDL_INCOMPLETE_DIR_NAME)
-        self.trans = StdlTranscoder(
-            accessor=StdlLocalSegmentAccessor(local_incomplete_dir_path=self.incomplete_dir_path),
+        self.is_archive = is_archive
+
+    def transcode_by_s3(self, targets: list[ArchiveTarget]):
+        trans = StdlTranscoder(
+            accessor=StdlS3SegmentAccessor(
+                conf=self.s3_conf,
+                network_io_delay_ms=0,
+                network_buf_size=65536,
+            ),
             notifier=self.notifier,
-            out_dir_path=path_join(out_dir_path, "complete"),
-            tmp_path=tmp_dir_path,
-            is_archive=False,
+            out_dir_path=path_join(self.out_dir_path, "complete"),
+            tmp_path=self.tmp_dir_path,
+            is_archive=self.is_archive,
             video_size_limit_gb=VIDEO_SIZE_LIMIT_GB,
         )
 
-    def transcode(self):
+        for target in targets:
+            start_time = time.time()
+            info = StdlSegmentsInfo(
+                platform_name=target.platform,
+                channel_id=target.uid,
+                video_name=target.video_name,
+            )
+            trans.transcode(info)
+            log.info(f"End transcode video", {"elapsed_time": round(time.time() - start_time, 3)})
+        log.info("All transcoding is done")
+
+    def transcode_by_local(self):
+        trans = StdlTranscoder(
+            accessor=StdlLocalSegmentAccessor(local_incomplete_dir_path=self.incomplete_dir_path),
+            notifier=self.notifier,
+            out_dir_path=path_join(self.out_dir_path, "complete"),
+            tmp_path=self.tmp_dir_path,
+            is_archive=self.is_archive,
+            video_size_limit_gb=VIDEO_SIZE_LIMIT_GB,
+        )
         for platform_name in os.listdir(self.incomplete_dir_path):
             platform_dir_path = checked_dir_path(self.incomplete_dir_path, platform_name)
             for channel_id in os.listdir(platform_dir_path):
@@ -53,14 +84,14 @@ class StdlArchiver:
                         channel_id=channel_id,
                         video_name=video_name,
                     )
-                    self.trans.transcode(info)
+                    trans.transcode(info)
                     log.info(f"End transcode video", {video_name: video_name})
 
         message = "All transcoding is done"
         log.info(message)
         self.notifier.notify(message)
 
-    def archive(self, targets: list[ArchiveTarget]):
+    def download(self, targets: list[ArchiveTarget]):
         start_time = time.time()
 
         for target in targets:

@@ -1,13 +1,11 @@
 import os
 import sys
 
-from .stdl_archive_executor import StdlArchiveExecutor
-from .stdl_archiver import StdlArchiver, ArchiveTarget
+from .task_status_repository import TaskStatusRepository, TaskStatus
 
 
 targets = [
-    "stdl_archive_executor",
-    "stdl_archiver",
+    "task_status_repository",
 ]
 if os.getenv("PY_ENV") != "prod":
     for name in list(sys.modules.keys()):

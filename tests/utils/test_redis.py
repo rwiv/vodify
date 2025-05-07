@@ -27,7 +27,7 @@ def test_remove_by_idx():
     for value in queue.list_items():
         print(value)
 
-    queue.clear_queue()
+    queue.clear()
 
 
 def test_remove_by_value():
@@ -43,4 +43,4 @@ def test_remove_by_value():
     for value in queue.list_items():
         print(value)
 
-    queue.clear_queue()
+    queue.clear()

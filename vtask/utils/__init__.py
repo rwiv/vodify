@@ -7,7 +7,8 @@ from .s3 import S3Client
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
 from .s3_utils import disable_warning_log
 from .object_writer import ObjectWriter, LocalObjectWriter, S3ObjectWriter
-from .redis_queue import RedisQueue
+from .redis.redis_queue import RedisQueue
+from .redis.reids_map import RedisMap
 
 targets = [
     "file",
@@ -15,6 +16,7 @@ targets = [
     "s3",
     "s3_responses",
     "s3_utils",
+    "redis",
 ]
 if os.getenv("PY_ENV") != "prod":
     for name in list(sys.modules.keys()):

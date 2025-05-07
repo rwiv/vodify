@@ -2,6 +2,8 @@ import uuid
 
 from redis import Redis
 
+from .redis_errors import RedisError
+
 
 class RedisQueue:
     def __init__(self, redis: Redis, key: str):
@@ -16,7 +18,7 @@ class RedisQueue:
         if value is None:
             return None
         if not isinstance(value, bytes):
-            raise ValueError("Expected bytes data")
+            raise RedisError("Expected bytes data")
         return value.decode("utf-8")
 
     def get(self):
@@ -24,7 +26,7 @@ class RedisQueue:
         if value is None:
             return None
         if not isinstance(value, bytes):
-            raise ValueError("Expected bytes data")
+            raise RedisError("Expected bytes data")
         return value.decode("utf-8")
 
     def get_by_index(self, idx: int) -> str | None:
@@ -32,13 +34,13 @@ class RedisQueue:
         if value is None:
             return None
         if not isinstance(value, bytes):
-            raise ValueError("Expected bytes data")
+            raise RedisError("Expected bytes data")
         return value.decode("utf-8")
 
     def list_items(self) -> list[str]:
         items = self.__redis.lrange(self.__key, 0, -1)
         if not isinstance(items, list):
-            raise ValueError("Expected list data")
+            raise RedisError("Expected list data")
         return [item.decode("utf-8") for item in items]
 
     # Using index may cause concurrency issues
@@ -57,8 +59,12 @@ class RedisQueue:
     def size(self) -> int:
         result = self.__redis.llen(self.__key)
         if not isinstance(result, int):
-            raise ValueError("Expected int data")
+            raise RedisError("Expected int data")
         return result
 
-    def clear_queue(self):
-        self.__redis.delete(self.__key)
+    def clear(self):
+        result = self.__redis.delete(self.__key)
+        if not isinstance(result, int):
+            raise RedisError("Expected integer data")
+        if result != 1:
+            raise RedisError("Failed to delete key")

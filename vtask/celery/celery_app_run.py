@@ -3,12 +3,13 @@ import logging
 from pyutils import log
 
 from .celery_app import app
-from .celery_worker_deps import deps
+from .celery_worker_deps import WorkerDependencyManager
 
 
 def run():
     log.set_level(logging.DEBUG)
-    env = deps.read_env()
+    deps = WorkerDependencyManager()
+    env = deps.worker_env
     app.worker_main(
         [
             "worker",

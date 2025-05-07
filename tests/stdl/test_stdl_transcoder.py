@@ -7,6 +7,7 @@ from tests.testutils.test_utils_conf import read_test_conf
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.notifier import MockNotifier
+from vtask.service.stdl.archiver import StdlArchiver, ArchiveTarget
 from vtask.utils import S3ObjectWriter
 
 load_test_dotenv(".env-server-dev")
@@ -15,7 +16,6 @@ from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3SegmentAccessor
 from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, StdlSegmentsInfo
 
 test_conf = read_test_conf()
-
 
 # fs_name = "local"
 fs_name = "minio"
@@ -38,8 +38,10 @@ done_messages = [
 
 fs_configs = read_test_fs_configs(is_prod=False)
 fs_conf = find_test_fs_config(fs_configs, fs_name)
+s3_conf = fs_conf.s3
+assert s3_conf is not None
 # src_writer = LocalObjectWriter()
-src_writer = S3ObjectWriter(fs_conf.s3)  # type: ignore
+src_writer = S3ObjectWriter(s3_conf)
 
 local_chunks_path = test_conf.chunks_path
 base_dir_path = test_conf.local_base_dir_path
@@ -57,28 +59,51 @@ def write_test_context_files(platform: str, uid: str, video_name: str):
 
 def test_transcode():
     print()
+    assert s3_conf is not None
     log.set_level(logging.DEBUG)
     target = done_messages[0]
 
     write_test_context_files(target.platform.value, target.uid, target.video_name)
 
-    helper = StdlS3SegmentAccessor(
-        conf=fs_conf.s3,  # type: ignore
-        network_io_delay_ms=1,
-        network_buf_size=65536,
-    )
     transcoder = StdlTranscoder(
-        accessor=helper,
+        accessor=StdlS3SegmentAccessor(
+            conf=s3_conf,
+            network_io_delay_ms=1,
+            network_buf_size=65536,
+        ),
         notifier=MockNotifier(),
         out_dir_path=base_dir_path,
         tmp_path=tmp_dir_path,
         is_archive=is_archive,
         video_size_limit_gb=1024,
     )
-    info = StdlSegmentsInfo(
-        platform_name=target.platform.value,
-        channel_id=target.uid,
+    result = transcoder.transcode(
+        StdlSegmentsInfo(
+            platform_name=target.platform.value,
+            channel_id=target.uid,
+            video_name=target.video_name,
+        )
+    )
+    print(result)
+
+
+def test_transcode2():
+    print()
+    assert s3_conf is not None
+    target = done_messages[0]
+
+    write_test_context_files(target.platform.value, target.uid, target.video_name)
+
+    archiver = StdlArchiver(
+        s3_conf=s3_conf,
+        notifier=MockNotifier(),
+        out_dir_path=base_dir_path,
+        tmp_dir_path=tmp_dir_path,
+        is_archive=is_archive,
+    )
+    archive_target = ArchiveTarget(
+        platform=target.platform.value,
+        uid=target.uid,
         video_name=target.video_name,
     )
-    result = transcoder.transcode(info)
-    print(result)
+    archiver.transcode_by_s3([archive_target])

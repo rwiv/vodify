@@ -8,12 +8,12 @@ from .stdl_archiver import ArchiveTarget, StdlArchiver
 from ....common.env import BatchEnv
 from ....common.fs import S3Config
 from ....common.notifier import create_notifier
-from ....utils import S3Client
 
 
 class ArchiveMode(Enum):
-    ARCHIVE = "archive"
-    TRANSCODE = "transcode"
+    DOWNLOAD = "download"
+    TRANSCODE_LOCAL = "transcode_local"
+    TRANSCODE_S3 = "transcode_s3"
 
 
 class StdlArchiveConfig(BaseModel):
@@ -21,6 +21,7 @@ class StdlArchiveConfig(BaseModel):
     out_dir_path: str
     tmp_dir_path: str
     s3_config: S3Config
+    archive: bool
     targets: list[ArchiveTarget]
 
 
@@ -40,17 +41,20 @@ class StdlArchiveExecutor:
         self.conf = read_archive_config(conf_path)
         self.notifier = create_notifier(env=env.env, conf=env.untf)
         self.archiver = StdlArchiver(
-            s3_client=S3Client(self.conf.s3_config),
+            s3_conf=self.conf.s3_config,
             notifier=self.notifier,
             out_dir_path=self.conf.out_dir_path,
             tmp_dir_path=self.conf.tmp_dir_path,
+            is_archive=self.conf.archive,
         )
         self.targets = self.conf.targets
 
     def run(self):
-        if self.conf.mode == ArchiveMode.ARCHIVE:
-            self.archiver.archive(self.targets)
-        elif self.conf.mode == ArchiveMode.TRANSCODE:
-            self.archiver.transcode()
+        if self.conf.mode == ArchiveMode.DOWNLOAD:
+            self.archiver.download(self.targets)
+        elif self.conf.mode == ArchiveMode.TRANSCODE_LOCAL:
+            self.archiver.transcode_by_local()
+        elif self.conf.mode == ArchiveMode.TRANSCODE_S3:
+            self.archiver.transcode_by_s3(self.targets)
         else:
             raise ValueError(f"Unknown command: {self.conf.mode}")

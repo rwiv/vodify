@@ -42,4 +42,4 @@ class StdlDoneQueue:
         return self.redis_queue.empty()
 
     def clear_queue(self):
-        self.redis_queue.clear_queue()
+        self.redis_queue.clear()
