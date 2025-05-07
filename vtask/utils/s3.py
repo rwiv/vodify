@@ -1,4 +1,6 @@
+import os
 import time
+from datetime import datetime
 from io import BufferedReader
 from typing import Any
 
@@ -58,9 +60,9 @@ class S3Client:
                 break
             next_token = res.next_continuation_token
 
-    def read(self, key: str) -> StreamingBody:
+    def read(self, key: str) -> tuple[StreamingBody, datetime]:
         res = self.__s3.get_object(Bucket=self.bucket_name, Key=key)
-        return res["Body"]
+        return res["Body"], res["LastModified"]
 
     def write(self, key: str, data: bytes | BufferedReader):
         if isinstance(data, bytes):
@@ -76,10 +78,12 @@ class S3Client:
         file_path: str,
         network_io_delay_ms: int,
         network_buf_size: int,
+        sync_time: bool = False,
     ):
         for retry_cnt in range(self.retry_limit + 1):
             try:
-                with self.read(key) as body:
+                res_body, last_modified = self.read(key)
+                with res_body as body:
                     with open(file_path, "wb") as f:
                         while True:
                             chunk = body.read(network_buf_size)
@@ -88,6 +92,8 @@ class S3Client:
                             f.write(chunk)
                             if network_io_delay_ms > 0:
                                 time.sleep(network_io_delay_ms / 1000)
+                if sync_time:
+                    os.utime(file_path, (last_modified.timestamp(), last_modified.timestamp()))
                 break
             except Exception as e:
                 if retry_cnt == self.retry_limit:

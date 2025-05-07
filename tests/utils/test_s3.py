@@ -56,7 +56,7 @@ def test_stream_write():
         f.write(b"a" * 1024 * 1024 * 10)
     with open(big_file_path, "rb") as f:
         s3.write("/a/test1.txt", f)
-    body = s3.read("/a/test1.txt")
+    body, _ = s3.read("/a/test1.txt")
     s3.write("/a/test2.txt", body)  # type: ignore
     os.remove(big_file_path)
 

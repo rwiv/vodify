@@ -108,6 +108,7 @@ class StdlArchiver:
                     file_path=path_join(out_dir_path, filename(key)),
                     network_io_delay_ms=0,
                     network_buf_size=65536,
+                    sync_time=True,
                 )
                 if cnt % 10 == 0:
                     log.info(f"Archived {cnt} files")

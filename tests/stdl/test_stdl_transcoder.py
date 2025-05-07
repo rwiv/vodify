@@ -93,7 +93,6 @@ def test_transcode():
 
 
 def test_transcode_by_archiver():
-    print()
     assert s3_conf is not None
     target = done_messages[0]
 
@@ -115,3 +114,27 @@ def test_transcode_by_archiver():
         video_name=target.video_name,
     )
     archiver.transcode_by_s3([archive_target])
+
+
+def test_download():
+    assert s3_conf is not None
+    target = done_messages[0]
+
+    # is_archive = True
+    is_archive = False
+
+    # write_test_context_files(target.platform.value, target.uid, target.video_name)
+
+    archiver = StdlArchiver(
+        s3_conf=s3_conf,
+        notifier=MockNotifier(),
+        out_dir_path=base_dir_path,
+        tmp_dir_path=tmp_dir_path,
+        is_archive=is_archive,
+    )
+    archive_target = ArchiveTarget(
+        platform=target.platform.value,
+        uid=target.uid,
+        video_name=target.video_name,
+    )
+    archiver.download([archive_target])
