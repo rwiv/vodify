@@ -6,8 +6,7 @@ from pydantic import BaseModel
 from pyutils import path_join, filename, log
 
 from ..schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
-from ..transcoder import StdlTranscoder, StdlLocalSegmentAccessor
-from ..transcoder.segment_accessor.stdl_segment_accessor_s3 import StdlS3SegmentAccessor
+from ..transcoder import StdlTranscoder, StdlLocalSegmentAccessor, StdlS3SegmentAccessor
 from ....common.fs import S3Config
 from ....common.notifier import Notifier
 from ....utils import S3Client

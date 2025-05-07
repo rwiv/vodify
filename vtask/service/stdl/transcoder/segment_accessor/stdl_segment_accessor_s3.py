@@ -49,7 +49,10 @@ class StdlS3SegmentAccessor(StdlSegmentAccessor):
             keys.append(obj.key)
         return keys
 
-    def clear(self, info: StdlSegmentsInfo):
+    def clear_by_info(self, info: StdlSegmentsInfo):
         keys = self.__get_keys(info)
-        for key in keys:
+        self.clear_by_paths(keys)
+
+    def clear_by_paths(self, paths: list[str]):
+        for key in paths:
             self.__s3.delete(key)

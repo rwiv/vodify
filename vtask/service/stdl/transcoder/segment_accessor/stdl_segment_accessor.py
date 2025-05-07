@@ -21,5 +21,9 @@ class StdlSegmentAccessor(ABC):
         pass
 
     @abstractmethod
-    def clear(self, info: StdlSegmentsInfo):
+    def clear_by_info(self, info: StdlSegmentsInfo):
+        pass
+
+    @abstractmethod
+    def clear_by_paths(self, paths: list[str]):
         pass

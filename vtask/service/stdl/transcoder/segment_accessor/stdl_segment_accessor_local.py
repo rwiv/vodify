@@ -41,7 +41,7 @@ class StdlLocalSegmentAccessor(StdlSegmentAccessor):
             out_file_path = path_join(dest_dir_path, Path(src_file_path).name)
             shutil.copy(src_file_path, out_file_path)
 
-    def clear(self, info: StdlSegmentsInfo):
+    def clear_by_info(self, info: StdlSegmentsInfo):
         platform_dir_path = path_join(self.src_incomplete_dir_path, info.platform_name)
         channel_dir_path = path_join(platform_dir_path, info.channel_id)
         video_dir_path = path_join(channel_dir_path, info.video_name)
@@ -52,3 +52,9 @@ class StdlLocalSegmentAccessor(StdlSegmentAccessor):
             os.rmdir(channel_dir_path)
         if len(os.listdir(platform_dir_path)) == 0:
             os.rmdir(platform_dir_path)
+
+    def clear_by_paths(self, paths: list[str]):
+        for src_file_path in paths:
+            if not os.path.isfile(src_file_path):
+                raise ValueError(f"Source path {src_file_path} is not a file.")
+            os.remove(src_file_path)

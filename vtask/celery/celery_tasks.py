@@ -1,8 +1,7 @@
-from pyutils import log
+from pyutils import log, error_dict
 
 from .celery_app import app
 from .celery_worker_deps import WorkerDependencyManager
-from ..common.status import TaskStatus
 from ..service.stdl.schema import StdlDoneMsg, StdlDoneStatus
 
 
@@ -12,18 +11,25 @@ def stdl_done(dct: dict):
     msg = StdlDoneMsg(**dct)
 
     task_uname = f"{msg.platform}:{msg.uid}:{msg.video_name}"
-    task_status = deps.task_status_repository.get(task_uname=task_uname)
-    if task_status == TaskStatus.PENDING:
-        log.debug(f"Task already pending", {"task_uname": task_uname})
-        return
-    elif task_status == TaskStatus.SUCCESS:
-        log.debug(f"Task already completed", {"task_uname": task_uname})
-        return
+    exists_result = deps.task_status_repository.check(task_uname=task_uname)
+    if exists_result is not None:
+        return exists_result
 
-    transcoder = deps.create_stdl_transcoder(msg.fs_name)
-    if msg.status == StdlDoneStatus.COMPLETE:
-        return transcoder.transcode(msg.to_segments_info())
-    elif msg.status == StdlDoneStatus.CANCELED:
-        return transcoder.clear(msg.to_segments_info())
-    else:
-        raise ValueError(f"Unknown status: {msg.status}")
+    deps.task_status_repository.set_pending(task_uname=task_uname)
+
+    try:
+        transcoder = deps.create_stdl_transcoder(msg.fs_name)
+        if msg.status == StdlDoneStatus.COMPLETE:
+            result = transcoder.transcode(msg.to_segments_info())
+        elif msg.status == StdlDoneStatus.CANCELED:
+            result = transcoder.clear(msg.to_segments_info())
+        else:
+            raise ValueError(f"Unknown status: {msg.status}")
+        deps.task_status_repository.set_success(task_uname=task_uname)
+        return result
+    except Exception as ex:
+        err = error_dict(ex)
+        err["task_uname"] = task_uname
+        log.error(f"Failed to process task", err)
+        deps.task_status_repository.set_failure(task_uname=task_uname)
+        raise ex

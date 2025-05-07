@@ -61,7 +61,7 @@ class StdlTranscoder:
         self.__loss_inspector = TimeLossInspector(keyframe_only=False)
 
     def clear(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
-        self.__accessor.clear(info)
+        self.__accessor.clear_by_info(info)
         return _get_success_result("Clear success")
 
     def transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
@@ -191,8 +191,8 @@ class StdlTranscoder:
         clear_dir(self.__tmp_path, info, delete_platform=True, delete_self=False)
         clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=False)
 
-        if not self.__is_archive or not is_mismatched:
-            self.__accessor.clear(info)
+        if not self.__is_archive and not is_mismatched:
+            self.__accessor.clear_by_paths(src_paths)
 
         result_msg = "Complete Transcoding"
         log.info(result_msg, info.to_dict({"elapsed_time_sec": round(time.time() - transcode_start, 2)}))

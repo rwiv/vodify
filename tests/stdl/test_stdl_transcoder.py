@@ -20,9 +20,6 @@ test_conf = read_test_conf()
 # fs_name = "local"
 fs_name = "minio"
 
-# is_archive = True
-is_archive = False
-
 platform = StdlPlatformType.CHZZK
 video_name = "test_video"
 complete = StdlDoneStatus.COMPLETE
@@ -57,11 +54,19 @@ def write_test_context_files(platform: str, uid: str, video_name: str):
             src_writer.write(path_join(vid_dir_path, chunk_name), f.read())
 
 
+def test_write_files():
+    target = done_messages[0]
+    write_test_context_files(target.platform.value, target.uid, target.video_name)
+
+
 def test_transcode():
     print()
     assert s3_conf is not None
     log.set_level(logging.DEBUG)
     target = done_messages[0]
+
+    # is_archive = True
+    is_archive = False
 
     write_test_context_files(target.platform.value, target.uid, target.video_name)
 
@@ -87,10 +92,13 @@ def test_transcode():
     print(result)
 
 
-def test_transcode2():
+def test_transcode_by_archiver():
     print()
     assert s3_conf is not None
     target = done_messages[0]
+
+    # is_archive = True
+    is_archive = False
 
     write_test_context_files(target.platform.value, target.uid, target.video_name)
 
