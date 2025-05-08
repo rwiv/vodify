@@ -1,9 +1,9 @@
 import logging
 import os
+import shutil
 
-from pyutils import path_join, log
+from pyutils import path_join, log, find_project_root
 
-from tests.testutils.test_utils_conf import read_test_conf
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.notifier import MockNotifier
@@ -14,8 +14,6 @@ load_test_dotenv(".env-server-dev")
 
 from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3SegmentAccessor
 from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, StdlSegmentsInfo
-
-test_conf = read_test_conf()
 
 # fs_name = "local"
 fs = "minio"
@@ -40,9 +38,11 @@ assert s3_conf is not None
 # src_writer = LocalObjectWriter()
 src_writer = S3ObjectWriter(s3_conf)
 
-local_chunks_path = test_conf.chunks_path
-base_dir_path = test_conf.local_base_dir_path
-tmp_dir_path = test_conf.tmp_dir_path
+dev_test_dir_path = path_join(find_project_root(), "dev", "test")
+
+local_chunks_path = path_join(dev_test_dir_path, "stdl", "assets", "dup_o_miss_o_loss_o")
+base_dir_path = path_join(dev_test_dir_path, "stdl", "out")
+tmp_dir_path = path_join(dev_test_dir_path, "stdl", "tmp")
 
 
 def write_test_context_files(platform: str, uid: str, video_name: str):
@@ -65,8 +65,8 @@ def test_transcode():
     log.set_level(logging.DEBUG)
     target = done_messages[0]
 
-    # is_archive = True
-    is_archive = False
+    is_archive = True
+    # is_archive = False
 
     write_test_context_files(target.platform.value, target.uid, target.video_name)
 
@@ -89,6 +89,7 @@ def test_transcode():
             video_name=target.video_name,
         )
     )
+    shutil.rmtree(tmp_dir_path)
     print(result)
 
 
@@ -114,6 +115,7 @@ def test_transcode_by_archiver():
         video_name=target.video_name,
     )
     archiver.transcode_by_s3([archive_target])
+    shutil.rmtree(tmp_dir_path)
 
 
 def test_download():
@@ -138,3 +140,4 @@ def test_download():
         video_name=target.video_name,
     )
     archiver.download([archive_target])
+    shutil.rmtree(tmp_dir_path)

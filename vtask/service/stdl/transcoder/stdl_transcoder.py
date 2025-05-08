@@ -7,7 +7,6 @@ from enum import Enum
 from pathlib import Path
 from typing import TypedDict
 
-import yaml
 from pydantic import BaseModel, Field
 from pyutils import log, path_join
 
@@ -15,6 +14,7 @@ from .segment_accessor.stdl_segment_accessor import StdlSegmentAccessor
 from ..schema import StdlSegmentsInfo
 from ...loss import TimeLossInspector
 from ....common.notifier import Notifier
+from ....utils import write_yaml_file, ensure_dir, move_directory_not_recur
 
 
 class StdlDoneTaskStatus(Enum):
@@ -39,6 +39,10 @@ class InspectResult(BaseModel):
 
 TAR_SIZE_MB = 18
 SEG_SIZE_MB = 2
+
+TAR_DIR_NAME = "tars"
+EXTRACTED_DIR_NAME = "extracted"
+SEGMENTS_DIR_NAME = "segments"
 
 
 class StdlTranscoder:
@@ -65,57 +69,51 @@ class StdlTranscoder:
         return _get_success_result("Clear success")
 
     def transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
-        # Initialize
+        # Initialize local variables
         transcoding_start = time.time()
 
-        platform = info.platform_name
-        channel_id = info.channel_id
-        video_name = info.video_name
+        pf = info.platform_name
+        ch_id = info.channel_id
+        vid = info.video_name
 
-        is_archive = self.__is_archive
+        should_archive = self.__is_archive
         if info.should_archive:
-            is_archive = True
+            should_archive = True
 
         # Get source paths
-        src_paths = self.__accessor.get_paths(info)
+        source_paths = self.__accessor.get_paths(info)
 
         # Check video size
-        self.__check_video_size(info=info, src_paths=src_paths)
+        self.__check_video_size(info=info, source_paths=source_paths)
 
+        # Start transcoding
         log.info("Start Transcoding", info.to_dict())
+        base_dir_path = path_join(self.__tmp_path, pf, ch_id, vid)
 
         # Copy segments from remote storage
-        base_dir_path, tars_dir_path = self.__copy_direct(info, src_paths)
+        tars_dir_path = self.__copy_direct(info=info, base_dir_path=base_dir_path, source_paths=source_paths)
         _validate_tar_files(tars_dir_path)
 
         # Extract tar files
-        extract_dir_path = path_join(base_dir_path, "extract")
-        os.makedirs(extract_dir_path, exist_ok=True)
-        extract_seg_paths = _extract_tar_files(tars_dir_path=tars_dir_path, extract_dir_path=extract_dir_path)
+        extracted_dir_path = ensure_dir(path_join(base_dir_path, EXTRACTED_DIR_NAME))
+        extracted_seg_paths = _extract_tar_files(src_dir_path=tars_dir_path, out_dir_path=extracted_dir_path)
 
-        # Remove tar files
-        # TODO: implement archiving logic
-        os.rmdir(tars_dir_path)
-
-        # Get deduplicated segment paths, and Check for mismatched segments
-        dd_seg_paths, mismatched_seg_pairs = _get_deduplicated_seg_paths(extract_seg_paths=extract_seg_paths)
-        if len(mismatched_seg_pairs) > 0:
+        # Get deduplicated segment paths, and Check mismatched segments
+        dd_seg_paths, mismatch_seg_infos = _get_deduplicated_seg_paths(extract_seg_paths=extracted_seg_paths)
+        if len(mismatch_seg_infos) > 0:
             head = "Segment size mismatch"
-            for path1, path2 in mismatched_seg_pairs:
-                log.error(head, info.to_dict({"path1": path1, "path2": path2}))
-            self.__notifier.notify(
-                f"{head}: platform={platform}, channel_id={channel_id}, video_name={video_name}"
-            )
-            is_archive = True
+            log.error(head, info.to_dict())
+            msg = f"{head}: platform={pf}, channel_id={ch_id}, video_name={vid}"
+            self.__notifier.notify(msg)
+            should_archive = True
 
         # Move segment files to `segments` directory
-        seg_dir_path = path_join(base_dir_path, "segments")
-        os.makedirs(seg_dir_path, exist_ok=True)
+        seg_dir_path = ensure_dir(path_join(base_dir_path, SEGMENTS_DIR_NAME))
         for seg_path in dd_seg_paths:
-            shutil.move(seg_path, path_join(seg_dir_path, Path(seg_path).name))
+            shutil.move(src=seg_path, dst=path_join(seg_dir_path, Path(seg_path).name))
 
         # Remove duplicated segment files
-        shutil.rmtree(extract_dir_path)
+        shutil.rmtree(extracted_dir_path)
 
         # Get sorted segment paths
         sorted_segment_paths = _get_sorted_segment_paths(segments_path=seg_dir_path)
@@ -125,10 +123,19 @@ class StdlTranscoder:
         # Check for missing segments
         inspect_result = _check_missing_segments(segment_paths=sorted_segment_paths)
         if len(inspect_result.missing_segments) > 0 and info.conditionally_archive:
-            is_archive = True
+            should_archive = True
+
+        # Remove tar files
+        out_tmp_archive_dir_path = path_join(self.__out_tmp_dir_path, pf, ch_id, vid, TAR_DIR_NAME)
+        if should_archive:
+            duration = move_directory_not_recur(tars_dir_path, out_tmp_archive_dir_path)
+            attr = info.to_dict({"duration": round(duration, 2)})
+            log.debug("Move archive tar files to out tmp directory", attr)
+        else:
+            shutil.rmtree(tars_dir_path)
 
         # Merge segments
-        merged_tmp_ts_path = path_join(base_dir_path, f"{video_name}.ts")
+        merged_tmp_ts_path = path_join(base_dir_path, f"{vid}.ts")
         with open(merged_tmp_ts_path, "wb") as merged_file:
             for seg_file_path in sorted_segment_paths:
                 with open(seg_file_path, "rb") as seg_file:
@@ -137,86 +144,80 @@ class StdlTranscoder:
         os.rmdir(seg_dir_path)
 
         # Remux video from ts to mp4
-        tmp_mp4_path = path_join(base_dir_path, f"{video_name}.mp4")
+        tmp_mp4_path = path_join(base_dir_path, f"{vid}.mp4")
         _remux_video(merged_tmp_ts_path, tmp_mp4_path, info)
         os.remove(merged_tmp_ts_path)
 
-        # Move mp4 file
+        # Move result files
         self.move_mp4(info=info, tmp_mp4_path=tmp_mp4_path)
-        complete_loss_path = path_join(self.__out_dir_path, platform, channel_id, f"{video_name}.yaml")
-        with open(complete_loss_path, "w") as file:
-            file.write(yaml.dump(inspect_result.to_out_dict(), allow_unicode=True))
+        comp_chan_dir_path = path_join(self.__out_dir_path, pf, ch_id)
+        write_yaml_file(inspect_result.to_out_dict(), path_join(comp_chan_dir_path, f"{vid}.yaml"))
+        if len(mismatch_seg_infos) > 0:
+            write_yaml_file(mismatch_seg_infos, path_join(comp_chan_dir_path, f"{vid}_missmatch.yaml"))
+        if Path(out_tmp_archive_dir_path).exists():
+            comp_vid_dir_path = ensure_dir(path_join(self.__out_dir_path, pf, ch_id, vid))
+            move_directory_not_recur(out_tmp_archive_dir_path, comp_vid_dir_path)
 
-        # Clear directories
+        # Clear temporary directories
         shutil.rmtree(base_dir_path)
         clear_dir(self.__tmp_path, info, delete_platform=True, delete_self=False)
+        clear_dir(out_tmp_archive_dir_path, info, delete_platform=True, delete_self=True)
         clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=False)
 
-        if not is_archive:  # TODO: remove
-            self.__accessor.clear_by_paths(src_paths)
+        # Delete source tar files
+        self.__accessor.clear_by_paths(source_paths)
 
+        # Close
         result_msg = "Complete Transcoding"
         log.info(result_msg, info.to_dict({"duration": round(time.time() - transcoding_start, 2)}))
-        return _get_success_result(f"{result_msg}: {platform}/{channel_id}/{video_name}")
+        return _get_success_result(f"{result_msg}: platform={pf}, channel_id={ch_id}, video_name={vid}")
 
-    def __copy_direct(self, info: StdlSegmentsInfo, src_paths: list[str]) -> tuple[str, str]:
+    def __copy_direct(self, info: StdlSegmentsInfo, base_dir_path: str, source_paths: list[str]) -> str:
         start = time.time()
-        base_dir_path = path_join(self.__tmp_path, info.platform_name, info.channel_id, info.video_name)
-        tars_dir_path = path_join(base_dir_path, "tars")
-        os.makedirs(tars_dir_path, exist_ok=True)
-        self.__accessor.copy(src_paths, tars_dir_path)
+        tars_dir_path = ensure_dir(path_join(base_dir_path, TAR_DIR_NAME))
+        self.__accessor.copy(source_paths, tars_dir_path)
         log.debug("Download segments", info.to_dict({"duration": round(time.time() - start, 2)}))
-        return base_dir_path, tars_dir_path
+        return tars_dir_path
 
-    def __copy_pass_by_out_dir(self, info: StdlSegmentsInfo, src_paths: list[str]) -> tuple[str, str]:
+    def __copy_pass_by_out_dir(self, info: StdlSegmentsInfo, base_dir_path: str, src_paths: list[str]) -> str:
         dl_start = time.time()
-        out_tars_dir_path = path_join(
-            self.__out_tmp_dir_path, info.platform_name, info.channel_id, info.video_name
+        out_tmp_tars_dir_path = ensure_dir(
+            path_join(self.__out_tmp_dir_path, info.platform_name, info.channel_id, info.video_name)
         )
-        os.makedirs(out_tars_dir_path, exist_ok=True)
-        self.__accessor.copy(src_paths, out_tars_dir_path)
-        log.debug(
-            "Download segments to out directory",
-            info.to_dict({"duration": round(time.time() - dl_start, 2)}),
-        )
+        self.__accessor.copy(src_paths, out_tmp_tars_dir_path)
+        attr = info.to_dict({"duration": round(time.time() - dl_start, 2)})
+        log.debug("Download segments to out directory", attr)
 
         move_start = time.time()
-        base_dir_path = path_join(self.__tmp_path, info.platform_name, info.channel_id, info.video_name)
-        tars_dir_path = path_join(base_dir_path, "tars")
-        os.makedirs(tars_dir_path, exist_ok=True)
-        for out_tar_path in os.listdir(out_tars_dir_path):
-            out_tar_full_path = path_join(out_tars_dir_path, out_tar_path)
+        tars_dir_path = ensure_dir(path_join(base_dir_path, TAR_DIR_NAME))
+        for out_tar_path in os.listdir(out_tmp_tars_dir_path):
+            out_tar_full_path = path_join(out_tmp_tars_dir_path, out_tar_path)
             if os.path.isfile(out_tar_full_path):
-                shutil.move(out_tar_full_path, path_join(tars_dir_path, out_tar_path))
-        log.debug(
-            "Move segments to tmp directory",
-            info.to_dict({"duration": round(time.time() - move_start, 2)}),
-        )
-        clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=False)
-        return base_dir_path, tars_dir_path
+                shutil.move(src=out_tar_full_path, dst=path_join(tars_dir_path, out_tar_path))
+        attr = info.to_dict({"duration": round(time.time() - move_start, 2)})
+        log.debug("Move segments to tmp directory", attr)
+        return tars_dir_path
 
     def move_mp4(self, info: StdlSegmentsInfo, tmp_mp4_path: str):
-        platform = info.platform_name
-        channel_id = info.channel_id
-        video_name = info.video_name
+        pf = info.platform_name
+        ch_id = info.channel_id
+        vid = info.video_name
 
         # Move mp4 file to complete directory
-        out_tmp_channel_dir_path = path_join(self.__out_tmp_dir_path, platform, channel_id)
-        os.makedirs(out_tmp_channel_dir_path, exist_ok=True)
-        out_tmp_mp4_path = path_join(out_tmp_channel_dir_path, f"{video_name}.mp4")
-        complete_mp4_path = path_join(self.__out_dir_path, platform, channel_id, f"{video_name}.mp4")
+        out_tmp_vid_dir_path = ensure_dir(path_join(self.__out_tmp_dir_path, pf, ch_id, vid))
+        complete_chan_dir_path = ensure_dir(path_join(self.__out_dir_path, pf, ch_id))
+        out_tmp_mp4_path = path_join(out_tmp_vid_dir_path, f"{vid}.mp4")
+        complete_mp4_path = path_join(complete_chan_dir_path, f"{vid}.mp4")
 
-        # write 도중인 파일이 complete directory에 들어가면 안되기 때문에 먼저 incomplete directory로 이동
         start = time.time()
-        shutil.move(tmp_mp4_path, out_tmp_mp4_path)
-
+        # write 도중인 파일이 complete directory에 들어가면 안되기 때문에 먼저 incomplete directory로 이동
+        shutil.move(src=tmp_mp4_path, dst=out_tmp_mp4_path)
         # incomplete directory에 있는 파일을 complete directory로 이동
-        os.makedirs(path_join(self.__out_dir_path, platform, channel_id), exist_ok=True)
-        shutil.move(out_tmp_mp4_path, complete_mp4_path)
+        shutil.move(src=out_tmp_mp4_path, dst=complete_mp4_path)
         log.debug("Move mp4", info.to_dict({"duration": round(time.time() - start, 2)}))
 
-    def __check_video_size(self, info: StdlSegmentsInfo, src_paths: list[str]):
-        too_large, video_size_gb = _get_video_size_by_cnt(self.__video_size_limit_gb, src_paths)
+    def __check_video_size(self, info: StdlSegmentsInfo, source_paths: list[str]):
+        too_large, video_size_gb = _get_video_size_by_cnt(self.__video_size_limit_gb, source_paths)
         info.video_size_gb = video_size_gb
         if too_large:
             head = "Video size is too large"
@@ -262,28 +263,25 @@ def _validate_tar_files(tars_dir_path: str):
             raise ValueError(f"Invalid file ext: {path_join(tars_dir_path, tar_name)}")
 
 
-def _extract_tar_files(tars_dir_path: str, extract_dir_path: str) -> list[str]:
-    for tar_filename in os.listdir(tars_dir_path):
-        src_tar_path = path_join(tars_dir_path, tar_filename)
-        extracted_dir_path = path_join(extract_dir_path, Path(tar_filename).stem)
-        os.makedirs(extracted_dir_path, exist_ok=True)
-        with tarfile.open(src_tar_path, "r:*") as tar:
+def _extract_tar_files(src_dir_path: str, out_dir_path: str) -> list[str]:
+    for tar_filename in os.listdir(src_dir_path):
+        extracted_dir_path = ensure_dir(path_join(out_dir_path, Path(tar_filename).stem))
+        with tarfile.open(path_join(src_dir_path, tar_filename), "r:*") as tar:
             tar.extractall(path=extracted_dir_path)
-        os.remove(src_tar_path)
 
-    extract_seg_paths = []
-    for root, _, files in os.walk(extract_dir_path):
+    extracted_seg_paths = []
+    for root, _, files in os.walk(out_dir_path):
         for file in files:
             if not file.endswith(".ts"):
                 raise ValueError(f"Invalid file ext: {path_join(root, file)}")
-            extract_seg_paths.append(path_join(root, file))
+            extracted_seg_paths.append(path_join(root, file))
 
-    return extract_seg_paths
+    return extracted_seg_paths
 
 
 def _get_deduplicated_seg_paths(extract_seg_paths: list[str]):
-    mismatched: list[tuple[str, str]] = []
     seg_map: dict[int, str] = {}
+    mismatch_seg_infos = []
     for seg_path in extract_seg_paths:
         seg_num = int(Path(seg_path).stem)
         if seg_num not in seg_map:
@@ -292,8 +290,8 @@ def _get_deduplicated_seg_paths(extract_seg_paths: list[str]):
             prev_size = Path(seg_map[seg_num]).stat().st_size
             cur_size = Path(seg_path).stat().st_size
             if prev_size != cur_size:
-                mismatched.append((seg_map[seg_num], seg_path))
-    return list(seg_map.values()), mismatched
+                mismatch_seg_infos.append({"path1": seg_map[seg_num], "path2": seg_path})
+    return list(seg_map.values()), mismatch_seg_infos
 
 
 def _check_missing_segments(segment_paths: list[str]) -> InspectResult:
