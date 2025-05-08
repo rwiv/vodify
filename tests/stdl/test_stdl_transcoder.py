@@ -18,23 +18,23 @@ from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformT
 test_conf = read_test_conf()
 
 # fs_name = "local"
-fs_name = "minio"
+fs = "minio"
 
-platform = StdlPlatformType.CHZZK
-video_name = "test_video"
-complete = StdlDoneStatus.COMPLETE
-canceled = StdlDoneStatus.CANCELED
+pf = StdlPlatformType.CHZZK
+vid = "test_video"
+o = StdlDoneStatus.COMPLETE
+x = StdlDoneStatus.CANCELED
 
 done_messages = [
-    StdlDoneMsg(platform=platform, uid="test_uid1", videoName=video_name, fsName=fs_name, status=complete),
-    StdlDoneMsg(platform=platform, uid="test_uid2", videoName=video_name, fsName=fs_name, status=complete),
-    StdlDoneMsg(platform=platform, uid="test_uid3", videoName=video_name, fsName=fs_name, status=canceled),
-    StdlDoneMsg(platform=platform, uid="test_uid4", videoName=video_name, fsName=fs_name, status=canceled),
-    StdlDoneMsg(platform=platform, uid="test_uid5", videoName=video_name, fsName=fs_name, status=complete),
+    StdlDoneMsg(platform=pf, uid="test_uid1", videoName=vid, fsName=fs, status=o),
+    StdlDoneMsg(platform=pf, uid="test_uid2", videoName=vid, fsName=fs, status=o),
+    StdlDoneMsg(platform=pf, uid="test_uid3", videoName=vid, fsName=fs, status=x),
+    StdlDoneMsg(platform=pf, uid="test_uid4", videoName=vid, fsName=fs, status=x),
+    StdlDoneMsg(platform=pf, uid="test_uid5", videoName=vid, fsName=fs, status=o),
 ]
 
 fs_configs = read_test_fs_configs(is_prod=False)
-fs_conf = find_test_fs_config(fs_configs, fs_name)
+fs_conf = find_test_fs_config(fs_configs, fs)
 s3_conf = fs_conf.s3
 assert s3_conf is not None
 # src_writer = LocalObjectWriter()

@@ -15,7 +15,7 @@ def test_analyze_by_key_frames():
 
 
 def test_inspect_by_time():
-    vid_path = path_join(find_project_root(), "dev", "assets", "source.mp4")
+    vid_path = path_join(find_project_root(), "dev", "test", "assets", "loss", "source.mp4")
     csv_path = path_join(find_project_root(), "dev", "out", "source.csv")
     yaml_path = path_join(find_project_root(), "dev", "out", "source.yaml")
 
@@ -32,7 +32,7 @@ def test_inspect_by_time():
 
 
 def test_inspect_by_size():
-    vid_path = path_join(find_project_root(), "dev", "assets", "encoded.mp4")
+    vid_path = path_join(find_project_root(), "dev", "test", "assets", "loss", "encoded.mp4")
     csv_path = path_join(find_project_root(), "dev", "out", "encoded.csv")
     yaml_path = path_join(find_project_root(), "dev", "out", "encoded.yaml")
 

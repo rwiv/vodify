@@ -19,9 +19,11 @@ class StdlSegmentsInfo(BaseModel):
     channel_id: str
     video_name: str
     video_size_gb: float | None = None
+    conditionally_archive: bool = False
+    should_archive: bool = False
 
     def to_dict(self, extra: dict | None = None) -> dict:
-        result = self.model_dump(mode="json", by_alias=True)
+        result = self.model_dump(mode="json", by_alias=True, exclude_none=True)
         if extra:
             for k, v in extra.items():
                 result[k] = v
@@ -34,6 +36,8 @@ class StdlDoneMsg(BaseModel):
     uid: constr(min_length=1)
     video_name: constr(min_length=1) = Field(alias="videoName")
     fs_name: constr(min_length=1) = Field(alias="fsName")
+    conditionally_archive: bool = Field(alias="conditionallyArchive", default=False)
+    should_archive: bool = Field(alias="conditionallyArchive", default=False)
 
     def to_json_dict(self) -> dict:
         return self.model_dump(mode="json", by_alias=True)
@@ -47,4 +51,6 @@ class StdlDoneMsg(BaseModel):
             platform_name=self.platform.value,
             channel_id=self.uid,
             video_name=self.video_name,
+            conditionally_archive=self.conditionally_archive,
+            should_archive=self.should_archive,
         )
