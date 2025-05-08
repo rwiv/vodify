@@ -37,7 +37,7 @@ class StdlDoneMsg(BaseModel):
     video_name: constr(min_length=1) = Field(alias="videoName")
     fs_name: constr(min_length=1) = Field(alias="fsName")
     conditionally_archive: bool = Field(alias="conditionallyArchive", default=False)
-    should_archive: bool = Field(alias="conditionallyArchive", default=False)
+    should_archive: bool = Field(alias="shouldArchive", default=False)
 
     def to_json_dict(self) -> dict:
         return self.model_dump(mode="json", by_alias=True)

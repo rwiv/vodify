@@ -5,7 +5,7 @@ from vtask.service.loss import TimeLossInspector, SizeLossInspector
 
 
 def test_analyze_by_key_frames():
-    csv_path = path_join(find_project_root(), "dev", "test", "loss", "assets", "all_enc.csv")
+    csv_path = path_join(find_project_root(), "dev", "test", "assets", "loss", "all_enc.csv")
 
     inspector = TimeLossInspector(keyframe_only=False)
     result = inspector.analyze(csv_path)
@@ -15,9 +15,9 @@ def test_analyze_by_key_frames():
 
 
 def test_inspect_by_time():
-    vid_path = path_join(find_project_root(), "dev", "test", "loss", "assets", "source.mp4")
-    csv_path = path_join(find_project_root(), "dev", "test", "loss", "out", "source.csv")
-    yaml_path = path_join(find_project_root(), "dev", "test", "loss", "out", "source.yaml")
+    vid_path = path_join(find_project_root(), "dev", "test", "assets", "loss", "source.mp4")
+    csv_path = path_join(find_project_root(), "dev", "test", "out", "source.csv")
+    yaml_path = path_join(find_project_root(), "dev", "test", "out", "source.yaml")
 
     keyframe_only = True
     # keyframe_only = False
@@ -32,9 +32,9 @@ def test_inspect_by_time():
 
 
 def test_inspect_by_size():
-    vid_path = path_join(find_project_root(), "dev", "test", "loss", "assets", "encoded.mp4")
-    csv_path = path_join(find_project_root(), "dev", "test", "loss", "out", "encoded.csv")
-    yaml_path = path_join(find_project_root(), "dev", "test", "loss", "out", "encoded.yaml")
+    vid_path = path_join(find_project_root(), "dev", "test", "assets", "loss", "encoded.mp4")
+    csv_path = path_join(find_project_root(), "dev", "test", "out", "encoded.csv")
+    yaml_path = path_join(find_project_root(), "dev", "test", "out", "encoded.yaml")
 
     inspector = SizeLossInspector()
     result = inspector.inspect(vid_path, csv_path)

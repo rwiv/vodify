@@ -40,9 +40,9 @@ src_writer = S3ObjectWriter(s3_conf)
 
 dev_test_dir_path = path_join(find_project_root(), "dev", "test")
 
-local_chunks_path = path_join(dev_test_dir_path, "stdl", "assets", "dup_o_miss_o_loss_o")
-base_dir_path = path_join(dev_test_dir_path, "stdl", "out")
-tmp_dir_path = path_join(dev_test_dir_path, "stdl", "tmp")
+local_chunks_path = path_join(dev_test_dir_path, "assets", "stdl", "dup_o_miss_o_loss_o")
+base_dir_path = path_join(dev_test_dir_path, "out")
+tmp_dir_path = path_join(dev_test_dir_path, "tmp")
 
 
 def write_test_context_files(platform: str, uid: str, video_name: str):
@@ -65,8 +65,8 @@ def test_transcode():
     log.set_level(logging.DEBUG)
     target = done_messages[0]
 
-    is_archive = True
-    # is_archive = False
+    # is_archive = True
+    is_archive = False
 
     write_test_context_files(target.platform.value, target.uid, target.video_name)
 
