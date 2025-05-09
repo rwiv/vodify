@@ -76,9 +76,10 @@ class StdlTranscoder:
         ch_id = info.channel_id
         vid = info.video_name
 
-        should_archive = self.__is_archive
+        archive_source = False
+        archive_tars = self.__is_archive
         if info.should_archive:
-            should_archive = True
+            archive_tars = True
 
         # Get source paths
         source_paths = self.__accessor.get_paths(info)
@@ -105,7 +106,8 @@ class StdlTranscoder:
             log.error(head, info.to_dict())
             msg = f"{head}: platform={pf}, channel_id={ch_id}, video_name={vid}"
             self.__notifier.notify(msg)
-            should_archive = True
+            archive_source = True
+            archive_tars = True
 
         # Move segment files to `segments` directory
         seg_dir_path = ensure_dir(path_join(base_dir_path, SEGMENTS_DIR_NAME))
@@ -123,11 +125,11 @@ class StdlTranscoder:
         # Check for missing segments
         inspect_result = _check_missing_segments(segment_paths=sorted_segment_paths)
         if len(inspect_result.missing_segments) > 0 and info.conditionally_archive:
-            should_archive = True
+            archive_tars = True
 
         # Remove tar files
         out_tmp_archive_dir_path = path_join(self.__out_tmp_dir_path, pf, ch_id, vid, TAR_DIR_NAME)
-        if should_archive:
+        if archive_tars:
             duration = move_directory_not_recur(tars_dir_path, out_tmp_archive_dir_path)
             attr = info.to_dict({"duration": round(duration, 2)})
             log.debug("Move archive tar files to out tmp directory", attr)
@@ -164,8 +166,9 @@ class StdlTranscoder:
         clear_dir(out_tmp_archive_dir_path, info, delete_platform=True, delete_self=True)
         clear_dir(self.__out_tmp_dir_path, info, delete_platform=True, delete_self=False)
 
-        # Delete source tar files
-        self.__accessor.clear_by_paths(source_paths)
+        # Delete source tar files if not archive
+        if not archive_source:
+            self.__accessor.clear_by_paths(source_paths)
 
         # Close
         result_msg = "Complete Transcoding"

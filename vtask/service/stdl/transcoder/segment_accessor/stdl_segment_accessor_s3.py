@@ -38,6 +38,7 @@ class StdlS3SegmentAccessor(StdlSegmentAccessor):
                 file_path=path_join(dest_dir_path, filename(key)),
                 network_io_delay_ms=self.network_io_delay_ms,
                 network_buf_size=self.network_buf_size,
+                sync_time=True,
             )
 
     def __get_keys(self, info: StdlSegmentsInfo):
