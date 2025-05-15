@@ -36,7 +36,7 @@ class StdlDoneMsg(BaseModel):
     uid: constr(min_length=1)
     video_name: constr(min_length=1) = Field(alias="videoName")
     fs_name: constr(min_length=1) = Field(alias="fsName")
-    conditionally_archive: bool = Field(alias="conditionallyArchive", default=False)
+    cond_archive: bool = Field(alias="condArchive", default=False)
     should_archive: bool = Field(alias="shouldArchive", default=False)
 
     def to_json_dict(self) -> dict:
@@ -51,6 +51,6 @@ class StdlDoneMsg(BaseModel):
             platform_name=self.platform.value,
             channel_id=self.uid,
             video_name=self.video_name,
-            conditionally_archive=self.conditionally_archive,
+            conditionally_archive=self.cond_archive,
             should_archive=self.should_archive,
         )
