@@ -15,7 +15,7 @@ services:
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
       - "${VIDEO_OUT_DIR_PATH}:/mnt/volume/out"
-      - "${VIDEO_TMP_DIR_PATH}:/mnt/volume/tmp"
+#      - "${VIDEO_TMP_DIR_PATH}:/mnt/volume/tmp"
       - "${VIDEO_DOWNLOAD_CONFIG_PATH}:/mnt/app/video_conf.yaml"
     labels:
       app: vtask
