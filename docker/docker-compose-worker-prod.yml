@@ -41,15 +41,15 @@ services:
       options:
         labels: app,host
         tag: "container_image={{.ImageName}},container_name={{.Name}}"
-  vtask-io-01:
+  vtask-io:
     image: harbor.rwiv.xyz/private/vtask:0.4.7
-    container_name: vtask-io-01
+    container_name: vtask-io
     working_dir: /app
     entrypoint: python -m vtask worker
     restart: always
     environment:
       PY_ENV: prod
-      WORKER_NAME: io-01
+      WORKER_NAME: io
       WORKER_QUEUES: celery:vtask:io:lfs,celery:vtask:io:net
       TMP_DIR_PATH: /app/tmp
 
@@ -70,7 +70,7 @@ services:
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
 
-      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_01_CONCURRENCY}"
+      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_CONCURRENCY}"
       CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
     volumes:
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
@@ -83,44 +83,3 @@ services:
       options:
         labels: app,host
         tag: "container_image={{.ImageName}},container_name={{.Name}}"
-#  vtask-io-02:
-#    image: harbor.rwiv.xyz/private/vtask:0.4.7
-#    container_name: vtask-io-02
-#    working_dir: /app
-#    entrypoint: python -m vtask worker
-#    restart: always
-#    environment:
-#      PY_ENV: prod
-#      WORKER_NAME: io-02
-#      WORKER_QUEUES: celery:vtask:io:lfs,celery:vtask:io:net
-#      TMP_DIR_PATH: /app/tmp
-#
-#      OUT_FS_NAME: "${OUT_FS_NAME}"
-#      FS_CONFIG_PATH: /mnt/app_conf/fs_conf.yaml
-#      NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
-#      NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
-#
-#      STDL_BASE_DIR_PATH: /mnt/stdl
-#      STDL_IS_ARCHIVE: "${STDL_IS_ARCHIVE}"
-#      STDL_VIDEO_SIZE_LIMIT_GB: "${STDL_VIDEO_SIZE_LIMIT_GB}"
-#
-#      UNTF_ENDPOINT: "${UNTF_ENDPOINT}"
-#      UNTF_API_KEY: "${UNTF_API_KEY}"
-#      UNTF_TOPIC: "${UNTF_TOPIC}"
-#
-#      REDIS_HOST: "${REDIS_HOST}"
-#      REDIS_PORT: "${REDIS_PORT}"
-#      REDIS_PASSWORD: "${REDIS_PASSWORD}"
-#      CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_02_CONCURRENCY}"
-#      CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
-#    volumes:
-#      - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
-#      - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
-#    labels:
-#      app: vtask-worker
-#      host: ${HOSTNAME}
-#    logging:
-#      driver: json-file
-#      options:
-#        labels: app,host
-#        tag: "container_image={{.ImageName}},container_name={{.Name}}"

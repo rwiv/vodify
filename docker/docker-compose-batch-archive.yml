@@ -15,7 +15,7 @@ services:
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
       - "${ARCHIVE_OUT_DIR_PATH}:/mnt/volume/out"
-#      - "${ARCHIVE_TMP_DIR_PATH}:/mnt/volume/tmp"
+      - "${ARCHIVE_TMP_DIR_PATH}:/mnt/volume/tmp"
       - "${ARCHIVE_CONFIG_PATH}:/mnt/app/archive_conf.yaml"
     labels:
       app: vtask
