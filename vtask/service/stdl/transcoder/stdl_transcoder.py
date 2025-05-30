@@ -207,15 +207,16 @@ class StdlTranscoder:
         vid = info.video_name
 
         # Move mp4 file to complete directory
-        out_tmp_vid_dir_path = ensure_dir(path_join(self.__out_tmp_dir_path, pf, ch_id, vid))
-        complete_chan_dir_path = ensure_dir(path_join(self.__out_dir_path, pf, ch_id))
-        out_tmp_mp4_path = path_join(out_tmp_vid_dir_path, f"{vid}.mp4")
-        complete_mp4_path = path_join(complete_chan_dir_path, f"{vid}.mp4")
 
         start = time.time()
         # write 도중인 파일이 complete directory에 들어가면 안되기 때문에 먼저 incomplete directory로 이동
+        out_tmp_vid_dir_path = ensure_dir(path_join(self.__out_tmp_dir_path, pf, ch_id, vid))
+        out_tmp_mp4_path = path_join(out_tmp_vid_dir_path, f"{vid}.mp4")
         shutil.move(src=tmp_mp4_path, dst=out_tmp_mp4_path)
+
         # incomplete directory에 있는 파일을 complete directory로 이동
+        complete_chan_dir_path = ensure_dir(path_join(self.__out_dir_path, pf, ch_id))
+        complete_mp4_path = path_join(complete_chan_dir_path, f"{vid}.mp4")
         shutil.move(src=out_tmp_mp4_path, dst=complete_mp4_path)
         log.debug("Move mp4", info.to_dict({"duration": round(time.time() - start, 2)}))
 
