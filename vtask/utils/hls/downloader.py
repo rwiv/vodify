@@ -64,7 +64,7 @@ class HlsDownloader:
         urls = self.url_extractor.get_urls(m3u8_url, qs)
         cnt = 0
         for i, url in enumerate(urls):
-            if cnt % 10 == 0:
+            if cnt % 100 == 0:
                 log.info(f"{i}")
                 cnt = 0
             await _download_file_wrapper(url, self.headers, i, chunks_path)
@@ -75,20 +75,19 @@ class HlsDownloader:
 
 
 async def _download_file_wrapper(url: str, headers: dict[str, str] | None, num: int, out_dir_path: str):
-    for i in range(retry_count):
+    for retry_cnt in range(retry_count + 1):
         try:
             await _download_file(url, headers, num, out_dir_path)
             break
         except Exception as e:
-            print(f"HTTP Error: cnt={i}, error={e}")
+            if retry_cnt == retry_count:
+                raise Exception(f"Failed to download: num={num}, url={url}") from e
+            print(f"Download Error: retry_cnt={retry_cnt} num={num}, error={e}")
             time.sleep(1)
-    else:
-        # raise Exception(f"Failed to download, cnt={num + 1}")
-        print(f"Failed to download, cnt={num + 1}")
 
 
 async def _download_file(url: str, headers: dict[str, str] | None, num: int, out_dir_path: str):
-    file_path = path_join(out_dir_path, f"{num + 1}.ts")
+    file_path = path_join(out_dir_path, f"{num}.ts")
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url) as res:
             if res.status >= 400:

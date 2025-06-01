@@ -42,21 +42,22 @@ class SoopVideoDownloader:
             raise Exception("No chunks downloaded")
 
         if len(chunks_paths) == 1:
-            return self.__remux_video(chunks_paths[0], bj_id, title_no)
+            return self.__remux_video(chunks_paths[0], bj_id, f"{title_no}.mp4")
 
         if self.ctx.concat:
             out_mp4_path = self.__concat_video_parts(title_no, info, chunks_paths)
             return out_mp4_path
 
         result = []
-        for chunks_path in chunks_paths:
-            out_mp4_path = self.__remux_video(chunks_path, bj_id, title_no)
+        for i, chunks_path in enumerate(chunks_paths):
+            file_name = f"{title_no}_{i}.mp4"
+            out_mp4_path = self.__remux_video(chunks_path, bj_id, file_name)
             result.append(out_mp4_path)
         return result
- 
-    def __remux_video(self, chunks_path: str, bj_id: str, title_no: int):
+
+    def __remux_video(self, chunks_path: str, bj_id: str, file_name: str):
         tmp_mp4_path = remux_to_mp4(chunks_path)
-        out_mp4_path = path_join(self.out_dir_path, bj_id, f"{title_no}.mp4")
+        out_mp4_path = path_join(self.out_dir_path, bj_id, file_name)
 
         os.makedirs(path_join(self.out_dir_path, bj_id), exist_ok=True)
         shutil.move(tmp_mp4_path, out_mp4_path)
