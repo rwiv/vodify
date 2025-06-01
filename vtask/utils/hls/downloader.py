@@ -3,7 +3,7 @@ import os
 import time
 
 import aiohttp
-from pyutils import path_join, sanitize_filename, log
+from pyutils import path_join, sanitize_filename, log, error_dict
 
 from .hls_url_extractor import HlsUrlExtractor
 from .utils import sub_lists_with_idx
@@ -80,9 +80,16 @@ async def _download_file_wrapper(url: str, headers: dict[str, str] | None, num: 
             await _download_file(url, headers, num, out_dir_path)
             break
         except Exception as e:
+            err_msg = "Download Error"
+            attr = error_dict(e)
+            attr["retry_cnt"] = retry_cnt
+            attr["num"] = num
+
             if retry_cnt == retry_count:
-                raise Exception(f"Failed to download: num={num}, url={url}") from e
-            print(f"Download Error: retry_cnt={retry_cnt} num={num}, error={e}")
+                log.warn("Download Error", attr)
+                raise Exception(err_msg) from e
+
+            log.warn(err_msg, attr)
             time.sleep(1)
 
 

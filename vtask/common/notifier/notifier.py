@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import requests
 from pydantic import BaseModel
+from pyutils import log
 
 from ...common.env import UntfConfig
 
@@ -35,4 +36,4 @@ class UntfNotifier(Notifier):
 
 class MockNotifier(Notifier):
     def notify(self, message: str) -> None:
-        print(f"MockNotifier.notify({message})")
+        log.info(f"MockNotifier.notify({message})")

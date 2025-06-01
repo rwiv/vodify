@@ -12,7 +12,6 @@ class RedisMap:
         if result is None:
             return
         if not isinstance(result, bool):
-            print(result)
             raise RedisError("Expected boolean data")
         if not result:
             raise RedisError("Failed to set value")
