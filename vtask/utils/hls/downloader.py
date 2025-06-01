@@ -9,7 +9,8 @@ from .hls_url_extractor import HlsUrlExtractor
 from .utils import sub_lists_with_idx
 
 buf_size = 8192
-retry_count = 5
+base_delay_sec = 0.5
+retry_count_limit = 8
 
 
 class HttpError(Exception):
@@ -75,7 +76,7 @@ class HlsDownloader:
 
 
 async def _download_file_wrapper(url: str, headers: dict[str, str] | None, num: int, out_dir_path: str):
-    for retry_cnt in range(retry_count + 1):
+    for retry_cnt in range(retry_count_limit + 1):
         try:
             await _download_file(url, headers, num, out_dir_path)
             break
@@ -85,12 +86,13 @@ async def _download_file_wrapper(url: str, headers: dict[str, str] | None, num: 
             attr["retry_cnt"] = retry_cnt
             attr["num"] = num
 
-            if retry_cnt == retry_count:
-                log.warn("Download Error", attr)
+            if retry_cnt == retry_count_limit:
+                log.error("Download Error", attr)
                 raise Exception(err_msg) from e
 
             log.warn(err_msg, attr)
-            time.sleep(1)
+            delay = base_delay_sec * (2 ** retry_cnt)
+            time.sleep(delay)
 
 
 async def _download_file(url: str, headers: dict[str, str] | None, num: int, out_dir_path: str):
