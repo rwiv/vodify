@@ -10,7 +10,7 @@ from .soop_video_client import SoopVideoClient, SoopVideoInfo
 from ..schema.video_schema import VideoDownloadContext
 from ....utils import get_headers
 from ....utils.hls.downloader import HlsDownloader
-from ....utils.hls.merge import merge_to_mp4
+from ....utils.hls.merge import remux_to_mp4
 
 
 class SoopVideoDownloader:
@@ -27,7 +27,7 @@ class SoopVideoDownloader:
         )
         self.client = SoopVideoClient(cookie_str=self.ctx.cookie_str)
 
-    def download_one(self, title_no: int) -> str:
+    def download_one(self, title_no: int) -> str | list[str]:
         info = self.client.get_video_info(title_no)
         bj_id = info.bj_id
         chunks_paths = []
@@ -40,28 +40,39 @@ class SoopVideoDownloader:
 
         if len(chunks_paths) == 0:
             raise Exception("No chunks downloaded")
-        elif len(chunks_paths) == 1:
-            tmp_mp4_path = merge_to_mp4(chunks_paths[0])
-            out_mp4_path = path_join(self.out_dir_path, bj_id, f"{title_no}.mp4")
 
-            os.makedirs(path_join(self.out_dir_path, bj_id), exist_ok=True)
-            shutil.move(tmp_mp4_path, out_mp4_path)
+        if len(chunks_paths) == 1:
+            return self.__remux_video(chunks_paths[0], bj_id, title_no)
 
-            if len(os.listdir(path_join(self.tmp_dir_path, bj_id))) == 0:
-                os.rmdir(path_join(self.tmp_dir_path, bj_id))
-            return out_mp4_path
-        else:
-            out_mp4_path = self.merge_video_parts(title_no, info, chunks_paths)
+        if self.ctx.concat:
+            out_mp4_path = self.__concat_video_parts(title_no, info, chunks_paths)
             return out_mp4_path
 
-    def merge_video_parts(self, title_no: int, info: SoopVideoInfo, chunks_paths: list[str]) -> str:
+        result = []
+        for chunks_path in chunks_paths:
+            out_mp4_path = self.__remux_video(chunks_path, bj_id, title_no)
+            result.append(out_mp4_path)
+        return result
+ 
+    def __remux_video(self, chunks_path: str, bj_id: str, title_no: int):
+        tmp_mp4_path = remux_to_mp4(chunks_path)
+        out_mp4_path = path_join(self.out_dir_path, bj_id, f"{title_no}.mp4")
+
+        os.makedirs(path_join(self.out_dir_path, bj_id), exist_ok=True)
+        shutil.move(tmp_mp4_path, out_mp4_path)
+
+        if len(os.listdir(path_join(self.tmp_dir_path, bj_id))) == 0:
+            os.rmdir(path_join(self.tmp_dir_path, bj_id))
+        return out_mp4_path
+
+    def __concat_video_parts(self, title_no: int, info: SoopVideoInfo, chunks_paths: list[str]) -> str:
         bj_id = info.bj_id
         os.makedirs(path_join(self.out_dir_path, bj_id), exist_ok=True)
         os.makedirs(path_join(self.tmp_dir_path, bj_id), exist_ok=True)
 
         tmp_mp4_part_paths = []
         for chunks_path in chunks_paths:
-            tmp_mp4_path = merge_to_mp4(chunks_path)
+            tmp_mp4_path = remux_to_mp4(chunks_path)
             tmp_mp4_part_paths.append(tmp_mp4_path)
 
         list_file_path = path_join(self.tmp_dir_path, bj_id, "list.txt")

@@ -14,3 +14,4 @@ class VideoDownloadContext(BaseModel):
     is_parallel: bool = Field(alias="isParallel")
     parallel_num: int = Field(alias="parallelNum")
     non_parallel_delay_ms: int = Field(alias="nonParallelDelayMs")
+    concat: bool

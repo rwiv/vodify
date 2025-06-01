@@ -22,7 +22,7 @@ def convert_vid(src_path: str, out_path: str):
     subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
-def merge_to_mp4(chunks_path: str):
+def remux_to_mp4(chunks_path: str):
     # merge ts files
     merged_ts_path = merge_ts(chunks_path)
     shutil.rmtree(chunks_path)

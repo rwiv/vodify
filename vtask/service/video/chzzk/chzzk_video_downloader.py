@@ -8,7 +8,7 @@ from .chzzk_video_client import ChzzkVideoClient
 from ..schema.video_schema import VideoDownloadContext
 from ....utils import get_headers
 from ....utils.hls.downloader import HlsDownloader
-from ....utils.hls.merge import merge_to_mp4
+from ....utils.hls.merge import remux_to_mp4
 
 
 class ChzzkVideoDownloader:
@@ -43,7 +43,7 @@ class ChzzkVideoDownloader:
                 self.hls.download_non_parallel(info.m3u8_url, channel_id, file_name, info.qs)
             )
 
-        tmp_mp4_path = merge_to_mp4(chunks_path)
+        tmp_mp4_path = remux_to_mp4(chunks_path)
         out_mp4_path = path_join(self.out_dir_path, channel_id, f"{file_name}.mp4")
         os.makedirs(path_join(self.out_dir_path, channel_id), exist_ok=True)
         shutil.move(tmp_mp4_path, out_mp4_path)
