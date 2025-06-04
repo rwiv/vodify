@@ -91,7 +91,7 @@ async def _download_file_wrapper(url: str, headers: dict[str, str] | None, num: 
                 raise Exception(err_msg) from e
 
             log.warn(err_msg, attr)
-            delay = base_delay_sec * (2 ** retry_cnt)
+            delay = base_delay_sec * (2**retry_cnt)
             time.sleep(delay)
 
 

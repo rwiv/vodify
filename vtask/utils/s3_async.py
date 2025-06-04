@@ -1,0 +1,130 @@
+import asyncio
+import os
+from typing import Any
+
+import aiofiles
+from aiobotocore.session import get_session
+from botocore.exceptions import ClientError
+from pyutils import log, error_dict
+from types_aiobotocore_s3.client import S3Client
+
+from .s3_responses import S3ListResponse, S3ObjectInfoResponse
+from ..common.fs import S3Config
+
+
+class S3AsyncClient:
+    def __init__(self, conf: S3Config, retry_limit: int = 3):
+        self.conf = conf
+        self.bucket_name = conf.bucket_name
+        self.retry_limit = retry_limit
+
+    async def head(self, key: str) -> S3ObjectInfoResponse | None:
+        async with create_async_client(self.conf) as client:
+            try:
+                s3_res = await client.head_object(Bucket=self.bucket_name, Key=key)
+                return S3ObjectInfoResponse.new(s3_res, key)
+            except ClientError as e:
+                res: Any = e.response
+                if res["Error"]["Code"] == "404":
+                    return None
+                else:
+                    raise e
+
+    async def list(
+        self,
+        prefix: str,
+        delimiter: str | None = None,
+        next_token: str | None = None,
+        max_keys: int | None = None,
+    ) -> S3ListResponse:
+        async with create_async_client(self.conf) as client:
+            kwargs = {"Bucket": self.bucket_name, "Prefix": prefix}
+            if delimiter is not None:
+                kwargs["Delimiter"] = delimiter
+            if next_token is not None:
+                kwargs["ContinuationToken"] = next_token
+            if max_keys is not None:
+                kwargs["MaxKeys"] = max_keys
+
+            s3_res = await client.list_objects_v2(**kwargs)
+            return S3ListResponse.new(s3_res)
+
+    async def list_all_objects(self, prefix: str, delimiter: str | None = None):
+        next_token = None
+        while True:
+            res = await self.list(prefix, delimiter=delimiter, next_token=next_token)
+            if res.contents is not None:
+                for obj in res.contents:
+                    yield obj
+            if not res.is_truncated:
+                break
+            next_token = res.next_continuation_token
+
+    async def write(self, key: str, data: bytes):
+        async with create_async_client(self.conf) as client:
+            await client.put_object(Bucket=self.bucket_name, Key=key, Body=data)
+
+    async def write_file(
+        self,
+        key: str,
+        file_path: str,
+        network_io_delay_ms: float,
+        network_buf_size: int,
+        sync_time: bool = False,
+    ):
+        for retry_cnt in range(self.retry_limit + 1):
+            try:
+                cnt = 0
+                async with create_async_client(self.conf) as client:
+                    res = await client.get_object(Bucket=self.bucket_name, Key=key)
+                    last_modified = res["LastModified"]
+                    async with res["Body"] as body:
+                        async with aiofiles.open(file_path, "wb") as f:
+                            while True:
+                                chunk = await body.content.read(network_buf_size)
+                                if not chunk:
+                                    break
+                                if len(chunk) < network_buf_size:
+                                    cnt += 1
+                                await f.write(chunk)
+                                if network_io_delay_ms > 0:
+                                    await asyncio.sleep(network_io_delay_ms / 1000)
+                    if sync_time:
+                        os.utime(file_path, (last_modified.timestamp(), last_modified.timestamp()))
+                # print(cnt)
+                break
+            except Exception as e:
+                if retry_cnt == self.retry_limit:
+                    log.error(f"Read object retry limit exceeded", _retry_error_attr(e, retry_cnt, key))
+                    raise
+                log.warn(f"Failed to read object", _retry_error_attr(e, retry_cnt, key))
+
+    async def delete(self, key: str):
+        for retry_cnt in range(self.retry_limit + 1):
+            try:
+                async with create_async_client(self.conf) as client:
+                    await client.delete_object(Bucket=self.bucket_name, Key=key)
+                break
+            except Exception as e:
+                if retry_cnt == self.retry_limit:
+                    log.error(f"delete object retry limit exceeded", _retry_error_attr(e, retry_cnt, key))
+                    raise
+                log.warn(f"Failed to delete object", _retry_error_attr(e, retry_cnt, key))
+
+
+def create_async_client(conf: S3Config) -> S3Client:
+    client = get_session().create_client(
+        "s3",
+        endpoint_url=conf.endpoint_url,
+        aws_access_key_id=conf.access_key,
+        aws_secret_access_key=conf.secret_key,
+        verify=conf.verify,
+    )
+    return client  # type: ignore
+
+
+def _retry_error_attr(ex: Exception, retry_cnt: int, key: str) -> dict[str, Any]:
+    attr = error_dict(ex)
+    attr["cnt"] = retry_cnt
+    attr["key"] = key
+    return attr
