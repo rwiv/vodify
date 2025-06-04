@@ -1,9 +1,7 @@
-import os
 from abc import ABC, abstractmethod
-from io import BufferedReader
-from pathlib import Path
 
 import aiofiles
+from aiofiles import os as aios
 from pyutils import filename, dirpath
 
 from vtask.common.fs import FsType, S3Config
@@ -31,9 +29,9 @@ class LocalObjectWriter(ObjectWriter):
     def normalize_base_path(self, base_path: str) -> str:
         return base_path
 
-    async def write(self, path: str, data: bytes | BufferedReader) -> None:
-        if not Path(dirpath(path)).exists():
-            os.makedirs(dirpath(path), exist_ok=True)
+    async def write(self, path: str, data: bytes) -> None:
+        if not await aios.path.exists(dirpath(path)):
+            await aios.makedirs(dirpath(path), exist_ok=True)
         async with aiofiles.open(path, "wb") as f:
             await f.write(data)
 
