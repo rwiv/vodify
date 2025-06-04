@@ -74,21 +74,22 @@ class S3AsyncClient:
     ):
         for retry_cnt in range(self.retry_limit + 1):
             try:
-                cnt = 0
+                # cnt = 0
                 async with create_async_client(self.conf) as client:
                     res = await client.get_object(Bucket=self.bucket_name, Key=key)
                     last_modified = res["LastModified"]
                     async with res["Body"] as body:
                         async with aiofiles.open(file_path, "wb") as f:
-                            while True:
-                                chunk = await body.content.read(network_buf_size)
-                                if not chunk:
-                                    break
-                                if len(chunk) < network_buf_size:
-                                    cnt += 1
-                                await f.write(chunk)
-                                if network_io_delay_ms > 0:
-                                    await asyncio.sleep(network_io_delay_ms / 1000)
+                            await f.write(await body.read())
+                            # while True:
+                            #     chunk = await body.content.read(network_buf_size)
+                            #     if not chunk:
+                            #         break
+                            #     if len(chunk) < network_buf_size:
+                            #         cnt += 1
+                            #     await f.write(chunk)
+                            #     if network_io_delay_ms > 0:
+                            #         await asyncio.sleep(network_io_delay_ms / 1000)
                     if sync_time:
                         os.utime(file_path, (last_modified.timestamp(), last_modified.timestamp()))
                 # print(cnt)
