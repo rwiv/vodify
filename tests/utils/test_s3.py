@@ -26,6 +26,13 @@ s3 = S3AsyncClient(s3_conf)
 
 
 @pytest.mark.asyncio
+async def test_download():
+    key = ""
+    file_path = path_join(find_project_root(), "dev", "out.tar")
+    await s3.write_file(key, file_path, 1, 64 * 1024, True)
+
+
+@pytest.mark.asyncio
 async def test_s3():
     print()
 

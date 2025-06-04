@@ -2,6 +2,7 @@ import asyncio
 import os
 import time
 
+import aiofiles
 import aiohttp
 from pyutils import path_join, sanitize_filename, log, error_dict
 
@@ -101,9 +102,9 @@ async def _download_file(url: str, headers: dict[str, str] | None, num: int, out
         async with session.get(url) as res:
             if res.status >= 400:
                 raise HttpError(res.status)
-            with open(file_path, "wb") as file:
+            async with aiofiles.open(file_path, "wb") as file:
                 while True:
                     chunk = await res.content.read(buf_size)
                     if not chunk:
                         break
-                    file.write(chunk)
+                    await file.write(chunk)

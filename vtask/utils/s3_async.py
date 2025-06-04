@@ -1,8 +1,11 @@
 import asyncio
 import os
+from datetime import datetime
 from typing import Any
 
 import aiofiles
+import aiohttp
+from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
 from pyutils import log, error_dict
@@ -17,6 +20,7 @@ class S3AsyncClient:
         self.conf = conf
         self.bucket_name = conf.bucket_name
         self.retry_limit = retry_limit
+        self.presigned_url_expires_in = 3600
 
     async def head(self, key: str) -> S3ObjectInfoResponse | None:
         async with create_async_client(self.conf) as client:
@@ -64,7 +68,56 @@ class S3AsyncClient:
         async with create_async_client(self.conf) as client:
             await client.put_object(Bucket=self.bucket_name, Key=key, Body=data)
 
+    async def generate_presigned_url(self, key: str) -> str:
+        async with create_async_client(self.conf) as client:
+            return await client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket_name, "Key": key},
+                ExpiresIn=self.presigned_url_expires_in,
+                HttpMethod="GET",
+            )
+
     async def write_file(
+        self,
+        key: str,
+        file_path: str,
+        network_io_delay_ms: float,
+        network_buf_size: int,
+        sync_time: bool = False,
+    ):
+        url = await self.generate_presigned_url(key)
+        for retry_cnt in range(self.retry_limit + 1):
+            try:
+                cnt = 0
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as res:
+                        if res.status >= 400:
+                            raise ValueError(f"Failed to download: key={key}, status={res.status}")
+                        last_modified_str = res.headers.get("Last-Modified")
+                        if not isinstance(last_modified_str, str):
+                            raise ValueError(f"Invalid Last-Modified header: {last_modified_str}")
+                        last_modified = datetime.strptime(last_modified_str, "%a, %d %b %Y %H:%M:%S GMT")
+                        async with aiofiles.open(file_path, "wb") as file:
+                            while True:
+                                chunk = await res.content.read(network_buf_size)
+                                if not chunk:
+                                    break
+                                if len(chunk) < network_buf_size:
+                                    cnt += 1
+                                await file.write(chunk)
+                                if network_io_delay_ms > 0:
+                                    await asyncio.sleep(network_io_delay_ms / 1000)
+                        if sync_time:
+                            os.utime(file_path, (last_modified.timestamp(), last_modified.timestamp()))
+                # print(cnt)
+                break
+            except Exception as e:
+                if retry_cnt == self.retry_limit:
+                    log.error(f"Read object retry limit exceeded", _retry_error_attr(e, retry_cnt, key))
+                    raise
+                log.warn(f"Failed to read object", _retry_error_attr(e, retry_cnt, key))
+
+    async def write_file2(
         self,
         key: str,
         file_path: str,
@@ -74,22 +127,21 @@ class S3AsyncClient:
     ):
         for retry_cnt in range(self.retry_limit + 1):
             try:
-                # cnt = 0
+                cnt = 0
                 async with create_async_client(self.conf) as client:
                     res = await client.get_object(Bucket=self.bucket_name, Key=key)
                     last_modified = res["LastModified"]
                     async with res["Body"] as body:
                         async with aiofiles.open(file_path, "wb") as f:
-                            await f.write(await body.read())
-                            # while True:
-                            #     chunk = await body.content.read(network_buf_size)
-                            #     if not chunk:
-                            #         break
-                            #     if len(chunk) < network_buf_size:
-                            #         cnt += 1
-                            #     await f.write(chunk)
-                            #     if network_io_delay_ms > 0:
-                            #         await asyncio.sleep(network_io_delay_ms / 1000)
+                            while True:
+                                chunk = await body.content.read(network_buf_size)
+                                if not chunk:
+                                    break
+                                if len(chunk) < network_buf_size:
+                                    cnt += 1
+                                await f.write(chunk)
+                                if network_io_delay_ms > 0:
+                                    await asyncio.sleep(network_io_delay_ms / 1000)
                     if sync_time:
                         os.utime(file_path, (last_modified.timestamp(), last_modified.timestamp()))
                 # print(cnt)
@@ -120,6 +172,7 @@ def create_async_client(conf: S3Config) -> S3Client:
         aws_access_key_id=conf.access_key,
         aws_secret_access_key=conf.secret_key,
         verify=conf.verify,
+        config=AioConfig(signature_version="s3v4"),
     )
     return client  # type: ignore
 
