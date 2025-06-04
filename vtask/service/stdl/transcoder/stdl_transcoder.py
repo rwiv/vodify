@@ -103,16 +103,12 @@ class StdlTranscoder:
         base_dir_path = path_join(self.__tmp_path, pf, ch_id, vid)
 
         # Copy segments from remote storage
-        tars_dir_path = await self.__copy_direct(
-            info=info, base_dir_path=base_dir_path, source_paths=source_paths
-        )
+        tars_dir_path = await self.__copy_direct(info=info, base_dir_path=base_dir_path, source_paths=source_paths)
         await _validate_tar_files(tars_dir_path)
 
         # Extract tar files
         extracted_dir_path = await ensure_dir(path_join(base_dir_path, EXTRACTED_DIR_NAME))
-        extracted_seg_paths = await _extract_tar_files(
-            src_dir_path=tars_dir_path, out_dir_path=extracted_dir_path
-        )
+        extracted_seg_paths = await _extract_tar_files(src_dir_path=tars_dir_path, out_dir_path=extracted_dir_path)
 
         # Get deduplicated segment paths, and Check mismatched segments
         dd_seg_paths, mismatch_seg_infos = await _get_deduplicated_seg_paths(extracted_seg_paths)
@@ -197,9 +193,7 @@ class StdlTranscoder:
         log.debug("Download segments", info.to_dict({"duration": round(cur_duration(start), 2)}))
         return tars_dir_path
 
-    async def __copy_pass_by_out_dir(
-        self, info: StdlSegmentsInfo, base_dir_path: str, src_paths: list[str]
-    ) -> str:
+    async def __copy_pass_by_out_dir(self, info: StdlSegmentsInfo, base_dir_path: str, src_paths: list[str]) -> str:
         dl_start = asyncio.get_event_loop().time()
         out_tmp_tars_dir_path = await ensure_dir(
             path_join(self.__out_tmp_dir_path, info.platform_name, info.channel_id, info.video_name)

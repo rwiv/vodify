@@ -15,15 +15,11 @@ class StdlLocalSegmentAccessor(StdlSegmentAccessor):
         self.src_incomplete_dir_path = local_incomplete_dir_path
 
     async def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
-        dir_path = path_join(
-            self.src_incomplete_dir_path, info.platform_name, info.channel_id, info.video_name
-        )
+        dir_path = path_join(self.src_incomplete_dir_path, info.platform_name, info.channel_id, info.video_name)
         return [path_join(dir_path, file_name) for file_name in await aios.listdir(dir_path)]
 
     async def get_size_sum(self, info: StdlSegmentsInfo) -> int:
-        dir_path = path_join(
-            self.src_incomplete_dir_path, info.platform_name, info.channel_id, info.video_name
-        )
+        dir_path = path_join(self.src_incomplete_dir_path, info.platform_name, info.channel_id, info.video_name)
         if not await aios.path.exists(dir_path):
             return 0
         size_sum = 0

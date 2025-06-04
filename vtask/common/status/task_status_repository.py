@@ -46,9 +46,7 @@ class TaskStatusRepository:
     def set_pending(self, task_uname: str):
         if self.exists(task_uname=task_uname):
             raise ValueError(f"Task {task_uname} already exists")
-        self.__map.set(
-            key=self.__get_key(task_uname=task_uname), value=TaskStatus.PENDING.value, ex=self.__start_ex_sec
-        )
+        self.__map.set(key=self.__get_key(task_uname=task_uname), value=TaskStatus.PENDING.value, ex=self.__start_ex_sec)
 
     def set_success(self, task_uname: str):
         exists = self.get(task_uname=task_uname)
@@ -56,9 +54,7 @@ class TaskStatusRepository:
             raise ValueError(f"Task {task_uname} does not exist")
         if exists != TaskStatus.PENDING:
             raise ValueError(f"Task {task_uname} is not pending")
-        self.__map.set(
-            key=self.__get_key(task_uname=task_uname), value=TaskStatus.SUCCESS.value, ex=self.__done_ex_sec
-        )
+        self.__map.set(key=self.__get_key(task_uname=task_uname), value=TaskStatus.SUCCESS.value, ex=self.__done_ex_sec)
 
     def set_failure(self, task_uname: str):
         exists = self.get(task_uname=task_uname)
@@ -66,9 +62,7 @@ class TaskStatusRepository:
             raise ValueError(f"Task {task_uname} does not exist")
         if exists != TaskStatus.PENDING:
             raise ValueError(f"Task {task_uname} is not pending")
-        self.__map.set(
-            key=self.__get_key(task_uname=task_uname), value=TaskStatus.FAILURE.value, ex=self.__done_ex_sec
-        )
+        self.__map.set(key=self.__get_key(task_uname=task_uname), value=TaskStatus.FAILURE.value, ex=self.__done_ex_sec)
 
     def get(self, task_uname: str) -> TaskStatus | None:
         text = self.__map.get(key=self.__get_key(task_uname=task_uname))

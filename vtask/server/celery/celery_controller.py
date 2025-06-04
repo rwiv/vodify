@@ -20,12 +20,8 @@ class CeleryController:
         self.router.add_api_route("/workers", self.get_workers, methods=["GET"])
         self.router.add_api_route("/tasks/running", self.get_running_tasks, methods=["GET"])
         self.router.add_api_route("/tasks/prefetched", self.get_prefetched_tasks, methods=["GET"])
-        self.router.add_api_route(
-            "/tasks/queued/{queue_name}/bodies", self.get_queue_tasks_bodies, methods=["GET"]
-        )
-        self.router.add_api_route(
-            "/tasks/queued/{queue_name}/args", self.get_queue_tasks_args, methods=["GET"]
-        )
+        self.router.add_api_route("/tasks/queued/{queue_name}/bodies", self.get_queue_tasks_bodies, methods=["GET"])
+        self.router.add_api_route("/tasks/queued/{queue_name}/args", self.get_queue_tasks_args, methods=["GET"])
 
     def shutdown(self):
         shutdown_workers(app)

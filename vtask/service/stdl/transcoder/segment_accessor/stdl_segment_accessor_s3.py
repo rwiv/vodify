@@ -42,9 +42,7 @@ class StdlS3SegmentAccessor(StdlSegmentAccessor):
             )
 
     async def __get_keys(self, info: StdlSegmentsInfo):
-        chunks_path = path_join(
-            STDL_INCOMPLETE_DIR_NAME, info.platform_name, info.channel_id, info.video_name
-        )
+        chunks_path = path_join(STDL_INCOMPLETE_DIR_NAME, info.platform_name, info.channel_id, info.video_name)
         keys = []
         async for obj in self.__s3.list_all_objects(prefix=chunks_path):
             keys.append(obj.key)
