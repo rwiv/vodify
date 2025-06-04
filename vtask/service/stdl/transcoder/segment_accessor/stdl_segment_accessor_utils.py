@@ -28,7 +28,12 @@ def create_stdl_accessor(
     elif fs_conf.type == FsType.S3:
         if fs_conf.s3 is None:
             raise ValueError(f"fs_conf.s3 is None")
-        s3_client = S3AsyncClient(conf=fs_conf.s3, network_mbit=env.network_mbit, network_buf_size=env.network_buf_size)
+        s3_client = S3AsyncClient(
+            conf=fs_conf.s3,
+            min_read_timeout_sec=env.min_read_timeout_sec,
+            network_mbit=env.network_mbit,
+            network_buf_size=env.network_buf_size,
+        )
         return StdlS3SegmentAccessor(s3_client=s3_client)
     else:
         raise ValueError(f"Unknown fs_name: {fs_name}")

@@ -21,6 +21,7 @@ class S3AsyncClient:
     def __init__(
         self,
         conf: S3Config,
+        min_read_timeout_sec: float,
         network_mbit: float,
         network_buf_size: int = 8192,
         retry_limit: int = 8,
@@ -28,6 +29,7 @@ class S3AsyncClient:
         self.__conf = conf
         self.__bucket_name = conf.bucket_name
         self.__retry_limit = retry_limit
+        self.__min_read_timeout_sec = min_read_timeout_sec
         self.__network_mbit = network_mbit
         self.__network_buf_size = network_buf_size
         self.__read_timeout_threshold = 2
@@ -109,8 +111,12 @@ class S3AsyncClient:
                         if res.status >= 400:
                             raise ValueError(f"Failed to download: status={res.status}, key={key}")
                         content_length, last_modified = _parse_get_object_res_headers(res)
+
                         expected_duration = content_length / (self.__network_mbit * 1024 * 1024 / 8)
                         read_timeout_sec = expected_duration * self.__read_timeout_threshold
+                        if read_timeout_sec < self.__min_read_timeout_sec:
+                            read_timeout_sec = self.__min_read_timeout_sec
+
                         async with aiofiles.open(file_path, "wb") as file:
                             while True:
                                 async with limiter:
@@ -138,7 +144,7 @@ class S3AsyncClient:
                 if retry_cnt == self.__retry_limit:
                     log.error(f"Read object retry limit exceeded", _retry_error_attr(e, retry_cnt, key))
                     raise
-                log.warn(f"Failed to read object", _retry_error_attr(e, retry_cnt, key))
+                # log.warn(f"Failed to read object", _retry_error_attr(e, retry_cnt, key))
 
     async def delete(self, key: str):
         for retry_cnt in range(self.__retry_limit + 1):

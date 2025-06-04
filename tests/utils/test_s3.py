@@ -22,7 +22,7 @@ if fs_conf is None:
 s3_conf = fs_conf.s3
 if s3_conf is None:
     raise ValueError("S3 config not found")
-s3 = S3AsyncClient(s3_conf, network_mbit=64, retry_limit=1)
+s3 = S3AsyncClient(s3_conf, min_read_timeout_sec=10, network_mbit=64, retry_limit=1)
 
 
 @pytest.mark.asyncio
