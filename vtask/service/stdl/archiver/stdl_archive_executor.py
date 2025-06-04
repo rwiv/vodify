@@ -1,3 +1,4 @@
+import asyncio
 from enum import Enum
 from pathlib import Path
 
@@ -51,10 +52,10 @@ class StdlArchiveExecutor:
 
     def run(self):
         if self.conf.mode == ArchiveMode.DOWNLOAD:
-            self.archiver.download(self.targets)
+            asyncio.run(self.archiver.download(self.targets))
         elif self.conf.mode == ArchiveMode.TRANSCODE_LOCAL:
-            self.archiver.transcode_by_local()
+            asyncio.run(self.archiver.transcode_by_local())
         elif self.conf.mode == ArchiveMode.TRANSCODE_S3:
-            self.archiver.transcode_by_s3(self.targets)
+            asyncio.run(self.archiver.transcode_by_s3(self.targets))
         else:
             raise ValueError(f"Unknown command: {self.conf.mode}")

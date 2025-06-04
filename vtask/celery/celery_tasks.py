@@ -1,3 +1,5 @@
+import asyncio
+
 from pyutils import log, error_dict
 
 from .celery_app import app
@@ -20,9 +22,9 @@ def stdl_done(dct: dict):
     try:
         transcoder = deps.create_stdl_transcoder(msg.fs_name)
         if msg.status == StdlDoneStatus.COMPLETE:
-            result = transcoder.transcode(msg.to_segments_info())
+            result = asyncio.run(transcoder.transcode(msg.to_segments_info()))
         elif msg.status == StdlDoneStatus.CANCELED:
-            result = transcoder.clear(msg.to_segments_info())
+            result = asyncio.run(transcoder.clear(msg.to_segments_info()))
         else:
             raise ValueError(f"Unknown status: {msg.status}")
         deps.task_status_repository.set_success(task_uname=task_uname)

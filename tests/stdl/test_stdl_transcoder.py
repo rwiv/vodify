@@ -1,14 +1,15 @@
 import logging
-import os
-import shutil
 
+import aiofiles
+from aiofiles import os as aios
+import pytest
 from pyutils import path_join, log, find_project_root
 
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.notifier import MockNotifier
 from vtask.service.stdl.archiver import StdlArchiver, ArchiveTarget
-from vtask.utils import S3ObjectWriter
+from vtask.utils import S3ObjectWriter, rmtree
 
 load_test_dotenv(".env-server-dev")
 
@@ -45,21 +46,23 @@ base_dir_path = path_join(dev_test_dir_path, "out")
 tmp_dir_path = path_join(dev_test_dir_path, "tmp")
 
 
-def write_test_context_files(platform: str, uid: str, video_name: str):
+async def write_test_context_files(platform: str, uid: str, video_name: str):
     incomplete_path = src_writer.normalize_base_path(path_join(base_dir_path, "incomplete"))
     vid_dir_path = path_join(incomplete_path, platform, uid, video_name)
 
-    for chunk_name in os.listdir(local_chunks_path):
-        with open(path_join(local_chunks_path, chunk_name), mode="rb") as f:
-            src_writer.write(path_join(vid_dir_path, chunk_name), f.read())
+    for chunk_name in await aios.listdir(local_chunks_path):
+        async with aiofiles.open(path_join(local_chunks_path, chunk_name), mode="rb") as f:
+            await src_writer.write(path_join(vid_dir_path, chunk_name), await f.read())
 
 
-def test_write_files():
+@pytest.mark.asyncio
+async def test_write_files():
     target = done_messages[0]
-    write_test_context_files(target.platform.value, target.uid, target.video_name)
+    await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
 
-def test_transcode():
+@pytest.mark.asyncio
+async def test_transcode():
     print()
     assert s3_conf is not None
     log.set_level(logging.DEBUG)
@@ -68,7 +71,7 @@ def test_transcode():
     # is_archive = True
     is_archive = False
 
-    write_test_context_files(target.platform.value, target.uid, target.video_name)
+    await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
     transcoder = StdlTranscoder(
         accessor=StdlS3SegmentAccessor(
@@ -82,25 +85,26 @@ def test_transcode():
         is_archive=is_archive,
         video_size_limit_gb=1024,
     )
-    result = transcoder.transcode(
+    result = await transcoder.transcode(
         StdlSegmentsInfo(
             platform_name=target.platform.value,
             channel_id=target.uid,
             video_name=target.video_name,
         )
     )
-    shutil.rmtree(tmp_dir_path)
+    await rmtree(tmp_dir_path)
     print(result)
 
 
-def test_transcode_by_archiver():
+@pytest.mark.asyncio
+async def test_transcode_by_archiver():
     assert s3_conf is not None
     target = done_messages[0]
 
     # is_archive = True
     is_archive = False
 
-    write_test_context_files(target.platform.value, target.uid, target.video_name)
+    await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
     archiver = StdlArchiver(
         s3_conf=s3_conf,
@@ -114,11 +118,12 @@ def test_transcode_by_archiver():
         uid=target.uid,
         video_name=target.video_name,
     )
-    archiver.transcode_by_s3([archive_target])
-    shutil.rmtree(tmp_dir_path)
+    await archiver.transcode_by_s3([archive_target])
+    await rmtree(tmp_dir_path)
 
 
-def test_download():
+@pytest.mark.asyncio
+async def test_download():
     assert s3_conf is not None
     target = done_messages[0]
 
@@ -139,5 +144,5 @@ def test_download():
         uid=target.uid,
         video_name=target.video_name,
     )
-    archiver.download([archive_target])
-    shutil.rmtree(tmp_dir_path)
+    await archiver.download([archive_target])
+    await rmtree(tmp_dir_path)

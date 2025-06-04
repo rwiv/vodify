@@ -9,21 +9,21 @@ class StdlSegmentAccessor(ABC):
         self.fs_type = fs_type
 
     @abstractmethod
-    def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
+    async def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
         pass
 
     @abstractmethod
-    def get_size_sum(self, info: StdlSegmentsInfo) -> int:
+    async def get_size_sum(self, info: StdlSegmentsInfo) -> int:
         pass
 
     @abstractmethod
-    def copy(self, paths: list[str], dest_dir_path: str):
+    async def copy(self, paths: list[str], dest_dir_path: str):
         pass
 
     @abstractmethod
-    def clear_by_info(self, info: StdlSegmentsInfo):
+    async def clear_by_info(self, info: StdlSegmentsInfo):
         pass
 
     @abstractmethod
-    def clear_by_paths(self, paths: list[str]):
+    async def clear_by_paths(self, paths: list[str]):
         pass

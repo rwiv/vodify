@@ -9,7 +9,7 @@ from ..schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
 from ..transcoder import StdlTranscoder, StdlLocalSegmentAccessor, StdlS3SegmentAccessor
 from ....common.fs import S3Config
 from ....common.notifier import Notifier
-from ....utils import S3Client
+from ....utils import S3AsyncClient
 
 
 class ArchiveTarget(BaseModel):
@@ -31,14 +31,14 @@ class StdlArchiver:
         is_archive: bool,
     ):
         self.s3_conf = s3_conf
-        self.s3_client = S3Client(self.s3_conf)
+        self.s3_client = S3AsyncClient(self.s3_conf)
         self.notifier = notifier
         self.tmp_dir_path = tmp_dir_path
         self.out_dir_path = out_dir_path
         self.incomplete_dir_path = path_join(out_dir_path, STDL_INCOMPLETE_DIR_NAME)
         self.is_archive = is_archive
 
-    def transcode_by_s3(self, targets: list[ArchiveTarget]):
+    async def transcode_by_s3(self, targets: list[ArchiveTarget]):
         trans = StdlTranscoder(
             accessor=StdlS3SegmentAccessor(
                 conf=self.s3_conf,
@@ -59,11 +59,11 @@ class StdlArchiver:
                 channel_id=target.uid,
                 video_name=target.video_name,
             )
-            trans.transcode(info)
+            await trans.transcode(info)
             log.info(f"End transcode video", {"elapsed_time": round(time.time() - start_time, 3)})
         log.info("All transcoding is done")
 
-    def transcode_by_local(self):
+    async def transcode_by_local(self):
         trans = StdlTranscoder(
             accessor=StdlLocalSegmentAccessor(local_incomplete_dir_path=self.incomplete_dir_path),
             notifier=self.notifier,
@@ -83,27 +83,27 @@ class StdlArchiver:
                         channel_id=channel_id,
                         video_name=video_name,
                     )
-                    trans.transcode(info)
+                    await trans.transcode(info)
                     log.info(f"End transcode video", {video_name: video_name})
 
         message = "All transcoding is done"
         log.info(message)
         self.notifier.notify(message)
 
-    def download(self, targets: list[ArchiveTarget]):
+    async def download(self, targets: list[ArchiveTarget]):
         start_time = time.time()
 
         for target in targets:
             cnt = 0
             keys: list[str] = []
             prefix = path_join("incomplete", target.platform, target.uid, target.video_name)
-            for obj in self.s3_client.list_all_objects(prefix=prefix):
+            async for obj in self.s3_client.list_all_objects(prefix=prefix):
                 keys.append(obj.key)
 
             out_dir_path = path_join(self.out_dir_path, target.platform, target.uid, target.video_name)
             os.makedirs(out_dir_path, exist_ok=True)
             for key in keys:
-                self.s3_client.write_file(
+                await self.s3_client.write_file(
                     key=key,
                     file_path=path_join(out_dir_path, filename(key)),
                     network_io_delay_ms=0,

@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABC, abstractmethod
 
 import requests
@@ -11,6 +12,10 @@ class Notifier(ABC):
     @abstractmethod
     def notify(self, message: str):
         pass
+
+    async def notify_async(self, message: str):
+        # TODO: implement async notify
+        await asyncio.to_thread(self.notify, message)
 
 
 class UntfSendRequest(BaseModel):
