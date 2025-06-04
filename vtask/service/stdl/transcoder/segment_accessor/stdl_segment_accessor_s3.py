@@ -2,22 +2,14 @@ from pyutils import path_join, filename
 
 from .stdl_segment_accessor import StdlSegmentAccessor
 from ...schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
-from .....common.fs import S3Config, FsType
+from .....common.fs import FsType
 from .....utils import S3AsyncClient
 
 
 class StdlS3SegmentAccessor(StdlSegmentAccessor):
-    def __init__(
-        self,
-        conf: S3Config,
-        network_io_delay_ms: int,
-        network_buf_size: int,
-        retry_limit: int = 8,
-    ):
+    def __init__(self, s3_client: S3AsyncClient):
         super().__init__(FsType.S3)
-        self.__s3 = S3AsyncClient(conf, retry_limit)
-        self.network_io_delay_ms = network_io_delay_ms
-        self.network_buf_size = network_buf_size
+        self.__s3 = s3_client
 
     async def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
         return await self.__get_keys(info)
@@ -33,13 +25,8 @@ class StdlS3SegmentAccessor(StdlSegmentAccessor):
 
     async def copy(self, paths: list[str], dest_dir_path: str):
         for key in paths:
-            await self.__s3.write_file(
-                key=key,
-                file_path=path_join(dest_dir_path, filename(key)),
-                network_io_delay_ms=self.network_io_delay_ms,
-                network_buf_size=self.network_buf_size,
-                sync_time=True,
-            )
+            file_path = path_join(dest_dir_path, filename(key))
+            await self.__s3.write_file(key=key, file_path=file_path, sync_time=True)
 
     async def __get_keys(self, info: StdlSegmentsInfo):
         chunks_path = path_join(STDL_INCOMPLETE_DIR_NAME, info.platform_name, info.channel_id, info.video_name)

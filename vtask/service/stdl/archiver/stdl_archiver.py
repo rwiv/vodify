@@ -1,5 +1,5 @@
+import asyncio
 import os
-import time
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -7,9 +7,8 @@ from pyutils import path_join, filename, log
 
 from ..schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
 from ..transcoder import StdlTranscoder, StdlLocalSegmentAccessor, StdlS3SegmentAccessor
-from ....common.fs import S3Config
 from ....common.notifier import Notifier
-from ....utils import S3AsyncClient
+from ....utils import S3AsyncClient, cur_duration
 
 
 class ArchiveTarget(BaseModel):
@@ -18,49 +17,43 @@ class ArchiveTarget(BaseModel):
     video_name: str
 
 
-VIDEO_SIZE_LIMIT_GB = 1024
-
-
 class StdlArchiver:
     def __init__(
         self,
-        s3_conf: S3Config,
-        notifier: Notifier,
-        out_dir_path: str,
+        s3_client: S3AsyncClient,
         tmp_dir_path: str,
+        out_dir_path: str,
         is_archive: bool,
+        video_size_limit_gb: int,
+        notifier: Notifier,
     ):
-        self.s3_conf = s3_conf
-        self.s3_client = S3AsyncClient(self.s3_conf)
+        self.s3_client = s3_client
         self.notifier = notifier
         self.tmp_dir_path = tmp_dir_path
         self.out_dir_path = out_dir_path
         self.incomplete_dir_path = path_join(out_dir_path, STDL_INCOMPLETE_DIR_NAME)
         self.is_archive = is_archive
+        self.video_size_limit_gb = video_size_limit_gb
 
     async def transcode_by_s3(self, targets: list[ArchiveTarget]):
         trans = StdlTranscoder(
-            accessor=StdlS3SegmentAccessor(
-                conf=self.s3_conf,
-                network_io_delay_ms=0,
-                network_buf_size=65536,
-            ),
+            accessor=StdlS3SegmentAccessor(s3_client=self.s3_client),
             notifier=self.notifier,
             out_dir_path=path_join(self.out_dir_path, "complete"),
             tmp_path=self.tmp_dir_path,
             is_archive=self.is_archive,
-            video_size_limit_gb=VIDEO_SIZE_LIMIT_GB,
+            video_size_limit_gb=self.video_size_limit_gb,
         )
 
         for target in targets:
-            start_time = time.time()
+            start_time = asyncio.get_event_loop().time()
             info = StdlSegmentsInfo(
                 platform_name=target.platform,
                 channel_id=target.uid,
                 video_name=target.video_name,
             )
             await trans.transcode(info)
-            log.info(f"End transcode video", {"elapsed_time": round(time.time() - start_time, 3)})
+            log.info(f"End transcode video", {"elapsed_time": round(cur_duration(start_time), 3)})
         log.info("All transcoding is done")
 
     async def transcode_by_local(self):
@@ -70,7 +63,7 @@ class StdlArchiver:
             out_dir_path=path_join(self.out_dir_path, "complete"),
             tmp_path=self.tmp_dir_path,
             is_archive=self.is_archive,
-            video_size_limit_gb=VIDEO_SIZE_LIMIT_GB,
+            video_size_limit_gb=self.video_size_limit_gb,
         )
         for platform_name in os.listdir(self.incomplete_dir_path):
             platform_dir_path = checked_dir_path(self.incomplete_dir_path, platform_name)
@@ -91,7 +84,7 @@ class StdlArchiver:
         self.notifier.notify(message)
 
     async def download(self, targets: list[ArchiveTarget]):
-        start_time = time.time()
+        start_time = asyncio.get_event_loop().time()
 
         for target in targets:
             cnt = 0
@@ -103,19 +96,14 @@ class StdlArchiver:
             out_dir_path = path_join(self.out_dir_path, target.platform, target.uid, target.video_name)
             os.makedirs(out_dir_path, exist_ok=True)
             for key in keys:
-                await self.s3_client.write_file(
-                    key=key,
-                    file_path=path_join(out_dir_path, filename(key)),
-                    network_io_delay_ms=0,
-                    network_buf_size=65536,
-                    sync_time=True,
-                )
-                if cnt % 10 == 0:
+                file_path = path_join(out_dir_path, filename(key))
+                await self.s3_client.write_file(key=key, file_path=file_path, sync_time=True)
+                if cnt % 100 == 0:
                     log.info(f"Archived {cnt} files")
                 cnt += 1
             log.info(f"Archived {len(keys)} files")
 
-        log.info(f"Elapsed time: {time.time() - start_time:.3f} sec")
+        log.info(f"Elapsed time: {cur_duration(start_time):.3f} sec")
 
 
 def checked_dir_path(base_dir_path: str, new_path: str) -> str:

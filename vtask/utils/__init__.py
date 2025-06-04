@@ -14,6 +14,7 @@ from .file import (
     stem,
 )
 from .http import get_headers
+from .limiter import nio_limiter
 from .s3_async import S3AsyncClient
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
 from .object_writer import ObjectWriter, LocalObjectWriter, S3ObjectWriter
@@ -24,6 +25,8 @@ from .yaml import write_yaml_file
 
 targets = [
     "file",
+    "http",
+    "limiter",
     "object_writer",
     "s3_async",
     "s3_responses",

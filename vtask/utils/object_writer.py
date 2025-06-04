@@ -4,7 +4,7 @@ import aiofiles
 from aiofiles import os as aios
 from pyutils import filename, dirpath
 
-from vtask.common.fs import FsType, S3Config
+from vtask.common.fs import FsType
 from vtask.utils import S3AsyncClient
 
 
@@ -37,11 +37,9 @@ class LocalObjectWriter(ObjectWriter):
 
 
 class S3ObjectWriter(ObjectWriter):
-    def __init__(self, conf: S3Config):
+    def __init__(self, s3_client: S3AsyncClient):
         super().__init__(FsType.S3)
-        self.conf = conf
-        self.bucket_name = conf.bucket_name
-        self.__s3 = S3AsyncClient(self.conf)
+        self.__s3 = s3_client
 
     def normalize_base_path(self, base_path: str) -> str:
         return filename(base_path)

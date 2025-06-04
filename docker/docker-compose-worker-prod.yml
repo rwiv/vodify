@@ -1,6 +1,6 @@
 services:
   vtask-default:
-    image: harbor.rwiv.xyz/private/vtask:0.5.6
+    image: harbor.rwiv.xyz/private/vtask:0.5.7
     container_name: vtask-default
     working_dir: /app
     entrypoint: python -m vtask worker
@@ -13,7 +13,7 @@ services:
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
       FS_CONFIG_PATH: /mnt/app_conf/fs_conf.yaml
-      NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
+      NETWORK_MBIT: "${NETWORK_MBIT}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
 
       STDL_BASE_DIR_PATH: /mnt/stdl
@@ -42,7 +42,7 @@ services:
         labels: app,host
         tag: "container_image={{.ImageName}},container_name={{.Name}}"
   vtask-io:
-    image: harbor.rwiv.xyz/private/vtask:0.5.6
+    image: harbor.rwiv.xyz/private/vtask:0.5.7
     container_name: vtask-io
     working_dir: /app
     entrypoint: python -m vtask worker
@@ -55,7 +55,7 @@ services:
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
       FS_CONFIG_PATH: /mnt/app_conf/fs_conf.yaml
-      NETWORK_IO_DELAY_MS: "${NETWORK_IO_DELAY_MS}"
+      NETWORK_MBIT: "${NETWORK_MBIT}"
       NETWORK_BUF_SIZE: "${NETWORK_BUF_SIZE}"
       
       STDL_BASE_DIR_PATH: /mnt/stdl

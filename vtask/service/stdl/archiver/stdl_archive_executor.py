@@ -9,6 +9,7 @@ from .stdl_archiver import ArchiveTarget, StdlArchiver
 from ....common.env import BatchEnv
 from ....common.fs import S3Config
 from ....common.notifier import create_notifier
+from ....utils import S3AsyncClient
 
 
 class ArchiveMode(Enum):
@@ -23,6 +24,9 @@ class StdlArchiveConfig(BaseModel):
     tmp_dir_path: str
     s3_config: S3Config
     archive: bool
+    network_mbit: float
+    network_buf_size: int
+    video_size_limit_gb: int
     targets: list[ArchiveTarget]
 
 
@@ -42,11 +46,16 @@ class StdlArchiveExecutor:
         self.conf = read_archive_config(conf_path)
         self.notifier = create_notifier(env=env.env, conf=env.untf)
         self.archiver = StdlArchiver(
-            s3_conf=self.conf.s3_config,
-            notifier=self.notifier,
-            out_dir_path=self.conf.out_dir_path,
+            s3_client=S3AsyncClient(
+                conf=self.conf.s3_config,
+                network_mbit=self.conf.network_mbit,
+                network_buf_size=self.conf.network_buf_size,
+            ),
             tmp_dir_path=self.conf.tmp_dir_path,
+            out_dir_path=self.conf.out_dir_path,
             is_archive=self.conf.archive,
+            video_size_limit_gb=self.conf.video_size_limit_gb,
+            notifier=self.notifier,
         )
         self.targets = self.conf.targets
 

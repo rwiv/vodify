@@ -6,6 +6,7 @@ from .stdl_segment_accessor import StdlSegmentAccessor
 from ...schema import STDL_INCOMPLETE_DIR_NAME
 from .....common.env import WorkerEnv
 from .....common.fs import FsType, FsConfig
+from .....utils import S3AsyncClient
 
 
 def create_stdl_accessor(
@@ -27,10 +28,7 @@ def create_stdl_accessor(
     elif fs_conf.type == FsType.S3:
         if fs_conf.s3 is None:
             raise ValueError(f"fs_conf.s3 is None")
-        return StdlS3SegmentAccessor(
-            conf=fs_conf.s3,
-            network_io_delay_ms=env.network_io_delay_ms,
-            network_buf_size=env.network_buf_size,
-        )
+        s3_client = S3AsyncClient(conf=fs_conf.s3, network_mbit=env.network_mbit, network_buf_size=env.network_buf_size)
+        return StdlS3SegmentAccessor(s3_client=s3_client)
     else:
         raise ValueError(f"Unknown fs_name: {fs_name}")

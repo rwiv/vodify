@@ -5,7 +5,7 @@ import pytest
 from pyutils import find_project_root, path_join
 
 from vtask.common.fs import read_fs_config, FsConfig
-from vtask.utils import S3ListResponse, S3AsyncClient
+from vtask.utils import S3ListResponse, S3AsyncClient, cur_duration
 
 fs_configs = read_fs_config(path_join(find_project_root(), "dev", "fs_conf_test.yaml"))
 
@@ -22,14 +22,16 @@ if fs_conf is None:
 s3_conf = fs_conf.s3
 if s3_conf is None:
     raise ValueError("S3 config not found")
-s3 = S3AsyncClient(s3_conf)
+s3 = S3AsyncClient(s3_conf, network_mbit=64, retry_limit=1)
 
 
 @pytest.mark.asyncio
 async def test_download():
     key = ""
     file_path = path_join(find_project_root(), "dev", "out.tar")
-    await s3.write_file(key, file_path, 1, 64 * 1024, True)
+    start = asyncio.get_event_loop().time()
+    await s3.write_file(key=key, file_path=file_path, sync_time=True)
+    print(f"{cur_duration(start):.2f} seconds")
 
 
 @pytest.mark.asyncio
@@ -72,7 +74,7 @@ async def test_stream_write():
     b = b"a" * 1024 * 1024 * 10
     src_key = "/a/test1.txt"
     await s3.write(src_key, b)
-    await s3.write_file(src_key, big_file_path, 1, 64 * 1024, True)
+    await s3.write_file(key=src_key, file_path=big_file_path, sync_time=True)
     await s3.delete(src_key)
     os.remove(big_file_path)
 

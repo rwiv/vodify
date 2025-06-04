@@ -1,15 +1,15 @@
 import logging
 
 import aiofiles
-from aiofiles import os as aios
 import pytest
+from aiofiles import os as aios
 from pyutils import path_join, log, find_project_root
 
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.notifier import MockNotifier
 from vtask.service.stdl.archiver import StdlArchiver, ArchiveTarget
-from vtask.utils import S3ObjectWriter, rmtree
+from vtask.utils import S3ObjectWriter, rmtree, S3AsyncClient
 
 load_test_dotenv(".env-server-dev")
 
@@ -37,7 +37,8 @@ fs_conf = find_test_fs_config(fs_configs, fs)
 s3_conf = fs_conf.s3
 assert s3_conf is not None
 # src_writer = LocalObjectWriter()
-src_writer = S3ObjectWriter(s3_conf)
+s3_client = S3AsyncClient(conf=s3_conf, network_mbit=64, retry_limit=1)
+src_writer = S3ObjectWriter(s3_client)
 
 dev_test_dir_path = path_join(find_project_root(), "dev", "test")
 
@@ -74,11 +75,7 @@ async def test_transcode():
     await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
     transcoder = StdlTranscoder(
-        accessor=StdlS3SegmentAccessor(
-            conf=s3_conf,
-            network_io_delay_ms=1,
-            network_buf_size=65536,
-        ),
+        accessor=StdlS3SegmentAccessor(s3_client=s3_client),
         notifier=MockNotifier(),
         out_dir_path=base_dir_path,
         tmp_path=tmp_dir_path,
@@ -107,11 +104,12 @@ async def test_transcode_by_archiver():
     await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
     archiver = StdlArchiver(
-        s3_conf=s3_conf,
-        notifier=MockNotifier(),
+        s3_client=s3_client,
         out_dir_path=base_dir_path,
         tmp_dir_path=tmp_dir_path,
         is_archive=is_archive,
+        video_size_limit_gb=1024,
+        notifier=MockNotifier(),
     )
     archive_target = ArchiveTarget(
         platform=target.platform.value,
@@ -130,14 +128,15 @@ async def test_download():
     # is_archive = True
     is_archive = False
 
-    # write_test_context_files(target.platform.value, target.uid, target.video_name)
+    await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
     archiver = StdlArchiver(
-        s3_conf=s3_conf,
-        notifier=MockNotifier(),
+        s3_client=s3_client,
         out_dir_path=base_dir_path,
         tmp_dir_path=tmp_dir_path,
         is_archive=is_archive,
+        video_size_limit_gb=1024,
+        notifier=MockNotifier(),
     )
     archive_target = ArchiveTarget(
         platform=target.platform.value,

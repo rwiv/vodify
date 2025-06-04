@@ -7,21 +7,32 @@ import aiofiles
 import aiohttp
 from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
+from aiohttp import ClientResponse
 from botocore.exceptions import ClientError
 from pyutils import log, error_dict
 from types_aiobotocore_s3.client import S3Client
 
+from .limiter import nio_limiter
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
 from ..common.fs import S3Config
 
 
 class S3AsyncClient:
-    def __init__(self, conf: S3Config, retry_limit: int = 8):
+    def __init__(
+        self,
+        conf: S3Config,
+        network_mbit: float,
+        network_buf_size: int = 8192,
+        retry_limit: int = 8,
+    ):
         self.__conf = conf
         self.__bucket_name = conf.bucket_name
         self.__retry_limit = retry_limit
+        self.__network_mbit = network_mbit
+        self.__network_buf_size = network_buf_size
+        self.__read_timeout_threshold = 2
+        self.__small_chunk_count_threshold = 20
         self.__presigned_url_expires_in = 3600
-        self.__read_timeout_sec = 10
 
     async def head(self, key: str) -> S3ObjectInfoResponse | None:
         async with create_async_client(self.__conf) as client:
@@ -69,6 +80,12 @@ class S3AsyncClient:
         async with create_async_client(self.__conf) as client:
             await client.put_object(Bucket=self.__bucket_name, Key=key, Body=data)
 
+    async def read(self, key: str) -> bytes:
+        async with create_async_client(self.__conf) as client:
+            res = await client.get_object(Bucket=self.__bucket_name, Key=key)
+            async with res["Body"] as body:
+                return await body.read()
+
     async def generate_presigned_url(self, key: str) -> str:
         async with create_async_client(self.__conf) as client:
             return await client.generate_presigned_url(
@@ -78,43 +95,44 @@ class S3AsyncClient:
                 HttpMethod="GET",
             )
 
-    async def write_file(
-        self,
-        key: str,
-        file_path: str,
-        network_io_delay_ms: float,
-        network_buf_size: int,
-        sync_time: bool = False,
-    ):
+    async def write_file(self, key: str, file_path: str, sync_time: bool = False):
         url = await self.generate_presigned_url(key)
         for retry_cnt in range(self.__retry_limit + 1):
             try:
+                limiter = nio_limiter(self.__network_mbit, self.__network_buf_size)
                 loop = asyncio.get_event_loop()
                 start = loop.time()
+                w_sum = 0
                 cnt = 0
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url) as res:
                         if res.status >= 400:
-                            raise ValueError(f"Failed to download: key={key}, status={res.status}")
-                        last_modified_str = res.headers.get("Last-Modified")
-                        if not isinstance(last_modified_str, str):
-                            raise ValueError(f"Invalid Last-Modified header: {last_modified_str}")
-                        last_modified = datetime.strptime(last_modified_str, "%a, %d %b %Y %H:%M:%S GMT")
+                            raise ValueError(f"Failed to download: status={res.status}, key={key}")
+                        content_length, last_modified = _parse_get_object_res_headers(res)
+                        expected_duration = content_length / (self.__network_mbit * 1024 * 1024 / 8)
+                        read_timeout_sec = expected_duration * self.__read_timeout_threshold
                         async with aiofiles.open(file_path, "wb") as file:
                             while True:
-                                chunk = await res.content.read(network_buf_size)
-                                if not chunk:
-                                    break
-                                if loop.time() - start > self.__read_timeout_sec:
-                                    raise TimeoutError(f"Read timeout exceeded: key={key}")
-                                if len(chunk) < network_buf_size:
-                                    cnt += 1
-                                await file.write(chunk)
-                                if network_io_delay_ms > 0:
-                                    await asyncio.sleep(network_io_delay_ms / 1000)
+                                async with limiter:
+                                    chunk = await res.content.read(self.__network_buf_size)
+                                    if not chunk:
+                                        break
+
+                                    size = len(chunk)
+                                    w_sum += size
+                                    if size < self.__network_buf_size:
+                                        cnt += 1
+
+                                    duration = loop.time() - start
+                                    if duration > read_timeout_sec:
+                                        attr = f"duration={duration}, size={w_sum}, key={key}"
+                                        raise TimeoutError(f"Read timeout exceeded: {attr}")
+
+                                    await file.write(chunk)
                         if sync_time:
                             os.utime(file_path, (last_modified.timestamp(), last_modified.timestamp()))
-                # print(cnt)
+                if cnt > self.__small_chunk_count_threshold:
+                    log.warn(f"Read small chunks: cnt={cnt}")
                 break
             except Exception as e:
                 if retry_cnt == self.__retry_limit:
@@ -152,3 +170,13 @@ def _retry_error_attr(ex: Exception, retry_cnt: int, key: str) -> dict[str, Any]
     attr["cnt"] = retry_cnt
     attr["key"] = key
     return attr
+
+
+def _parse_get_object_res_headers(res: ClientResponse):
+    content_length_str = res.headers.get("Content-Length")
+    last_modified_str = res.headers.get("Last-Modified")
+    if not isinstance(last_modified_str, str) or not isinstance(content_length_str, str):
+        raise ValueError(f"Invalid headers")
+    content_length = int(content_length_str)
+    last_modified = datetime.strptime(last_modified_str, "%a, %d %b %Y %H:%M:%S GMT")
+    return content_length, last_modified
