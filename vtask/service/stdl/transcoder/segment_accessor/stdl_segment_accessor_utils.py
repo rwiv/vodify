@@ -8,7 +8,7 @@ from .....common.env import WorkerEnv
 from .....common.fs import FsType, FsConfig
 
 
-def create_stdl_helper(
+def create_stdl_accessor(
     fs_name: str,
     fs_configs: list[FsConfig],
     env: WorkerEnv,

@@ -13,7 +13,7 @@ from ..common.fs import S3Config
 
 
 class S3AsyncClient:
-    def __init__(self, conf: S3Config, retry_limit: int = 3):
+    def __init__(self, conf: S3Config, retry_limit: int = 8):
         self.conf = conf
         self.bucket_name = conf.bucket_name
         self.retry_limit = retry_limit

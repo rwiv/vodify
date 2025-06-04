@@ -12,7 +12,7 @@ class StdlS3SegmentAccessor(StdlSegmentAccessor):
         conf: S3Config,
         network_io_delay_ms: int,
         network_buf_size: int,
-        retry_limit: int = 3,
+        retry_limit: int = 8,
     ):
         super().__init__(FsType.S3)
         self.__s3 = S3AsyncClient(conf, retry_limit)
