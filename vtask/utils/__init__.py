@@ -16,7 +16,6 @@ from .file import (
 from .http import get_headers
 from .s3_async import S3AsyncClient
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
-from .s3_utils import disable_warning_log
 from .object_writer import ObjectWriter, LocalObjectWriter, S3ObjectWriter
 from .redis.redis_queue import RedisQueue
 from .redis.reids_map import RedisMap

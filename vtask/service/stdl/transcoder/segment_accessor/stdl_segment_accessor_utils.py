@@ -6,7 +6,6 @@ from .stdl_segment_accessor import StdlSegmentAccessor
 from ...schema import STDL_INCOMPLETE_DIR_NAME
 from .....common.env import WorkerEnv
 from .....common.fs import FsType, FsConfig
-from .....utils import disable_warning_log
 
 
 def create_stdl_helper(
@@ -28,8 +27,6 @@ def create_stdl_helper(
     elif fs_conf.type == FsType.S3:
         if fs_conf.s3 is None:
             raise ValueError(f"fs_conf.s3 is None")
-        if not fs_conf.s3.verify:
-            disable_warning_log()
         return StdlS3SegmentAccessor(
             conf=fs_conf.s3,
             network_io_delay_ms=env.network_io_delay_ms,
