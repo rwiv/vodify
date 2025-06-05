@@ -2,6 +2,7 @@ import os
 import sys
 
 from .file import (
+    stem,
     check_dir,
     ensure_dir,
     read_dir_recur,
@@ -11,7 +12,7 @@ from .file import (
     move_file,
     copy_file,
     open_tar,
-    stem,
+    utime,
 )
 from .http import get_headers
 from .limiter import nio_limiter

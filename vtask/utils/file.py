@@ -8,6 +8,10 @@ from aiofiles import os as aios
 from pyutils import path_join
 
 
+def stem(file_path: str) -> str:
+    return Path(file_path).stem
+
+
 def check_dir(base_path: str):
     dir_path = Path(base_path).resolve().parent
     if not dir_path.exists():
@@ -56,6 +60,10 @@ async def copy_file(src: str, dst: str):
     await asyncio.to_thread(shutil.copy, src=src, dst=dst)
 
 
+async def utime(path: str, times: tuple[float, float]):
+    await asyncio.to_thread(os.utime, path, times)
+
+
 def _open_tar(tar_path: str, out_dir_path: str):
     with tarfile.open(tar_path, "r:*") as tar:
         tar.extractall(path=out_dir_path)
@@ -63,7 +71,3 @@ def _open_tar(tar_path: str, out_dir_path: str):
 
 async def open_tar(tar_path: str, out_dir_path: str):
     await asyncio.to_thread(_open_tar, tar_path, out_dir_path)
-
-
-def stem(file_path: str) -> str:
-    return Path(file_path).stem

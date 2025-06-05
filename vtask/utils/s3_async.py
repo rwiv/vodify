@@ -1,5 +1,4 @@
 import asyncio
-import os
 from datetime import datetime
 from typing import Any
 
@@ -7,12 +6,14 @@ import aiofiles
 import aiohttp
 from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
+from aiofiles import os as aios
 from aiohttp import ClientResponse
 from botocore.exceptions import ClientError
 from pydantic import BaseModel
 from pyutils import log, error_dict
 from types_aiobotocore_s3.client import S3Client
 
+from .file import utime
 from .limiter import nio_limiter
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
 from ..common.fs import S3Config
@@ -105,12 +106,13 @@ class S3AsyncClient:
             )
 
     async def write_file(self, key: str, file_path: str, sync_time: bool = False):
-        retry_cnt = 0
+        url = await self.generate_presigned_url(key)
+
+        retry_cnt_total = 0
         wasted_sum = 0
         write_sum = 0
         small_chunk_cnt = 0
-        url = await self.generate_presigned_url(key)
-        for cur_retry_cnt in range(self.__retry_limit + 1):
+        for retry_cnt in range(self.__retry_limit + 1):
             try:
                 loop = asyncio.get_event_loop()
                 start = loop.time()
@@ -147,15 +149,18 @@ class S3AsyncClient:
 
                                     await file.write(chunk)
                         if sync_time:
-                            os.utime(file_path, (last_modified.timestamp(), last_modified.timestamp()))
+                            times = (last_modified.timestamp(), last_modified.timestamp())
+                            await utime(file_path, times)
                 break
             except Exception as e:
-                if cur_retry_cnt == self.__retry_limit:
-                    log.error(f"Read object retry limit exceeded", _retry_error_attr(e, cur_retry_cnt, key))
+                if retry_cnt == self.__retry_limit:
+                    log.error(f"Read object retry limit exceeded", _retry_error_attr(e, retry_cnt, key))
                     raise
-                retry_cnt += 1
+                await aios.remove(file_path)
+                retry_cnt_total += 1
                 wasted_sum += write_sum
-        return WriteFileResult(retry_count=retry_cnt, wasted_bytes=wasted_sum, small_chunk_count=small_chunk_cnt)
+
+        return WriteFileResult(retry_count=retry_cnt_total, wasted_bytes=wasted_sum, small_chunk_count=small_chunk_cnt)
 
     async def delete(self, key: str):
         for retry_cnt in range(self.__retry_limit + 1):

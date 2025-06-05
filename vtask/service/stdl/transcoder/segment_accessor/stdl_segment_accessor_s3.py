@@ -35,13 +35,11 @@ class StdlS3SegmentAccessor(StdlSegmentAccessor):
             wasted_bytes += ret.wasted_bytes
             retry_cnt += ret.retry_count
 
-        small_chunk_counts_filtered = [sc for sc in small_chunk_counts if sc > 0]
         attr = {
             "retry_count": retry_cnt,
             "wasted_bytes_mb": wasted_bytes / 1024 / 1024,
-            "small_chunk_count_all_avg": avg(small_chunk_counts),
-            "small_chunk_count_filtered_avg": avg(small_chunk_counts_filtered),
-            "small_chunk_count_max": max(small_chunk_counts_filtered),
+            "small_chunk_count_avg": avg(small_chunk_counts),
+            "small_chunk_count_max": max(small_chunk_counts),
         }
         log.debug("Download objects from S3", attr)
 
