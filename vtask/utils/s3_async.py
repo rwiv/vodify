@@ -9,12 +9,19 @@ from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
 from aiohttp import ClientResponse
 from botocore.exceptions import ClientError
+from pydantic import BaseModel
 from pyutils import log, error_dict
 from types_aiobotocore_s3.client import S3Client
 
 from .limiter import nio_limiter
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
 from ..common.fs import S3Config
+
+
+class WriteFileResult(BaseModel):
+    retry_count: int
+    wasted_bytes: int
+    small_chunk_count: int
 
 
 class S3AsyncClient:
@@ -32,8 +39,8 @@ class S3AsyncClient:
         self.__min_read_timeout_sec = min_read_timeout_sec
         self.__network_mbit = network_mbit
         self.__network_buf_size = network_buf_size
-        self.__read_timeout_threshold = 2
-        self.__small_chunk_count_threshold = 20
+        self.__read_timeout_threshold = 1.5
+        self.__small_chunk_count_ratio = 0.9
         self.__presigned_url_expires_in = 3600
 
     async def head(self, key: str) -> S3ObjectInfoResponse | None:
@@ -98,14 +105,18 @@ class S3AsyncClient:
             )
 
     async def write_file(self, key: str, file_path: str, sync_time: bool = False):
+        retry_cnt = 0
+        wasted_sum = 0
+        write_sum = 0
+        small_chunk_cnt = 0
         url = await self.generate_presigned_url(key)
-        for retry_cnt in range(self.__retry_limit + 1):
+        for cur_retry_cnt in range(self.__retry_limit + 1):
             try:
-                limiter = nio_limiter(self.__network_mbit, self.__network_buf_size)
                 loop = asyncio.get_event_loop()
                 start = loop.time()
-                w_sum = 0
-                cnt = 0
+                write_sum = 0
+                small_chunk_cnt = 0
+                limiter = nio_limiter(self.__network_mbit, self.__network_buf_size)
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url) as res:
                         if res.status >= 400:
@@ -125,26 +136,26 @@ class S3AsyncClient:
                                         break
 
                                     size = len(chunk)
-                                    w_sum += size
-                                    if size < self.__network_buf_size:
-                                        cnt += 1
+                                    write_sum += size
+                                    if size < self.__network_buf_size * self.__small_chunk_count_ratio:
+                                        small_chunk_cnt += 1
 
                                     duration = loop.time() - start
                                     if duration > read_timeout_sec:
-                                        attr = f"duration={duration}, size={w_sum}, key={key}"
+                                        attr = f"duration={duration}, size={write_sum}, key={key}"
                                         raise TimeoutError(f"Read timeout exceeded: {attr}")
 
                                     await file.write(chunk)
                         if sync_time:
                             os.utime(file_path, (last_modified.timestamp(), last_modified.timestamp()))
-                if cnt > self.__small_chunk_count_threshold:
-                    log.warn(f"Read small chunks: cnt={cnt}")
                 break
             except Exception as e:
-                if retry_cnt == self.__retry_limit:
-                    log.error(f"Read object retry limit exceeded", _retry_error_attr(e, retry_cnt, key))
+                if cur_retry_cnt == self.__retry_limit:
+                    log.error(f"Read object retry limit exceeded", _retry_error_attr(e, cur_retry_cnt, key))
                     raise
-                # log.warn(f"Failed to read object", _retry_error_attr(e, retry_cnt, key))
+                retry_cnt += 1
+                wasted_sum += write_sum
+        return WriteFileResult(retry_count=retry_cnt, wasted_bytes=wasted_sum, small_chunk_count=small_chunk_cnt)
 
     async def delete(self, key: str):
         for retry_cnt in range(self.__retry_limit + 1):
