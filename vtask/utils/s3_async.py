@@ -153,10 +153,13 @@ class S3AsyncClient:
                             await utime(file_path, times)
                 break
             except Exception as e:
+                if await aios.path.exists(file_path):
+                    await aios.remove(file_path)
+
                 if retry_cnt == self.__retry_limit:
                     log.error(f"Read object retry limit exceeded", _retry_error_attr(e, retry_cnt, key))
                     raise
-                await aios.remove(file_path)
+
                 retry_cnt_total += 1
                 wasted_sum += write_sum
 

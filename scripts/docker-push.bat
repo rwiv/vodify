@@ -1,5 +1,5 @@
 cd ..
-set IMG=harbor.rwiv.xyz/private/vtask:0.6.1
+set IMG=harbor.rwiv.xyz/private/vtask:0.6.2
 set DOCKERFILE=./docker/Dockerfile-prod
 
 docker rmi %IMG%

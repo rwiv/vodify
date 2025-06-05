@@ -74,7 +74,8 @@ class HlsDownloader:
                 await self.__download_file(url=url, file_path=file_path)
                 break
             except Exception as e:
-                await aios.remove(file_path)
+                if await aios.path.exists(file_path):
+                    await aios.remove(file_path)
 
                 if retry_cnt == self.__retry_limit:
                     attr = error_dict(e)
