@@ -34,12 +34,16 @@ class ChzzkVideoDownloader:
         info = self.client.get_video_info(video_no)
         channel_id = info.channel_id
         file_name = str(video_no)
-        if self.ctx.is_parallel:
-            chunks_path = asyncio.run(self.hls.download_parallel(info.m3u8_url, channel_id, file_name, info.qs))
-        else:
-            chunks_path = asyncio.run(self.hls.download_non_parallel(info.m3u8_url, channel_id, file_name, info.qs))
 
-        tmp_mp4_path = remux_to_mp4(chunks_path)
+        urls = self.hls.get_seg_urls_by_master(info.m3u8_url, info.qs)
+        segments_path = path_join(self.tmp_dir_path, channel_id, file_name)
+
+        if self.ctx.is_parallel:
+            segments_path = asyncio.run(self.hls.download_parallel(urls=urls, segments_path=segments_path))
+        else:
+            segments_path = asyncio.run(self.hls.download(urls=urls, segments_path=segments_path))
+
+        tmp_mp4_path = remux_to_mp4(segments_path)
         out_mp4_path = path_join(self.out_dir_path, channel_id, f"{file_name}.mp4")
         os.makedirs(path_join(self.out_dir_path, channel_id), exist_ok=True)
         shutil.move(tmp_mp4_path, out_mp4_path)

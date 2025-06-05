@@ -4,8 +4,13 @@ from pydantic import BaseModel
 from ....utils import get_headers
 
 
+class SoopM3u8Info(BaseModel):
+    video_master_url: str
+    audio_media_url: str
+
+
 class SoopVideoInfo(BaseModel):
-    m3u8_urls: list[str]
+    m3u8_infos: list[SoopM3u8Info]
     title: str
     bj_id: str
 
@@ -26,8 +31,9 @@ class SoopVideoClient:
             },
         ).json()
         data = res["data"]
+        m3u8_infos = [SoopM3u8Info(video_master_url=f["file"], audio_media_url=f["radio_url"]) for f in data["files"]]
         return SoopVideoInfo(
-            m3u8_urls=[f["file"] for f in data["files"]],
+            m3u8_infos=m3u8_infos,
             title=data["full_title"].strip(),
             bj_id=data["bj_id"],
         )

@@ -63,8 +63,8 @@ def parse_master_playlist(m3u8: str) -> MasterPlaylist:
     return MasterPlaylist(resolutions=resolutions)
 
 
-def parse_media_playlist(m3u8: str, base_url_param: str = "", qs: str | None = None) -> MediaPaths:
-    base_url = base_url_param.rstrip("/")
+def parse_media_playlist(m3u8: str, base_url: str = "", qs: str | None = None) -> MediaPaths:
+    base_url_new = base_url.rstrip("/")
     media_playlist = __parse_media_playlist_raw(m3u8)
     origin_paths = [media_playlist.init_section_path] if media_playlist.init_section_path else []
     origin_paths.extend(media_playlist.segment_paths)
@@ -77,7 +77,7 @@ def parse_media_playlist(m3u8: str, base_url_param: str = "", qs: str | None = N
             new_path = path
             if not new_path.startswith("/"):
                 new_path = "/" + new_path
-            segment = merge_intersected_strings(base_url, new_path)
+            segment = merge_intersected_strings(base_url_new, new_path)
             if qs is not None and qs != "":
                 segment += f"?{qs}"
             segment_paths.append(segment)

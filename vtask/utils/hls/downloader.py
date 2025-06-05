@@ -2,10 +2,12 @@ import asyncio
 
 import aiofiles
 import aiohttp
+import requests
 from aiofiles import os as aios
-from pyutils import path_join, sanitize_filename, log, error_dict
+from pyutils import path_join, log, error_dict, get_base_url
 
 from .hls_url_extractor import HlsUrlExtractor
+from .parser import parse_media_playlist
 from .utils import sub_lists_with_idx
 from .. import nio_limiter
 
@@ -33,38 +35,39 @@ class HlsDownloader:
         self.__retry_limit = 8
         self.__retry_base_delay_sec = 0.5
 
-    async def download_parallel(self, m3u8_url: str, name: str, title: str, qs: str | None = None) -> str:
-        title_name = sanitize_filename(title)
-        chunks_path = path_join(self.__tmp_dir_path, name, title_name)
-        await aios.makedirs(chunks_path, exist_ok=True)
-        urls = self.__url_extractor.get_urls(m3u8_url, qs)
-        retry_cnt_sum = 0
-        for sub in sub_lists_with_idx(urls, self.__parallel_num):
-            log.info(f"{sub[0].idx}-{sub[0].idx + self.__parallel_num}")
-            coroutines = [self.__download_file_wrapper(elem.value, elem.idx, chunks_path) for elem in sub]
-            retry_counts = await asyncio.gather(*coroutines)
-            retry_cnt_sum += sum(retry_counts)
-        if retry_cnt_sum > 0:
-            log.warn(f"Retry count: {retry_cnt_sum}, name={name}, title={title_name}")
-        return chunks_path
+    def get_seg_urls_by_master(self, m3u8_url: str, qs: str | None) -> list[str]:
+        return self.__url_extractor.get_urls(m3u8_url, qs)
 
-    async def download_non_parallel(self, m3u8_url: str, name: str, title: str, qs: str | None = None) -> str:
-        title_name = sanitize_filename(title)
-        chunks_path = path_join(self.__tmp_dir_path, name, title_name)
-        await aios.makedirs(chunks_path, exist_ok=True)
-        urls = self.__url_extractor.get_urls(m3u8_url, qs)
+    def get_seg_urls_by_media(self, m3u8_url: str, qs: str | None) -> list[str]:
+        m3u8 = requests.get(m3u8_url).text
+        return parse_media_playlist(m3u8, get_base_url(m3u8_url), qs).segment_paths
+
+    async def download(self, urls: list[str], segments_path: str) -> str:
+        await aios.makedirs(segments_path, exist_ok=True)
         retry_cnt_sum = 0
         req_cnt = 0
         for i, url in enumerate(urls):
             if req_cnt % 100 == 0:
                 log.info(f"{i}")
                 req_cnt = 0
-            retry_cnt = await self.__download_file_wrapper(url, i, chunks_path)
+            retry_cnt = await self.__download_file_wrapper(url, i, segments_path)
             req_cnt += 1
             retry_cnt_sum += retry_cnt
         if retry_cnt_sum > 0:
-            log.warn(f"Retry count: {retry_cnt_sum}, name={name}, title={title_name}")
-        return chunks_path
+            log.warn(f"Retry count: {retry_cnt_sum}, segments_path={segments_path}")
+        return segments_path
+
+    async def download_parallel(self, urls: list[str], segments_path: str) -> str:
+        await aios.makedirs(segments_path, exist_ok=True)
+        retry_cnt_sum = 0
+        for sub in sub_lists_with_idx(urls, self.__parallel_num):
+            log.info(f"{sub[0].idx}-{sub[0].idx + self.__parallel_num}")
+            coroutines = [self.__download_file_wrapper(elem.value, elem.idx, segments_path) for elem in sub]
+            retry_counts = await asyncio.gather(*coroutines)
+            retry_cnt_sum += sum(retry_counts)
+        if retry_cnt_sum > 0:
+            log.warn(f"Retry count: {retry_cnt_sum}, segments_path={segments_path}")
+        return segments_path
 
     async def __download_file_wrapper(self, url: str, num: int, out_dir_path: str) -> int:
         file_path = path_join(out_dir_path, f"{num}.ts")

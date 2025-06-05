@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pyutils import get_query_string
+from pyutils import get_query_string, path_join
 
 from .chzzk.chzzk_video_client_1 import ChzzkVideoClient1
 from .chzzk.chzzk_video_client_2 import ChzzkVideoClient2
@@ -41,12 +41,14 @@ class VideoDownloader:
             parallel_num=self.ctx.parallel_num,
             network_mbit=self.ctx.network_mbit,
         )
-        qs = get_query_string(m3u8_url)
+        qs = get_query_string(m3u8_url) or None
         title = datetime.now().strftime("%Y%m%d_%H%M%S")
+        urls = hls.get_seg_urls_by_master(m3u8_url, qs)
+        chunks_path = path_join(self.tmp_dir_path, "hls", title)
         if self.ctx.is_parallel:
-            asyncio.run(hls.download_parallel(m3u8_url, "hls", title, qs))
+            asyncio.run(hls.download_parallel(urls=urls, segments_path=chunks_path))
         else:
-            asyncio.run(hls.download_non_parallel(m3u8_url, "hls", title, qs))
+            asyncio.run(hls.download(urls=urls, segments_path=chunks_path))
 
     def __download_video_using_ytdl(self, url):
         YtdlDownloader(self.out_dir_path).download([url])
