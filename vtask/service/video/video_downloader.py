@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pyutils import get_query_string, log
+from pyutils import get_query_string
 
 from .chzzk.chzzk_video_client_1 import ChzzkVideoClient1
 from .chzzk.chzzk_video_client_2 import ChzzkVideoClient2
@@ -39,7 +39,7 @@ class VideoDownloader:
             out_dir_path=self.tmp_dir_path,
             headers=get_headers(self.ctx.cookie_str),
             parallel_num=self.ctx.parallel_num,
-            non_parallel_delay_ms=self.ctx.non_parallel_delay_ms,
+            network_mbit=self.ctx.network_mbit,
         )
         qs = get_query_string(m3u8_url)
         title = datetime.now().strftime("%Y%m%d_%H%M%S")

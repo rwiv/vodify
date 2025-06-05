@@ -22,7 +22,7 @@ class SoopVideoDownloader:
             out_dir_path=tmp_dir,
             headers=get_headers(ctx.cookie_str),
             parallel_num=ctx.parallel_num,
-            non_parallel_delay_ms=ctx.non_parallel_delay_ms,
+            network_mbit=ctx.network_mbit,
             url_extractor=SoopHlsUrlExtractor(),
         )
         self.client = SoopVideoClient(cookie_str=self.ctx.cookie_str)

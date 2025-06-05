@@ -1,17 +1,13 @@
 import asyncio
-import os
-import time
 
 import aiofiles
 import aiohttp
+from aiofiles import os as aios
 from pyutils import path_join, sanitize_filename, log, error_dict
 
 from .hls_url_extractor import HlsUrlExtractor
 from .utils import sub_lists_with_idx
-
-buf_size = 8192
-base_delay_sec = 0.5
-retry_count_limit = 8
+from .. import nio_limiter
 
 
 class HttpError(Exception):
@@ -23,88 +19,84 @@ class HlsDownloader:
     def __init__(
         self,
         out_dir_path: str,
-        headers: dict | None = None,
-        parallel_num: int = 3,
-        non_parallel_delay_ms: int = 0,
+        headers: dict | None,
+        parallel_num: int,
+        network_mbit: float,
         url_extractor=HlsUrlExtractor(),
     ):
-        self.headers = headers
-        self.tmp_dir_path = out_dir_path
-        self.parallel_num = parallel_num
-        self.non_parallel_delay_ms = non_parallel_delay_ms
-        self.url_extractor = url_extractor
+        self.__headers = headers
+        self.__tmp_dir_path = out_dir_path
+        self.__parallel_num = parallel_num
+        self.__network_mbit = network_mbit
+        self.__url_extractor = url_extractor
+        self.__buf_size = 8192
+        self.__retry_limit = 8
+        self.__retry_base_delay_sec = 0.5
 
-    async def download_parallel(
-        self,
-        m3u8_url: str,
-        name: str,
-        title: str,
-        qs: str | None = None,
-    ) -> str:
+    async def download_parallel(self, m3u8_url: str, name: str, title: str, qs: str | None = None) -> str:
         title_name = sanitize_filename(title)
-        chunks_path = path_join(self.tmp_dir_path, name, title_name)
-        urls = self.url_extractor.get_urls(m3u8_url, qs)
-        subs = sub_lists_with_idx(urls, self.parallel_num)
-        for sub in subs:
-            log.info(f"{sub[0].idx}-{sub[0].idx + self.parallel_num}")
-            os.makedirs(chunks_path, exist_ok=True)
-
-            tasks = [_download_file_wrapper(elem.value, self.headers, elem.idx, chunks_path) for elem in sub]
-            await asyncio.gather(*tasks)
+        chunks_path = path_join(self.__tmp_dir_path, name, title_name)
+        await aios.makedirs(chunks_path, exist_ok=True)
+        urls = self.__url_extractor.get_urls(m3u8_url, qs)
+        retry_cnt_sum = 0
+        for sub in sub_lists_with_idx(urls, self.__parallel_num):
+            log.info(f"{sub[0].idx}-{sub[0].idx + self.__parallel_num}")
+            coroutines = [self.__download_file_wrapper(elem.value, elem.idx, chunks_path) for elem in sub]
+            retry_counts = await asyncio.gather(*coroutines)
+            retry_cnt_sum += sum(retry_counts)
+        if retry_cnt_sum > 0:
+            log.warn(f"Retry count: {retry_cnt_sum}, name={name}, title={title_name}")
         return chunks_path
 
-    async def download_non_parallel(
-        self,
-        m3u8_url: str,
-        name: str,
-        title: str,
-        qs: str | None = None,
-    ) -> str:
+    async def download_non_parallel(self, m3u8_url: str, name: str, title: str, qs: str | None = None) -> str:
         title_name = sanitize_filename(title)
-        chunks_path = path_join(self.tmp_dir_path, name, title_name)
-        os.makedirs(chunks_path, exist_ok=True)
-        urls = self.url_extractor.get_urls(m3u8_url, qs)
-        cnt = 0
+        chunks_path = path_join(self.__tmp_dir_path, name, title_name)
+        await aios.makedirs(chunks_path, exist_ok=True)
+        urls = self.__url_extractor.get_urls(m3u8_url, qs)
+        retry_cnt_sum = 0
+        req_cnt = 0
         for i, url in enumerate(urls):
-            if cnt % 100 == 0:
+            if req_cnt % 100 == 0:
                 log.info(f"{i}")
-                cnt = 0
-            await _download_file_wrapper(url, self.headers, i, chunks_path)
-            if self.non_parallel_delay_ms > 0:
-                time.sleep(self.non_parallel_delay_ms / 1000)
-            cnt += 1
+                req_cnt = 0
+            retry_cnt = await self.__download_file_wrapper(url, i, chunks_path)
+            req_cnt += 1
+            retry_cnt_sum += retry_cnt
+        if retry_cnt_sum > 0:
+            log.warn(f"Retry count: {retry_cnt_sum}, name={name}, title={title_name}")
         return chunks_path
 
+    async def __download_file_wrapper(self, url: str, num: int, out_dir_path: str) -> int:
+        file_path = path_join(out_dir_path, f"{num}.ts")
+        retry_cnt_total = 0
+        for retry_cnt in range(self.__retry_limit + 1):
+            try:
+                await self.__download_file(url=url, file_path=file_path)
+                break
+            except Exception as e:
+                await aios.remove(file_path)
 
-async def _download_file_wrapper(url: str, headers: dict[str, str] | None, num: int, out_dir_path: str):
-    for retry_cnt in range(retry_count_limit + 1):
-        try:
-            await _download_file(url, headers, num, out_dir_path)
-            break
-        except Exception as e:
-            err_msg = "Download Error"
-            attr = error_dict(e)
-            attr["retry_cnt"] = retry_cnt
-            attr["num"] = num
+                if retry_cnt == self.__retry_limit:
+                    attr = error_dict(e)
+                    attr["retry_cnt"] = retry_cnt
+                    attr["num"] = num
+                    log.error("Download Error", attr)
+                    raise Exception("Download Error") from e
 
-            if retry_cnt == retry_count_limit:
-                log.error("Download Error", attr)
-                raise Exception(err_msg) from e
+                retry_cnt_total += 1
+                await asyncio.sleep(self.__retry_base_delay_sec * (2**retry_cnt))
+        return retry_cnt_total
 
-            log.warn(err_msg, attr)
-            delay = base_delay_sec * (2**retry_cnt)
-            time.sleep(delay)
-
-
-async def _download_file(url: str, headers: dict[str, str] | None, num: int, out_dir_path: str):
-    file_path = path_join(out_dir_path, f"{num}.ts")
-    async with aiohttp.ClientSession(headers=headers) as session:
-        async with session.get(url) as res:
-            if res.status >= 400:
-                raise HttpError(res.status)
-            async with aiofiles.open(file_path, "wb") as file:
-                while True:
-                    chunk = await res.content.read(buf_size)
-                    if not chunk:
-                        break
-                    await file.write(chunk)
+    async def __download_file(self, url: str, file_path: str):
+        limiter = nio_limiter(self.__network_mbit, self.__buf_size)
+        async with aiohttp.ClientSession(headers=self.__headers) as session:
+            async with session.get(url) as res:
+                if res.status >= 400:
+                    raise HttpError(res.status)
+                async with aiofiles.open(file_path, "wb") as file:
+                    while True:
+                        async with limiter:
+                            chunk = await res.content.read(self.__buf_size)
+                            if not chunk:
+                                break
+                            await file.write(chunk)

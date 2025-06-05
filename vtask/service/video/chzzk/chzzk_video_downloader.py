@@ -27,7 +27,7 @@ class ChzzkVideoDownloader:
             out_dir_path=tmp_dir_path,
             headers=get_headers(ctx.cookie_str),
             parallel_num=ctx.parallel_num,
-            non_parallel_delay_ms=ctx.non_parallel_delay_ms,
+            network_mbit=ctx.network_mbit,
         )
 
     def download_one(self, video_no: int) -> str:
