@@ -6,7 +6,7 @@ from ..common.env import get_batch_env
 from ..common.env.env_batch import BatchCommand
 from ..service.loss import LossExecutor
 from ..service.stdl.archiver import StdlArchiveExecutor
-from ..service.video import VideoDownloadExecutor
+from ..video import VideoDownloadExecutor
 
 
 class BatchRunner:

@@ -1,4 +1,4 @@
-from vtask.service.video import ChzzkVideoClient1
+from vtask.video import ChzzkVideoClient1
 
 
 def test_get_info():

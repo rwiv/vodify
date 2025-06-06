@@ -6,9 +6,9 @@ from pyutils import path_join
 
 from .chzzk_video_client import ChzzkVideoClient
 from ..schema.video_schema import VideoDownloadContext
-from ....utils import get_headers
-from ....utils.hls.downloader import HlsDownloader
-from ....utils.hls.merge import remux_to_mp4
+from ...utils import get_headers
+from ...utils.hls.downloader import HlsDownloader
+from ...utils.hls.merge import remux_to_mp4
 
 
 class ChzzkVideoDownloader:

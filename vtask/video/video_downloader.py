@@ -10,8 +10,8 @@ from .chzzk.chzzk_video_downloader import ChzzkVideoDownloader
 from .schema.video_schema import VideoPlatform, VideoDownloadContext
 from .soop.soop_video_downloader import SoopVideoDownloader
 from .ytdl.ytdl_downloader import YtdlDownloader
-from ...utils import get_headers
-from ...utils.hls.downloader import HlsDownloader
+from ..utils import get_headers
+from ..utils.hls.downloader import HlsDownloader
 
 
 class VideoDownloader:

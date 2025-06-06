@@ -1,4 +1,4 @@
-from vtask.service.video import SoopVideoClient, SoopHlsUrlExtractor
+from vtask.video import SoopVideoClient, SoopHlsUrlExtractor
 
 
 def test_get_info():

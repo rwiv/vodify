@@ -6,7 +6,7 @@ import requests
 from pyutils import get_base_url
 
 from .chzzk_video_client import ChzzkVideoInfo, ChzzkVideoClient
-from ....utils import get_headers
+from ...utils import get_headers
 
 
 class ChzzkVideoClient1(ChzzkVideoClient):

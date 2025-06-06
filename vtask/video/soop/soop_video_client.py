@@ -1,7 +1,7 @@
 import requests
 from pydantic import BaseModel
 
-from ....utils import get_headers
+from ...utils import get_headers
 
 
 class SoopM3u8Info(BaseModel):
