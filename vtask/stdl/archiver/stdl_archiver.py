@@ -1,15 +1,14 @@
 import asyncio
-import os
-from pathlib import Path
 
+from aiofiles import os as aios
 from pydantic import BaseModel
 from pyutils import path_join, filename, log
 
-from ..schema.stdl_types import StdlSegmentsInfo
-from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
-from ..transcoder.stdl_transcoder import StdlTranscoder
 from ..accessor.stdl_segment_accessor_local import StdlLocalSegmentAccessor
 from ..accessor.stdl_segment_accessor_s3 import StdlS3SegmentAccessor
+from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
+from ..schema.stdl_types import StdlSegmentsInfo
+from ..transcoder.stdl_transcoder import StdlTranscoder
 from ...common.notifier import Notifier
 from ...utils import S3AsyncClient, cur_duration
 
@@ -68,12 +67,12 @@ class StdlArchiver:
             is_archive=self.is_archive,
             video_size_limit_gb=self.video_size_limit_gb,
         )
-        for platform_name in os.listdir(self.incomplete_dir_path):
-            platform_dir_path = checked_dir_path(self.incomplete_dir_path, platform_name)
-            for channel_id in os.listdir(platform_dir_path):
-                channel_dir_path = checked_dir_path(platform_dir_path, channel_id)
-                for video_name in os.listdir(channel_dir_path):
-                    checked_dir_path(channel_dir_path, video_name)
+        for platform_name in await aios.listdir(self.incomplete_dir_path):
+            platform_dir_path = await checked_dir_path(self.incomplete_dir_path, platform_name)
+            for channel_id in await aios.listdir(platform_dir_path):
+                channel_dir_path = await checked_dir_path(platform_dir_path, channel_id)
+                for video_name in await aios.listdir(channel_dir_path):
+                    await checked_dir_path(channel_dir_path, video_name)
                     info = StdlSegmentsInfo(
                         platform_name=platform_name,
                         channel_id=channel_id,
@@ -84,7 +83,7 @@ class StdlArchiver:
 
         message = "All transcoding is done"
         log.info(message)
-        self.notifier.notify(message)
+        await self.notifier.notify(message)
 
     async def download(self, targets: list[ArchiveTarget]):
         start_time = asyncio.get_event_loop().time()
@@ -97,7 +96,7 @@ class StdlArchiver:
                 keys.append(obj.key)
 
             out_dir_path = path_join(self.out_dir_path, target.platform, target.uid, target.video_name)
-            os.makedirs(out_dir_path, exist_ok=True)
+            await aios.makedirs(out_dir_path, exist_ok=True)
             for key in keys:
                 file_path = path_join(out_dir_path, filename(key))
                 await self.s3_client.write_file(key=key, file_path=file_path, sync_time=True)
@@ -109,8 +108,8 @@ class StdlArchiver:
         log.info(f"Elapsed time: {cur_duration(start_time):.3f} sec")
 
 
-def checked_dir_path(base_dir_path: str, new_path: str) -> str:
+async def checked_dir_path(base_dir_path: str, new_path: str) -> str:
     return_dir_path = path_join(base_dir_path, new_path)
-    if not Path(return_dir_path).is_dir():
+    if not await aios.path.isdir(return_dir_path):
         raise ValueError(f"Invalid directory: {return_dir_path}")
     return return_dir_path

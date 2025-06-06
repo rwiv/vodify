@@ -24,10 +24,9 @@ if __name__ == "__main__":
 
         run_server()
     elif mode == "batch":
-        import asyncio
         from .common.batch import BatchRunner
 
-        asyncio.run(BatchRunner().run())
+        BatchRunner().run()
     else:
         log.info(f"Unknown mode: {mode}")
         sys.exit(1)

@@ -28,8 +28,8 @@ class VideoDownloadExecutor:
                 log.info("End video download", {"url": url})
         except Exception as e:
             log.error("Video download failed", error_dict(e))
-            await self.notifier.notify_async("Video download failed")
+            await self.notifier.notify("Video download failed")
             raise
 
         log.info("All video downloads are done")
-        await self.notifier.notify_async("All video downloads are done")
+        await self.notifier.notify("All video downloads are done")

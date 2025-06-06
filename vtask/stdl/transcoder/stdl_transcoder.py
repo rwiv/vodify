@@ -112,7 +112,7 @@ class StdlTranscoder:
             head = "Segment size mismatch"
             log.error(head, info.to_dict())
             msg = f"{head}: platform={pf}, channel_id={ch_id}, video_name={vid}"
-            await self.__notifier.notify_async(msg)
+            await self.__notifier.notify(msg)
             archive_source = True
             archive_tars = True
 
@@ -236,7 +236,7 @@ class StdlTranscoder:
             log.error(head, info.to_dict())
 
             message = f"{head}: platform={info.platform_name}, channel_id={info.channel_id}, video_name={info.video_name}, size={video_size_gb}GB"
-            await self.__notifier.notify_async(message)
+            await self.__notifier.notify(message)
             raise ValueError(message)
 
 

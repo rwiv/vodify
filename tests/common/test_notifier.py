@@ -13,4 +13,4 @@ env = get_batch_env()
 async def test_untf():
     print(env)
     notifier = UntfNotifier(env.untf)
-    await notifier.notify_async("test")
+    await notifier.notify("test")

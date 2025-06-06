@@ -1,3 +1,4 @@
+import asyncio
 import os
 import shutil
 from pathlib import Path
@@ -65,10 +66,10 @@ class LossExecutor:
                 log.info("one loss check is done", get_done_log_attrs(result, file_path))
             except Exception as e:
                 notify_msg = f"Directory Failed: {path_join(self.src_dir_path, src_sub_path)}, err: {e}"
-                self.notifier.notify(notify_msg)
+                asyncio.run(self.notifier.notify(notify_msg))
                 raise
 
-        self.notifier.notify(f"directory frame-loss check done: {self.src_dir_path}")
+        asyncio.run(self.notifier.notify(f"directory frame-loss check done: {self.src_dir_path}"))
         log.info(f"directory frame-loss check done: {self.src_dir_path}")
 
     def __analyze(self):
