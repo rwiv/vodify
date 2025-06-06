@@ -8,13 +8,20 @@ from pyutils import path_join, log, find_project_root
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.notifier import MockNotifier
-from vtask.service.stdl.archiver import StdlArchiver, ArchiveTarget
+from vtask.stdl import (
+    StdlDoneMsg,
+    StdlDoneStatus,
+    StdlPlatformType,
+    StdlSegmentsInfo,
+    StdlTranscoder,
+    StdlS3SegmentAccessor,
+    StdlArchiver,
+    ArchiveTarget,
+)
 from vtask.utils import S3ObjectWriter, rmtree, S3AsyncClient
 
 load_test_dotenv(".env-server-dev")
 
-from vtask.service.stdl.transcoder import StdlTranscoder, StdlS3SegmentAccessor
-from vtask.service.stdl.schema import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, StdlSegmentsInfo
 
 # fs_name = "local"
 fs = "minio"

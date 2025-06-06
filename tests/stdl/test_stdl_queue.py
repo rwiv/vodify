@@ -7,8 +7,7 @@ from pyutils import path_join, find_project_root, dirpath
 
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.env import get_celery_env
-from vtask.service.stdl.common import StdlDoneQueue
-from vtask.service.stdl.schema import StdlDoneMsg
+from vtask.stdl import StdlDoneMsg, StdlDoneQueue
 
 load_test_dotenv(".env-worker-dev")
 # load_test_dotenv(".env-worker-prod")

@@ -11,11 +11,11 @@ from aiofiles import os as aios
 from pydantic import BaseModel, Field
 from pyutils import log, path_join
 
-from .segment_accessor.stdl_segment_accessor import StdlSegmentAccessor
-from ..schema import StdlSegmentsInfo
-from ...loss import TimeLossInspector
-from ....common.notifier import Notifier
-from ....utils import (
+from ..accessor.stdl_segment_accessor import StdlSegmentAccessor
+from ..schema.stdl_types import StdlSegmentsInfo
+from ...service.loss import TimeLossInspector
+from ...common.notifier import Notifier
+from ...utils import (
     cur_duration,
     write_yaml_file,
     ensure_dir,

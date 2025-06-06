@@ -4,7 +4,7 @@ from pyutils import log, error_dict
 
 from .celery_app import app
 from .celery_worker_deps import WorkerDependencyManager
-from ..service.stdl.schema import StdlDoneMsg, StdlDoneStatus
+from ..stdl import StdlDoneMsg, StdlDoneStatus
 
 
 @app.task(name="vtask.stdl.done")

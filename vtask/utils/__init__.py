@@ -20,7 +20,7 @@ from .s3_async import S3AsyncClient
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
 from .object_writer import ObjectWriter, LocalObjectWriter, S3ObjectWriter
 from .redis.redis_queue import RedisQueue
-from .redis.reids_map import RedisMap
+from .redis.redis_map import RedisMap
 from .stats import avg
 from .time import cur_duration
 from .yaml import write_yaml_file

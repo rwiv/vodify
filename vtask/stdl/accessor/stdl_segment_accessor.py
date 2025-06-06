@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from ...schema import StdlSegmentsInfo
-from .....common.fs import FsType
+from ..schema.stdl_types import StdlSegmentsInfo
+from ...common.fs import FsType
 
 
 class StdlSegmentAccessor(ABC):

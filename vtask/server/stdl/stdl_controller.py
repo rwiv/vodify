@@ -4,8 +4,7 @@ from fastapi import APIRouter
 
 from .stdl_task_requester import StdlTaskRequester
 from ...common.job import CronJob
-from ...service.stdl.common import StdlDoneQueue
-from ...service.stdl.schema import StdlDoneMsg, StdlDoneStatus
+from ...stdl import StdlDoneMsg, StdlDoneStatus, StdlDoneQueue
 
 
 class StdlController:

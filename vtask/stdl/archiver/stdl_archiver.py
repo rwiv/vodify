@@ -5,10 +5,13 @@ from pathlib import Path
 from pydantic import BaseModel
 from pyutils import path_join, filename, log
 
-from ..schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
-from ..transcoder import StdlTranscoder, StdlLocalSegmentAccessor, StdlS3SegmentAccessor
-from ....common.notifier import Notifier
-from ....utils import S3AsyncClient, cur_duration
+from ..schema.stdl_types import StdlSegmentsInfo
+from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
+from ..transcoder.stdl_transcoder import StdlTranscoder
+from ..accessor.stdl_segment_accessor_local import StdlLocalSegmentAccessor
+from ..accessor.stdl_segment_accessor_s3 import StdlS3SegmentAccessor
+from ...common.notifier import Notifier
+from ...utils import S3AsyncClient, cur_duration
 
 
 class ArchiveTarget(BaseModel):

@@ -1,8 +1,7 @@
 from .stdl_task_requester import StdlTaskRequester
 from ...celery import CeleryRedisBrokerClient, find_active_worker_names, app
 from ...common.job import Job
-from ...service.stdl.common import StdlDoneQueue
-from ...service.stdl.schema import StdlDoneMsg
+from ...stdl import StdlDoneMsg, StdlDoneQueue
 
 STDL_DONE_JOB_NAME = "stdl_done_job"
 

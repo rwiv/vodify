@@ -4,9 +4,9 @@ from aiofiles import os as aios
 from pyutils import path_join
 
 from .stdl_segment_accessor import StdlSegmentAccessor
-from ...schema import StdlSegmentsInfo
-from .....common.fs import FsType
-from .....utils import copy_file, rmtree
+from ..schema.stdl_types import StdlSegmentsInfo
+from ...common.fs import FsType
+from ...utils import copy_file, rmtree
 
 
 class StdlLocalSegmentAccessor(StdlSegmentAccessor):

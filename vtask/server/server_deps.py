@@ -5,7 +5,7 @@ from .stdl import StdlController, StdlDoneJob, StdlTaskRequester
 from ..celery import CeleryRedisBrokerClient
 from ..common.env import get_server_env, get_celery_env
 from ..common.job import CronJob
-from ..service.stdl.common import StdlDoneQueue
+from ..stdl import StdlDoneQueue
 
 
 class DefaultController:

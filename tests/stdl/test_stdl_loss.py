@@ -4,7 +4,7 @@ import yaml
 from pydantic import BaseModel, Field
 from pyutils import path_join, find_project_root
 
-from vtask.service.stdl.loss import StdlLossInspector
+from vtask.stdl import StdlLossInspector
 
 base_path = path_join(find_project_root(), "dev", "loss_stdl")
 

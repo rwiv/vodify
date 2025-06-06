@@ -3,10 +3,10 @@ from pyutils import path_join
 from .stdl_segment_accessor_local import StdlLocalSegmentAccessor
 from .stdl_segment_accessor_s3 import StdlS3SegmentAccessor
 from .stdl_segment_accessor import StdlSegmentAccessor
-from ...schema import STDL_INCOMPLETE_DIR_NAME
-from .....common.env import WorkerEnv
-from .....common.fs import FsType, FsConfig
-from .....utils import S3AsyncClient
+from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
+from ...common.env import WorkerEnv
+from ...common.fs import FsType, FsConfig
+from ...utils import S3AsyncClient
 
 
 def create_stdl_accessor(

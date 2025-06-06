@@ -1,9 +1,10 @@
 from pyutils import path_join, filename, log
 
 from .stdl_segment_accessor import StdlSegmentAccessor
-from ...schema import StdlSegmentsInfo, STDL_INCOMPLETE_DIR_NAME
-from .....common.fs import FsType
-from .....utils import S3AsyncClient, avg
+from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
+from ..schema.stdl_types import StdlSegmentsInfo
+from ...common.fs import FsType
+from ...utils import S3AsyncClient, avg
 
 
 class StdlS3SegmentAccessor(StdlSegmentAccessor):

@@ -2,7 +2,7 @@ from pyutils import log
 
 from ...celery import stdl_done, DEFAULT_QUEUE_NAME, IO_NET_QUEUE_NAME, IO_LFS_QUEUE_NAME
 from ...common.fs import LOCAL_FILE_NAME
-from ...service.stdl.schema import StdlDoneMsg, StdlDoneStatus
+from ...stdl import StdlDoneMsg, StdlDoneStatus
 
 
 class StdlTaskRequester:
