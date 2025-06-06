@@ -2,11 +2,10 @@ import logging
 
 from pyutils import log
 
-from ..common.env import get_batch_env
-from ..common.env.env_batch import BatchCommand
-from ..common.loss import LossExecutor
-from ..stdl import StdlArchiveExecutor
-from ..video import VideoDownloadExecutor
+from ..env import get_batch_env, BatchCommand
+from ..loss import LossExecutor
+from ...stdl import StdlArchiveExecutor
+from ...video import VideoDownloadExecutor
 
 
 class BatchRunner:

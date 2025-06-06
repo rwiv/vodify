@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
         run()
     elif mode == "batch":
-        from .batch import BatchRunner
+        from .common.batch import BatchRunner
 
         BatchRunner().run()
     else:
