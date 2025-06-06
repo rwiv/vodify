@@ -25,6 +25,7 @@ class StdlArchiveConfig(BaseModel):
     s3_config: S3Config
     archive: bool
     min_read_timeout_sec: float
+    read_timeout_threshold: float
     network_mbit: float
     network_buf_size: int
     video_size_limit_gb: int
@@ -50,6 +51,7 @@ class StdlArchiveExecutor:
             s3_client=S3AsyncClient(
                 conf=self.conf.s3_config,
                 min_read_timeout_sec=self.conf.min_read_timeout_sec,
+                read_timeout_threshold=self.conf.read_timeout_threshold,
                 network_mbit=self.conf.network_mbit,
                 network_buf_size=self.conf.network_buf_size,
             ),

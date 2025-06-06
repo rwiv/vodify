@@ -37,7 +37,13 @@ fs_conf = find_test_fs_config(fs_configs, fs)
 s3_conf = fs_conf.s3
 assert s3_conf is not None
 # src_writer = LocalObjectWriter()
-s3_client = S3AsyncClient(conf=s3_conf, min_read_timeout_sec=10, network_mbit=64, retry_limit=1)
+s3_client = S3AsyncClient(
+    conf=s3_conf,
+    min_read_timeout_sec=10,
+    read_timeout_threshold=2.0,
+    network_mbit=64,
+    retry_limit=1,
+)
 src_writer = S3ObjectWriter(s3_client)
 
 dev_test_dir_path = path_join(find_project_root(), "dev", "test")

@@ -30,6 +30,7 @@ class S3AsyncClient:
         self,
         conf: S3Config,
         min_read_timeout_sec: float,
+        read_timeout_threshold: float,
         network_mbit: float,
         network_buf_size: int = 8192,
         retry_limit: int = 8,
@@ -40,7 +41,7 @@ class S3AsyncClient:
         self.__min_read_timeout_sec = min_read_timeout_sec
         self.__network_mbit = network_mbit
         self.__network_buf_size = network_buf_size
-        self.__read_timeout_threshold = 1.5
+        self.__read_timeout_threshold = read_timeout_threshold
         self.__small_chunk_count_ratio = 0.9
         self.__presigned_url_expires_in = 3600
 

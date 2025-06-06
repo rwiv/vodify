@@ -22,6 +22,7 @@ class WorkerEnv(BaseModel):
     out_fs_name: constr(min_length=1)
     fs_config_path: constr(min_length=1)
     min_read_timeout_sec: float
+    read_timeout_threshold: float
     network_mbit: float
     network_buf_size: int
     worker: WorkerConfig
@@ -48,6 +49,7 @@ def get_worker_env() -> WorkerEnv:
         out_fs_name=os.getenv("OUT_FS_NAME"),
         fs_config_path=os.getenv("FS_CONFIG_PATH"),
         min_read_timeout_sec=os.getenv("MIN_READ_TIMEOUT_SEC"),  # type: ignore
+        read_timeout_threshold=os.getenv("READ_TIMEOUT_THRESHOLD"),  # type: ignore
         network_mbit=os.getenv("NETWORK_MBIT"),  # type: ignore
         network_buf_size=os.getenv("NETWORK_BUF_SIZE"),  # type: ignore
         stdl=stdl_config,
