@@ -9,8 +9,8 @@ from .loss_config import read_loss_config, LossConfig, LossCommand, LossMethod
 from .loss_inspector import LossInspector, InspectResult
 from .loss_inspector_size import SizeLossInspector
 from .loss_inspector_time import TimeLossInspector
-from ...common.env import BatchEnv
-from ...common.notifier import create_notifier
+from ..env import BatchEnv
+from ..notifier import create_notifier
 from ...utils import check_dir, read_dir_recur
 
 

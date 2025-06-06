@@ -1,6 +1,6 @@
 from pyutils import path_join, find_project_root
 
-from vtask.service.loss import read_loss_config
+from vtask.common.loss import read_loss_config
 
 
 def test_frame_loss_config():

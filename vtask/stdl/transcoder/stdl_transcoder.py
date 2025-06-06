@@ -13,7 +13,6 @@ from pyutils import log, path_join
 
 from ..accessor.stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_types import StdlSegmentsInfo
-from ...service.loss import TimeLossInspector
 from ...common.notifier import Notifier
 from ...utils import (
     cur_duration,
@@ -73,7 +72,6 @@ class StdlTranscoder:
         self.__out_dir_path = out_dir_path
         self.__is_archive = is_archive
         self.__video_size_limit_gb = video_size_limit_gb
-        self.__loss_inspector = TimeLossInspector(keyframe_only=False)
 
     async def clear(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
         await self.__accessor.clear_by_info(info)
