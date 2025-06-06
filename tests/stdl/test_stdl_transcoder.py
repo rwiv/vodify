@@ -46,10 +46,11 @@ assert s3_conf is not None
 # src_writer = LocalObjectWriter()
 s3_client = S3AsyncClient(
     conf=s3_conf,
+    network_mbit=64,
+    network_buf_size=8192,
+    retry_limit=1,
     min_read_timeout_sec=10,
     read_timeout_threshold=2.0,
-    network_mbit=64,
-    retry_limit=1,
 )
 src_writer = S3ObjectWriter(s3_client)
 

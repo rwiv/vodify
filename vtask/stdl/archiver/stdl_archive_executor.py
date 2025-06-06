@@ -27,6 +27,7 @@ class StdlArchiveConfig(BaseModel):
     read_timeout_threshold: float
     network_mbit: float
     network_buf_size: int
+    network_retry_limit: int
     video_size_limit_gb: int
     targets: list[ArchiveTarget]
 
@@ -49,10 +50,11 @@ class StdlArchiveExecutor:
         self.archiver = StdlArchiver(
             s3_client=S3AsyncClient(
                 conf=self.conf.s3_config,
-                min_read_timeout_sec=self.conf.min_read_timeout_sec,
-                read_timeout_threshold=self.conf.read_timeout_threshold,
                 network_mbit=self.conf.network_mbit,
                 network_buf_size=self.conf.network_buf_size,
+                retry_limit=self.conf.network_retry_limit,
+                min_read_timeout_sec=self.conf.min_read_timeout_sec,
+                read_timeout_threshold=self.conf.read_timeout_threshold,
             ),
             tmp_dir_path=self.conf.tmp_dir_path,
             out_dir_path=self.conf.out_dir_path,

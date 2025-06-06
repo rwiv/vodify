@@ -30,10 +30,11 @@ def create_stdl_accessor(
             raise ValueError(f"fs_conf.s3 is None")
         s3_client = S3AsyncClient(
             conf=fs_conf.s3,
-            min_read_timeout_sec=env.min_read_timeout_sec,
-            read_timeout_threshold=env.read_timeout_threshold,
             network_mbit=env.network_mbit,
             network_buf_size=env.network_buf_size,
+            retry_limit=env.network_retry_limit,
+            min_read_timeout_sec=env.min_read_timeout_sec,
+            read_timeout_threshold=env.read_timeout_threshold,
         )
         return StdlS3SegmentAccessor(s3_client=s3_client)
     else:

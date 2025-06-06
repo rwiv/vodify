@@ -29,18 +29,18 @@ class S3AsyncClient:
     def __init__(
         self,
         conf: S3Config,
+        network_mbit: float,
+        network_buf_size: int,
+        retry_limit: int,
         min_read_timeout_sec: float,
         read_timeout_threshold: float,
-        network_mbit: float,
-        network_buf_size: int = 8192,
-        retry_limit: int = 8,
     ):
         self.__conf = conf
         self.__bucket_name = conf.bucket_name
-        self.__retry_limit = retry_limit
-        self.__min_read_timeout_sec = min_read_timeout_sec
         self.__network_mbit = network_mbit
         self.__network_buf_size = network_buf_size
+        self.__retry_limit = retry_limit
+        self.__min_read_timeout_sec = min_read_timeout_sec
         self.__read_timeout_threshold = read_timeout_threshold
         self.__small_chunk_count_ratio = 0.9
         self.__presigned_url_expires_in = 3600
