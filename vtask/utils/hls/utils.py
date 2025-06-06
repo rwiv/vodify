@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 
 def get_ext(file_path: str) -> str | None:
@@ -8,6 +9,10 @@ def get_ext(file_path: str) -> str | None:
     if chunks[-1] == "":
         raise ValueError("Invalid file path")
     return chunks[-1]
+
+
+def stem(file_path: str) -> str:
+    return Path(file_path).stem
 
 
 def merge_intersected_strings(str1: str, str2: str) -> str:

@@ -1,7 +1,4 @@
 import asyncio
-import shutil
-import subprocess
-import time
 from enum import Enum
 from pathlib import Path
 from typing import TypedDict
@@ -14,6 +11,7 @@ from pyutils import log, path_join
 from ..accessor.stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_types import StdlSegmentsInfo
 from ...common.notifier import Notifier
+from ...ffmpeg import remux_video
 from ...utils import (
     cur_duration,
     write_yaml_file,
@@ -156,7 +154,7 @@ class StdlTranscoder:
 
         # Remux video from ts to mp4
         tmp_mp4_path = path_join(base_dir_path, f"{vid}.mp4")
-        await asyncio.to_thread(_remux_video, merged_tmp_ts_path, tmp_mp4_path, info)
+        await _remux_video(merged_tmp_ts_path, tmp_mp4_path, info)
         await aios.remove(merged_tmp_ts_path)
 
         # Move result files
@@ -355,13 +353,10 @@ async def _get_sorted_segment_paths(segments_path: str) -> list[str]:
     return sorted(paths, key=lambda x: int(stem(x)))
 
 
-def _remux_video(src_path: str, out_path: str, info: StdlSegmentsInfo):
-    start = time.time()
-    if shutil.which("ffmpeg") is None:
-        raise FileNotFoundError("ffmpeg not found")
-    command = ["ffmpeg", "-i", src_path, "-c", "copy", out_path]
-    subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    log.debug("Remux from ts to mp4", info.to_dict({"duration": round(time.time() - start, 2)}))
+async def _remux_video(src_path: str, out_path: str, info: StdlSegmentsInfo):
+    start = asyncio.get_event_loop().time()
+    await remux_video(src_path=src_path, out_path=out_path)
+    log.debug("Remux from ts to mp4", info.to_dict({"duration": round(cur_duration(start), 2)}))
 
 
 def _get_success_result(message: str) -> StdlDoneTaskResult:

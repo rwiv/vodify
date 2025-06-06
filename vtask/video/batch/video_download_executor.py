@@ -20,16 +20,16 @@ class VideoDownloadExecutor:
         self.notifier = create_notifier(env=env.env, conf=env.untf)
         self.topic = env.untf.topic
 
-    def run(self):
+    async def run(self):
         try:
             for url in self.conf.urls:
                 log.info("Start video download", {"url": url})
-                self.downloader.download(url=url, is_m3u8_url=self.conf.is_m3u8_url)
+                await self.downloader.download(url=url, is_m3u8_url=self.conf.is_m3u8_url)
                 log.info("End video download", {"url": url})
         except Exception as e:
             log.error("Video download failed", error_dict(e))
-            self.notifier.notify("Video download failed")
+            await self.notifier.notify_async("Video download failed")
             raise
 
         log.info("All video downloads are done")
-        self.notifier.notify("All video downloads are done")
+        await self.notifier.notify_async("All video downloads are done")

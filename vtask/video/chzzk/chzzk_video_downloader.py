@@ -7,7 +7,7 @@ from pyutils import path_join
 from .chzzk_video_client import ChzzkVideoClient
 from ..schema.video_schema import VideoDownloadContext
 from ...utils import get_headers
-from ...utils.hls import HlsDownloader, remux_to_mp4
+from ...utils.hls import HlsDownloader, merge_and_remux_to_mp4
 
 
 class ChzzkVideoDownloader:
@@ -29,12 +29,12 @@ class ChzzkVideoDownloader:
             network_mbit=ctx.network_mbit,
         )
 
-    def download_one(self, video_no: int) -> str:
+    async def download_one(self, video_no: int) -> str:
         info = self.client.get_video_info(video_no)
         channel_id = info.channel_id
         file_name = str(video_no)
 
-        urls = self.hls.get_seg_urls_by_master(info.m3u8_url, info.qs)
+        urls = await self.hls.get_seg_urls_by_master(info.m3u8_url, info.qs)
         segments_path = path_join(self.tmp_dir_path, channel_id, file_name)
 
         if self.ctx.is_parallel:
@@ -42,7 +42,7 @@ class ChzzkVideoDownloader:
         else:
             segments_path = asyncio.run(self.hls.download(urls=urls, segments_path=segments_path))
 
-        tmp_mp4_path = remux_to_mp4(segments_path)
+        tmp_mp4_path = merge_and_remux_to_mp4(segments_path)
         out_mp4_path = path_join(self.out_dir_path, channel_id, f"{file_name}.mp4")
         os.makedirs(path_join(self.out_dir_path, channel_id), exist_ok=True)
         shutil.move(tmp_mp4_path, out_mp4_path)

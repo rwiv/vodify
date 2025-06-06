@@ -2,7 +2,6 @@ import asyncio
 
 import aiofiles
 import aiohttp
-import requests
 from aiofiles import os as aios
 from pyutils import path_join, log, error_dict, get_base_url
 
@@ -24,23 +23,26 @@ class HlsDownloader:
         headers: dict | None,
         parallel_num: int,
         network_mbit: float,
-        url_extractor=HlsUrlExtractor(),
+        url_extractor: HlsUrlExtractor | None = None,
     ):
         self.__headers = headers
         self.__tmp_dir_path = out_dir_path
         self.__parallel_num = parallel_num
         self.__network_mbit = network_mbit
-        self.__url_extractor = url_extractor
+        self.__url_extractor = url_extractor if url_extractor is not None else HlsUrlExtractor(headers=headers)
         self.__buf_size = 8192
         self.__retry_limit = 8
         self.__retry_base_delay_sec = 0.5
 
-    def get_seg_urls_by_master(self, m3u8_url: str, qs: str | None) -> list[str]:
-        return self.__url_extractor.get_urls(m3u8_url, qs)
+    async def get_seg_urls_by_master(self, m3u8_url: str, qs: str | None) -> list[str]:
+        return await self.__url_extractor.get_urls(m3u8_url, qs)
 
-    def get_seg_urls_by_media(self, m3u8_url: str, qs: str | None) -> list[str]:
-        m3u8 = requests.get(m3u8_url).text
-        return parse_media_playlist(m3u8, get_base_url(m3u8_url), qs).segment_paths
+    async def get_seg_urls_by_media(self, m3u8_url: str, qs: str | None) -> list[str]:
+        async with aiohttp.ClientSession(headers=self.__headers) as session:
+            async with session.get(m3u8_url) as res:
+                if res.status >= 400:
+                    raise ValueError(f"Failed to fetch m3u8 content: {res.status}")
+                return parse_media_playlist(await res.text(), get_base_url(m3u8_url), qs).segment_paths
 
     async def download(self, urls: list[str], segments_path: str) -> str:
         await aios.makedirs(segments_path, exist_ok=True)

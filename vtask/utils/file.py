@@ -4,12 +4,24 @@ import shutil
 import tarfile
 from pathlib import Path
 
+import aiofiles
 from aiofiles import os as aios
 from pyutils import path_join
 
 
 def stem(file_path: str) -> str:
     return Path(file_path).stem
+
+
+async def write_file(file_path: str, data: str | bytes, dir_check: bool = True):
+    if dir_check:
+        await aios.makedirs(Path(file_path).parent, exist_ok=True)
+    if isinstance(data, bytes):
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(data)
+    elif isinstance(data, str):
+        async with aiofiles.open(file_path, "w") as f:
+            await f.write(data)
 
 
 def check_dir(base_path: str):

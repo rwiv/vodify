@@ -9,13 +9,13 @@ from ...video import VideoDownloadExecutor
 
 
 class BatchRunner:
-    def run(self):
+    async def run(self):
         log.set_level(logging.DEBUG)
         env = get_batch_env()
         if env.command == BatchCommand.LOSS:
             return LossExecutor(env).run()
         if env.command == BatchCommand.VIDEO:
-            return VideoDownloadExecutor(env).run()
+            return await VideoDownloadExecutor(env).run()
         if env.command == BatchCommand.ARCHIVE:
             return StdlArchiveExecutor(env).run()
         else:

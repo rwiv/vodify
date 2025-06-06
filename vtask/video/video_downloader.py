@@ -20,21 +20,21 @@ class VideoDownloader:
         self.out_dir_path = out_dir_path
         self.tmp_dir_path = tmp_dir_path
 
-    def download(self, url: str, is_m3u8_url: bool = False):
+    async def download(self, url: str, is_m3u8_url: bool = False):
         if is_m3u8_url:
-            return self.__download_hls_video_using_m3u8(url)
+            return await self.__download_hls_video_using_m3u8(url)
 
         platform = find_platform_by_url(url)
         if platform == VideoPlatform.CHZZK:
-            return self.__download_chzzk_video(url)
+            return await self.__download_chzzk_video(url)
         elif platform == VideoPlatform.SOOP:
-            return self.__download_soop_video(url)
+            return await self.__download_soop_video(url)
         elif platform == VideoPlatform.MISC:
-            return self.__download_video_using_ytdl(url)
+            return await self.__download_video_using_ytdl(url)
         else:
             raise ValueError(f"Unsupported platform: {platform}")
 
-    def __download_hls_video_using_m3u8(self, m3u8_url: str):
+    async def __download_hls_video_using_m3u8(self, m3u8_url: str):
         hls = HlsDownloader(
             out_dir_path=self.tmp_dir_path,
             headers=get_headers(self.ctx.cookie_str),
@@ -43,31 +43,32 @@ class VideoDownloader:
         )
         qs = get_query_string(m3u8_url) or None
         title = datetime.now().strftime("%Y%m%d_%H%M%S")
-        urls = hls.get_seg_urls_by_master(m3u8_url, qs)
+        urls = await hls.get_seg_urls_by_master(m3u8_url, qs)
         chunks_path = path_join(self.tmp_dir_path, "hls", title)
         if self.ctx.is_parallel:
-            asyncio.run(hls.download_parallel(urls=urls, segments_path=chunks_path))
+            await hls.download_parallel(urls=urls, segments_path=chunks_path)
         else:
-            asyncio.run(hls.download(urls=urls, segments_path=chunks_path))
+            await hls.download(urls=urls, segments_path=chunks_path)
 
-    def __download_video_using_ytdl(self, url):
-        YtdlDownloader(self.out_dir_path).download([url])
+    async def __download_video_using_ytdl(self, url):
+        downloader = YtdlDownloader(self.out_dir_path)
+        await asyncio.to_thread(downloader.download, [url])
 
-    def __download_chzzk_video(self, url: str):
+    async def __download_chzzk_video(self, url: str):
         video_no = int(url.split("/")[-1])
         try:
             c = ChzzkVideoClient1(self.ctx.cookie_str)
             dl = ChzzkVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx, c)
-            dl.download_one(video_no)
+            await dl.download_one(video_no)
         except Exception:
             c = ChzzkVideoClient2(self.ctx.cookie_str)
             dl = ChzzkVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx, c)
-            dl.download_one(video_no)
+            await dl.download_one(video_no)
 
-    def __download_soop_video(self, url: str):
+    async def __download_soop_video(self, url: str):
         dl = SoopVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx)
         video_no = int(url.split("/")[-1])
-        dl.download_one(video_no)
+        await dl.download_one(video_no)
 
 
 def find_platform_by_url(url: str) -> VideoPlatform:

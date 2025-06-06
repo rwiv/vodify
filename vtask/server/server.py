@@ -7,7 +7,7 @@ from pyutils import log
 from .server_deps import ServerDependencyManager
 
 
-def run():
+def run_server():
     log.set_level(logging.DEBUG)
 
     deps = ServerDependencyManager()
