@@ -1,7 +1,6 @@
 from pyutils import get_origin_url, get_base_url
 
-from ...utils.hls.hls_url_extractor import HlsUrlExtractor
-from ...utils.hls.parser import Resolution
+from ...utils.hls import HlsUrlExtractor, Resolution
 
 
 class SoopHlsUrlExtractor(HlsUrlExtractor):
