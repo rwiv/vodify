@@ -7,7 +7,7 @@ from .soop_video_client import SoopVideoClient, SoopVideoInfo
 from ..schema.video_schema import VideoDownloadContext
 from ...ffmpeg import concat_streams, remux_video, get_info, concat_by_list
 from ...utils import get_headers, stem, move_file, rmtree, write_file
-from ...utils.hls import HlsDownloader, merge_ts_async
+from ...utils.hls import HlsDownloader, merge_ts
 
 
 class SegmentsPathInfo(BaseModel):
@@ -138,9 +138,9 @@ async def mux_to_mp4(info: SegmentsPathInfo) -> str:
     await check_stream(path_join(info.audio_segments_path, audio_seg_names[0]), False)
 
     # merge ts files
-    video_path = await merge_ts_async(info.video_segments_path)
+    video_path = await merge_ts(info.video_segments_path)
     await rmtree(info.video_segments_path)
-    audio_path = await merge_ts_async(info.audio_segments_path)
+    audio_path = await merge_ts(info.audio_segments_path)
     await rmtree(info.audio_segments_path)
 
     merged_ts_path = path_join(info.out_dir_path, info.bj_id, f"{info.video_name}.ts")

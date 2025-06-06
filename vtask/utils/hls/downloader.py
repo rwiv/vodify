@@ -8,7 +8,7 @@ from pyutils import path_join, log, error_dict, get_base_url
 from .hls_url_extractor import HlsUrlExtractor
 from .parser import parse_media_playlist
 from .utils import sub_lists_with_idx
-from .. import nio_limiter
+from .. import nio_limiter, fetch_text
 
 
 class HttpError(Exception):
@@ -38,11 +38,8 @@ class HlsDownloader:
         return await self.__url_extractor.get_urls(m3u8_url, qs)
 
     async def get_seg_urls_by_media(self, m3u8_url: str, qs: str | None) -> list[str]:
-        async with aiohttp.ClientSession(headers=self.__headers) as session:
-            async with session.get(m3u8_url) as res:
-                if res.status >= 400:
-                    raise ValueError(f"Failed to fetch m3u8 content: {res.status}")
-                return parse_media_playlist(await res.text(), get_base_url(m3u8_url), qs).segment_paths
+        text = await fetch_text(url=m3u8_url, headers=self.__headers)
+        return parse_media_playlist(text, get_base_url(m3u8_url), qs).segment_paths
 
     async def download(self, urls: list[str], segments_path: str) -> str:
         await aios.makedirs(segments_path, exist_ok=True)

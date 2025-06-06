@@ -1,6 +1,6 @@
 services:
   vtask-default:
-    image: harbor.rwiv.xyz/private/vtask:0.6.3
+    image: harbor.rwiv.xyz/private/vtask:0.6.4
     container_name: vtask-default
     working_dir: /app
     entrypoint: python -m vtask worker
@@ -44,7 +44,7 @@ services:
         labels: app,host
         tag: "container_image={{.ImageName}},container_name={{.Name}}"
   vtask-io:
-    image: harbor.rwiv.xyz/private/vtask:0.6.3
+    image: harbor.rwiv.xyz/private/vtask:0.6.4
     container_name: vtask-io
     working_dir: /app
     entrypoint: python -m vtask worker

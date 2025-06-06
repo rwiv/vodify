@@ -15,7 +15,7 @@ from .file import (
     open_tar,
     utime,
 )
-from .http import get_headers
+from .http import get_headers, fetch_text, fetch_json
 from .limiter import nio_limiter
 from .s3_async import S3AsyncClient
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse

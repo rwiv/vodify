@@ -12,5 +12,5 @@ class ChzzkVideoInfo(BaseModel):
 
 class ChzzkVideoClient(ABC):
     @abstractmethod
-    def get_video_info(self, video_no: int) -> ChzzkVideoInfo:
+    async def get_video_info(self, video_no: int) -> ChzzkVideoInfo:
         pass

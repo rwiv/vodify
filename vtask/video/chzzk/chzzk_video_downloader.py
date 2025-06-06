@@ -1,13 +1,11 @@
-import asyncio
-import os
-import shutil
-
+from aiofiles import os as aios
 from pyutils import path_join
 
 from .chzzk_video_client import ChzzkVideoClient
 from ..schema.video_schema import VideoDownloadContext
-from ...utils import get_headers
-from ...utils.hls import HlsDownloader, merge_and_remux_to_mp4
+from ...ffmpeg import remux_video
+from ...utils import get_headers, move_file, rmtree
+from ...utils.hls import HlsDownloader, merge_ts
 
 
 class ChzzkVideoDownloader:
@@ -30,7 +28,7 @@ class ChzzkVideoDownloader:
         )
 
     async def download_one(self, video_no: int) -> str:
-        info = self.client.get_video_info(video_no)
+        info = await self.client.get_video_info(video_no)
         channel_id = info.channel_id
         file_name = str(video_no)
 
@@ -38,15 +36,23 @@ class ChzzkVideoDownloader:
         segments_path = path_join(self.tmp_dir_path, channel_id, file_name)
 
         if self.ctx.is_parallel:
-            segments_path = asyncio.run(self.hls.download_parallel(urls=urls, segments_path=segments_path))
+            segments_path = await self.hls.download_parallel(urls=urls, segments_path=segments_path)
         else:
-            segments_path = asyncio.run(self.hls.download(urls=urls, segments_path=segments_path))
+            segments_path = await self.hls.download(urls=urls, segments_path=segments_path)
 
-        tmp_mp4_path = merge_and_remux_to_mp4(segments_path)
+        # merge and remux
+        merged_ts_path = await merge_ts(segments_path)
+        await rmtree(segments_path)
+        tmp_mp4_path = f"{segments_path}.mp4"
+        await remux_video(merged_ts_path, tmp_mp4_path)
+        await aios.remove(merged_ts_path)
+
+        # move to out dir
         out_mp4_path = path_join(self.out_dir_path, channel_id, f"{file_name}.mp4")
-        os.makedirs(path_join(self.out_dir_path, channel_id), exist_ok=True)
-        shutil.move(tmp_mp4_path, out_mp4_path)
+        await aios.makedirs(path_join(self.out_dir_path, channel_id), exist_ok=True)
+        await move_file(tmp_mp4_path, out_mp4_path)
 
-        if len(os.listdir(path_join(self.tmp_dir_path, channel_id))) == 0:
-            os.rmdir(path_join(self.tmp_dir_path, channel_id))
+        # clean up empty directories
+        if len(await aios.listdir(path_join(self.tmp_dir_path, channel_id))) == 0:
+            await aios.rmdir(path_join(self.tmp_dir_path, channel_id))
         return out_mp4_path

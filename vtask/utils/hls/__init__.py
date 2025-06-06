@@ -3,7 +3,7 @@ import sys
 
 from .downloader import HlsDownloader
 from .hls_url_extractor import HlsUrlExtractor
-from .merge import merge_ts, merge_ts_async, merge_and_remux_to_mp4
+from .merge import merge_ts
 from .parser import parse_master_playlist, parse_media_playlist, Resolution
 from .utils import merge_intersected_strings
 

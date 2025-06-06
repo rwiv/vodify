@@ -2,26 +2,25 @@ from typing import Any
 from urllib.parse import urlparse, parse_qs
 from xml.etree.ElementTree import fromstring, Element
 
-import requests
 from pyutils import get_base_url
 
 from .chzzk_video_client import ChzzkVideoInfo, ChzzkVideoClient
-from ...utils import get_headers
+from ...utils import get_headers, fetch_json, fetch_text
 
 
 class ChzzkVideoClient1(ChzzkVideoClient):
     def __init__(self, cookie_str: str | None):
         self.cookie_str = cookie_str
 
-    def get_video_info(self, video_no: int) -> ChzzkVideoInfo:
-        res = self.__request_video_info(video_no)
+    async def get_video_info(self, video_no: int) -> ChzzkVideoInfo:
+        res = await self.__request_video_info(video_no)
 
         channelId = res["content"]["channel"]["channelId"]
         title = res["content"]["videoTitle"]
         videoId = res["content"]["videoId"]
         key = res["content"]["inKey"]
 
-        m3u_url, lsu_sa, base_url = self.__request_play_info(videoId, key)
+        m3u_url, lsu_sa, base_url = await self.__request_play_info(videoId, key)
 
         return ChzzkVideoInfo(
             m3u8_url=m3u_url,
@@ -30,14 +29,13 @@ class ChzzkVideoClient1(ChzzkVideoClient):
             channel_id=channelId,
         )
 
-    def __request_video_info(self, video_no: int) -> dict[str, Any]:
+    async def __request_video_info(self, video_no: int) -> dict[str, Any]:
         url = f"https://api.chzzk.naver.com/service/v3/videos/{video_no}"
-        res = requests.get(url, headers=get_headers(self.cookie_str, "application/json"))
-        return res.json()
+        return await fetch_json(url=url, headers=get_headers(self.cookie_str, "application/json"))
 
-    def __request_play_info(self, video_id: str, key: str):
+    async def __request_play_info(self, video_id: str, key: str):
         url = f"https://apis.naver.com/neonplayer/vodplay/v2/playback/{video_id}?key={key}"
-        res = requests.get(url, headers=get_headers(self.cookie_str, "application/xml")).text
+        res = await fetch_text(url=url, headers=get_headers(self.cookie_str, "application/xml"))
         root: Element = fromstring(res)
         if len(root) != 1:
             raise ValueError("root element should be 1")
