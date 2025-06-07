@@ -15,3 +15,4 @@ class VideoDownloadContext(BaseModel):
     parallel_num: int = Field(alias="parallelNum")
     network_mbit: float = Field(alias="networkMbit")
     concat: bool
+    use_qs: bool = Field(alias="useQs", default=False)

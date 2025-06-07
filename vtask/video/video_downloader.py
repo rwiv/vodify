@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from urllib.parse import urlparse
 
+from aiofiles import os as aios
 from pyutils import get_query_string, path_join
 
 from .chzzk.chzzk_video_client_1 import ChzzkVideoClient1
@@ -9,6 +10,7 @@ from .chzzk.chzzk_video_client_2 import ChzzkVideoClient2
 from .chzzk.chzzk_video_downloader import ChzzkVideoDownloader
 from .schema.video_schema import VideoPlatform, VideoDownloadContext
 from .soop.soop_video_downloader import SoopVideoDownloader
+from .video_utils import convert_to_mp4
 from .ytdl.ytdl_downloader import YtdlDownloader
 from ..utils import get_headers
 from ..utils.hls import HlsDownloader
@@ -41,14 +43,21 @@ class VideoDownloader:
             parallel_num=self.ctx.parallel_num,
             network_mbit=self.ctx.network_mbit,
         )
-        qs = get_query_string(m3u8_url) or None
-        title = datetime.now().strftime("%Y%m%d_%H%M%S")
-        urls = await hls.get_seg_urls_by_master(m3u8_url, qs)
-        chunks_path = path_join(self.tmp_dir_path, "hls", title)
+        qs = None
+        if self.ctx.use_qs:
+            qs = get_query_string(m3u8_url) or None
+        file_stem = datetime.now().strftime("%Y%m%d_%H%M%S")
+        urls = await hls.get_seg_urls_by_media(m3u8_url, qs)
+        dir_name = "hls"
+        segments_path = path_join(self.tmp_dir_path, dir_name, file_stem)
         if self.ctx.is_parallel:
-            await hls.download_parallel(urls=urls, segments_path=chunks_path)
+            await hls.download_parallel(urls=urls, segments_path=segments_path)
         else:
-            await hls.download(urls=urls, segments_path=chunks_path)
+            await hls.download(urls=urls, segments_path=segments_path)
+        out_mp4_path = path_join(self.out_dir_path, dir_name, f"{file_stem}.mp4")
+        await convert_to_mp4(file_path=out_mp4_path, segments_path=segments_path)
+        if len(await aios.listdir(path_join(self.tmp_dir_path, dir_name))) == 0:
+            await aios.rmdir(path_join(self.tmp_dir_path, dir_name))
 
     async def __download_video_using_ytdl(self, url):
         downloader = YtdlDownloader(self.out_dir_path)
