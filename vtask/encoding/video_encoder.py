@@ -8,7 +8,7 @@ from pyutils import log
 from .encoding_request import EncodingRequest
 from .encoding_resolver import resolve_command
 from .progress_parser import parse_encoding_progress
-from ..utils import exec_process, cur_duration
+from ..utils import exec_process, cur_duration, check_returncode
 
 
 class VideoEncoder:
@@ -45,7 +45,13 @@ class VideoEncoder:
             if logging:
                 log.debug("Encoding Progress", info.model_dump(mode="json"))
 
-        await process.wait()
+        stdout, stderr = await process.communicate()
+        check_returncode(process, command, stdout, stderr)
+        if len(stderr) > 0:
+            await aios.remove(req.out_file_path)
+            log.error("Encoding failed with error", {"err": stderr.decode("utf-8")})
+            raise RuntimeError("Encoding failed with error")
+
         attr = {
             "output_file": req.out_file_path,
             "quantizer_avg": stream_q_sum / stream_q_cnt if stream_q_cnt > 0 else None,

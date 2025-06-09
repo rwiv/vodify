@@ -1,22 +1,31 @@
 services:
   vtask-batch:
-    image: vtask:latest
+    image: vtask-gpu:latest
     container_name: vtask-batch
     working_dir: /app
-    entrypoint: python -m vtask batch
+    entrypoint: python3 -m vtask batch
     environment:
-      PY_ENV: dev
+      PY_ENV: prod
       BATCH_COMMAND: "${BATCH_COMMAND}"
-      TMP_DIR_PATH: /app/tmp
 
       LOSS_CONFIG_PATH: /mnt/app/loss_conf.yaml
       VIDEO_DOWNLOAD_CONFIG_PATH: /mnt/app/video_conf.yaml
+      ARCHIVE_CONFIG_PATH: /mnt/app/archive_conf.yaml
+      ENCODING_CONFIG_PATH: /mnt/app/encoding_conf.yaml
 
       UNTF_ENDPOINT: "${UNTF_ENDPOINT}"
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
-      - ../vtask:/app/vtask
-      - "${SRC_DIR_PATH}:/mnt/volume"
+      - "${BASE_DIR_PATH}:/mnt/volume/app"
       - "${LOSS_CONFIG_PATH}:/mnt/app/loss_conf.yaml"
       - "${VIDEO_DOWNLOAD_CONFIG_PATH}:/mnt/app/video_conf.yaml"
+      - "${ARCHIVE_CONFIG_PATH}:/mnt/app/archive_conf.yaml"
+      - "${ENCODING_CONFIG_PATH}:/mnt/app/encoding_conf.yaml"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

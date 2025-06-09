@@ -1,4 +1,4 @@
-celery[librabbitmq,redis]==5.4.0
+celery[redis]==5.4.0
 aiohttp==3.11.16
 aiolimiter==1.2.1
 aiofiles==24.1.0

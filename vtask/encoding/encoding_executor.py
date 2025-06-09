@@ -50,11 +50,11 @@ class EncodingExecutor:
             ext = get_ext(file_path)
             if ext is None:
                 raise ValueError(f"File without extension: {file_path}")
+            tmp_src_path = path_join(self.tmp_dir_path, f"{uid}_src.{ext}")
+            await copy_file2(file_path, tmp_src_path)
 
             try:
-                tmp_src_path = path_join(self.tmp_dir_path, f"{uid}_src.{ext}")
                 tmp_out_path = path_join(self.tmp_dir_path, f"{uid}_out.{ext}")
-                await copy_file2(file_path, tmp_src_path)
 
                 request: EncodingRequest = self.conf.request.copy()
                 request.src_file_path = tmp_src_path
@@ -66,6 +66,7 @@ class EncodingExecutor:
                 await check_dir_async(out_file_path)
                 await move_file(tmp_out_path, out_file_path)
             except Exception as e:
+                await aios.remove(tmp_src_path)
                 await self.notifier.notify(f"Failed to encoding: {sub_path}, err={e}")
                 raise
 

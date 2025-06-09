@@ -3,6 +3,8 @@ import shutil
 import subprocess
 from asyncio.subprocess import Process
 
+from pyutils import log
+
 
 def check_which(cmd: str):
     if shutil.which(cmd) is None:
@@ -18,6 +20,15 @@ def check_returncode(process: Process, command: list[str], stdout: bytes | None 
         returncode = process.returncode
         if returncode is None:
             returncode = 1
+        attr = {
+            "command": " ".join(command),
+            "code": process.returncode,
+        }
+        if stdout is not None:
+            attr["stdout"] = stdout.decode("utf-8")
+        if stderr is not None:
+            attr["stderr"] = stderr.decode("utf-8")
+        log.error("Process failed", attr)
         raise subprocess.CalledProcessError(returncode, command, output=stdout, stderr=stderr)
 
 

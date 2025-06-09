@@ -1,7 +1,7 @@
 services:
-  vtask-encoding:
-    image: harbor.rwiv.xyz/private/vtask:0.6.7
-    container_name: vtask-loss
+  vtask-enc:
+    image: vtask-gpu:latest
+    container_name: vtask-enc
     working_dir: /app
     entrypoint: python -m vtask batch
     environment:
