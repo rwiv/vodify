@@ -16,6 +16,7 @@ class VideoEncoder:
         if await aios.path.exists(req.out_file_path):
             raise FileExistsError(f"Output file {req.out_file_path} already exists.")
 
+        log.info("Starting encoding", {"src_file": req.src_file_path})
         start_time = asyncio.get_event_loop().time()
         command = resolve_command(req)
         process = await exec_process(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -48,9 +49,16 @@ class VideoEncoder:
         stdout, stderr = await process.communicate()
         check_returncode(process, command, stdout, stderr)
         if len(stderr) > 0:
-            await aios.remove(req.out_file_path)
-            log.error("Encoding failed with error", {"err": stderr.decode("utf-8")})
-            raise RuntimeError("Encoding failed with error")
+            lines = stderr.decode("utf-8").splitlines()
+            lines, _ = filter_by_prefix(lines, "Svt[info]")
+            lines, warnings = filter_by_prefix(lines, "Svt[warn]")
+            for waning in warnings:
+                log.warn(waning)
+            stderr_str = "\n".join(lines)
+            if len(stderr_str) > 0:
+                await aios.remove(req.out_file_path)
+                log.error("Encoding failed with error", {"err": stderr_str})
+                raise RuntimeError("Encoding failed with error")
 
         attr = {
             "output_file": req.out_file_path,
@@ -60,3 +68,14 @@ class VideoEncoder:
             "duration": cur_duration(start_time),
         }
         log.info("Encoding completed", attr)
+
+
+def filter_by_prefix(lines, prefix: str) -> tuple[list[str], list[str]]:
+    a = []
+    b = []
+    for line in lines:
+        if not line.startswith(prefix):
+            a.append(line)
+        else:
+            b.append(line)
+    return a, b

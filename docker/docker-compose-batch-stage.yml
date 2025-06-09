@@ -1,9 +1,11 @@
 services:
   vtask-batch:
-    image: vtask-gpu:latest
+#    image: vtask-gpu:latest
+    image: vtask-enc:latest
     container_name: vtask-batch
     working_dir: /app
-    entrypoint: python3 -m vtask batch
+#    entrypoint: python3 -m vtask batch
+    entrypoint: .venv/bin/python3 -m vtask batch
     environment:
       PY_ENV: prod
       BATCH_COMMAND: "${BATCH_COMMAND}"
@@ -22,10 +24,10 @@ services:
       - "${VIDEO_DOWNLOAD_CONFIG_PATH}:/mnt/app/video_conf.yaml"
       - "${ARCHIVE_CONFIG_PATH}:/mnt/app/archive_conf.yaml"
       - "${ENCODING_CONFIG_PATH}:/mnt/app/encoding_conf.yaml"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu,video]
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [gpu,video]
