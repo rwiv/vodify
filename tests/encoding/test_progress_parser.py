@@ -5,7 +5,7 @@ def test_progress_parser():
     raw_data = b"""
     frame=123
     fps=24.0
-    stream_0_0_q=22
+    stream_0_0_q=22.3
     bitrate=284.3kbits/s
     total_size=2048000
     out_time_us=1000000
@@ -19,7 +19,7 @@ def test_progress_parser():
     expected = ProgressInfo(
         frame=123,
         fps=24.0,
-        stream_q=22.0,
+        stream_q=22.3,
         bitrate_kbits=284.3,
         total_size=2048000,
         out_time_us=1000000,

@@ -72,6 +72,10 @@ async def copy_file(src: str, dst: str):
     await asyncio.to_thread(shutil.copy, src=src, dst=dst)
 
 
+async def copy_file2(src: str, dst: str):
+    await asyncio.to_thread(shutil.copy2, src=src, dst=dst)
+
+
 async def utime(path: str, times: tuple[float, float]):
     await asyncio.to_thread(os.utime, path, times)
 

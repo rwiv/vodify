@@ -40,21 +40,20 @@ class LossExecutor:
             os.makedirs(self.tmp_dir_path, exist_ok=True)
 
         for file_path in read_dir_recur(self.src_dir_path):
-            src_sub_path = file_path.replace(self.src_dir_path, "")
-
+            sub_path = file_path.replace(self.src_dir_path, "")
             tmp_file_path = path_join(self.tmp_dir_path, filename(file_path))
             shutil.copy2(file_path, tmp_file_path)
 
             try:
-                ext = get_ext(src_sub_path)
-                tmp_csv_path = path_join(self.tmp_dir_path, src_sub_path.replace(f".{ext}", ".csv"))
-                yaml_path = path_join(self.out_dir_path, src_sub_path.replace(f".{ext}", ".yaml"))
+                ext = get_ext(sub_path)
+                tmp_csv_path = path_join(self.tmp_dir_path, sub_path.replace(f".{ext}", ".csv"))
+                yaml_path = path_join(self.out_dir_path, sub_path.replace(f".{ext}", ".yaml"))
 
                 result = self.inspector.inspect(tmp_file_path, tmp_csv_path)
 
                 os.remove(tmp_file_path)
                 if self.conf.archive_csv:
-                    out_csv_path = path_join(self.out_dir_path, src_sub_path.replace(f".{ext}", ".csv"))
+                    out_csv_path = path_join(self.out_dir_path, sub_path.replace(f".{ext}", ".csv"))
                     shutil.move(tmp_csv_path, out_csv_path)
                 else:
                     os.remove(tmp_csv_path)
@@ -65,26 +64,25 @@ class LossExecutor:
 
                 log.info("one loss check is done", get_done_log_attrs(result, file_path))
             except Exception as e:
-                notify_msg = f"Directory Failed: {path_join(self.src_dir_path, src_sub_path)}, err: {e}"
-                asyncio.run(self.notifier.notify(notify_msg))
+                asyncio.run(self.notifier.notify(f"Failed to loss check: {sub_path}, err={e}"))
                 raise
 
-        asyncio.run(self.notifier.notify(f"directory frame-loss check done: {self.src_dir_path}"))
-        log.info(f"directory frame-loss check done: {self.src_dir_path}")
+        asyncio.run(self.notifier.notify(f"Loss Check Completed: {self.src_dir_path}"))
+        log.info(f"Loss Check Completed: {self.src_dir_path}")
 
     def __analyze(self):
         if not Path(self.tmp_dir_path).exists():
             os.makedirs(self.tmp_dir_path, exist_ok=True)
 
         for file_path in read_dir_recur(self.src_dir_path):
-            src_sub_path = file_path.replace(self.src_dir_path, "")
-            ext = get_ext(src_sub_path)
+            sub_path = file_path.replace(self.src_dir_path, "")
+            ext = get_ext(sub_path)
             if ext != "csv":
                 continue
 
             result = self.inspector.analyze(file_path)
 
-            yaml_path = path_join(self.out_dir_path, src_sub_path.replace(f".{ext}", ".yaml"))
+            yaml_path = path_join(self.out_dir_path, sub_path.replace(f".{ext}", ".yaml"))
             check_dir(yaml_path)
             with open(yaml_path, "w") as file:
                 file.write(yaml.dump(result.to_out_dict(), allow_unicode=True))

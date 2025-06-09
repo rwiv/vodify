@@ -12,6 +12,7 @@ from .file import (
     rmtree,
     move_file,
     copy_file,
+    copy_file2,
     open_tar,
     utime,
 )

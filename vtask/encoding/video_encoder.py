@@ -1,3 +1,4 @@
+import asyncio
 import subprocess
 import sys
 
@@ -7,13 +8,15 @@ from pyutils import log
 from .encoding_request import EncodingRequest
 from .encoding_resolver import resolve_command
 from .progress_parser import parse_encoding_progress
-from ..utils import exec_process
+from ..utils import exec_process, cur_duration
 
 
 class VideoEncoder:
     async def encode(self, req: EncodingRequest, logging: bool = False) -> None:
         if await aios.path.exists(req.out_file_path):
             raise FileExistsError(f"Output file {req.out_file_path} already exists.")
+
+        start_time = asyncio.get_event_loop().time()
         command = resolve_command(req)
         process = await exec_process(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         assert process.stdout is not None
@@ -48,5 +51,6 @@ class VideoEncoder:
             "quantizer_avg": stream_q_sum / stream_q_cnt if stream_q_cnt > 0 else None,
             "bitrate_avg": bitrate_sum / bitrate_cnt if bitrate_cnt > 0 else None,
             "speed_avg": speed_sum / speed_cnt if speed_cnt > 0 else None,
+            "duration": cur_duration(start_time),
         }
         log.info("Encoding completed", attr)

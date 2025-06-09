@@ -10,6 +10,7 @@ class BatchCommand(Enum):
     LOSS = "loss"
     VIDEO = "video"
     ARCHIVE = "archive"
+    ENCODING = "encoding"
 
 
 class BatchEnv(BaseModel):
@@ -18,6 +19,7 @@ class BatchEnv(BaseModel):
     loss_config_path: constr(min_length=1) | None = None
     video_download_config_path: constr(min_length=1) | None = None
     archive_config_path: constr(min_length=1) | None = None
+    encoding_config_path: constr(min_length=1) | None = None
     untf: UntfConfig
 
 

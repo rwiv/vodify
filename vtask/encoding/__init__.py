@@ -1,6 +1,7 @@
 import os
 import sys
 
+from .encoding_executor import EncodingExecutor
 from .encoding_request import EncodingRequest
 from .encoding_resolver import resolve_command
 from .progress_parser import ProgressInfo, parse_encoding_progress
