@@ -3,7 +3,7 @@ services:
     image: vtask-gpu:latest
     container_name: vtask-enc
     working_dir: /app
-    entrypoint: python -m vtask batch
+    entrypoint: python3 -m vtask batch
     environment:
       PY_ENV: prod
       BATCH_COMMAND: encoding
