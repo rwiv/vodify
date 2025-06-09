@@ -51,9 +51,7 @@ class VideoEncoder:
         if len(stderr) > 0:
             lines = stderr.decode("utf-8").splitlines()
             lines, _ = filter_by_prefix(lines, "Svt[info]")
-            lines, warnings = filter_by_prefix(lines, "Svt[warn]")
-            for waning in warnings:
-                log.warn(waning)
+            lines, _ = filter_by_prefix(lines, "Svt[warn]")
             stderr_str = "\n".join(lines)
             if len(stderr_str) > 0:
                 await aios.remove(req.out_file_path)
