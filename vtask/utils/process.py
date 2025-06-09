@@ -27,3 +27,7 @@ async def run_process(command: list[str], check: bool, stdout: int = subprocess.
     if check:
         check_returncode(process, command, ret_stdout, ret_stderr)
     return ret_stdout, ret_stderr
+
+
+async def exec_process(command: list[str], stdout: int = subprocess.PIPE, stderr: int = subprocess.PIPE) -> Process:
+    return await asyncio.create_subprocess_exec(*command, stdout=stdout, stderr=stderr)
