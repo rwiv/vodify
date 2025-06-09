@@ -81,8 +81,12 @@ def parse_speed(value: str) -> float | None:
         return None
 
 
-def parse_bitrate(value: str) -> str:
+def parse_bitrate(value: str) -> str | None:
     suffix = "kbits/s"
     if not value.endswith(suffix):
-        raise ValueError(f"invalid bitrate format: {value}")
-    return value[: -len(suffix)]
+        if value == "N/A":
+            return None
+        else:
+            raise ValueError(f"invalid bitrate format: {value}")
+    size = len(suffix)
+    return value[:-size]

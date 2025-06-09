@@ -6,7 +6,7 @@ from pathlib import Path
 
 import aiofiles
 from aiofiles import os as aios
-from pyutils import path_join
+from pyutils import path_join, dirpath
 
 
 def stem(file_path: str) -> str:
@@ -30,6 +30,12 @@ def check_dir(base_path: str):
         os.makedirs(dir_path, exist_ok=True)
 
 
+async def check_dir_async(base_path: str):
+    dir_path = dirpath(base_path)
+    if not await aios.path.exists(dir_path):
+        await aios.makedirs(dir_path, exist_ok=True)
+
+
 async def ensure_dir(dir_path: str):
     if not await aios.path.exists(dir_path):
         await aios.makedirs(dir_path, exist_ok=True)
@@ -44,7 +50,7 @@ def read_dir_recur(dir_path: str):
     paths = []
     for root, _, files in os.walk(dir_path):
         for file in files:
-            paths.append(os.path.join(root, file))
+            paths.append(path_join(root, file))
     return paths
 
 

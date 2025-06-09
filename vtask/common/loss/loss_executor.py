@@ -46,6 +46,8 @@ class LossExecutor:
 
             try:
                 ext = get_ext(sub_path)
+                if ext is None:
+                    raise ValueError(f"File without extension: {file_path}")
                 tmp_csv_path = path_join(self.tmp_dir_path, sub_path.replace(f".{ext}", ".csv"))
                 yaml_path = path_join(self.out_dir_path, sub_path.replace(f".{ext}", ".yaml"))
 

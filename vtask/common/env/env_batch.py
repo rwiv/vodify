@@ -34,5 +34,6 @@ def get_batch_env() -> BatchEnv:
         video_download_config_path=os.getenv("VIDEO_DOWNLOAD_CONFIG_PATH") or None,
         loss_config_path=os.getenv("LOSS_CONFIG_PATH") or None,
         archive_config_path=os.getenv("ARCHIVE_CONFIG_PATH") or None,
+        encoding_config_path=os.getenv("ENCODING_CONFIG_PATH") or None,
         untf=read_untf_env(),
     )

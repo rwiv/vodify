@@ -1,15 +1,16 @@
+import uuid
 from pathlib import Path
 
 import yaml
 from aiofiles import os as aios
 from pydantic import BaseModel, constr, Field
-from pyutils import path_join, log, filename
+from pyutils import log, get_ext, path_join
 
 from .encoding_request import EncodingRequest
 from .video_encoder import VideoEncoder
 from ..common.env import BatchEnv
 from ..common.notifier import create_notifier
-from ..utils import listdir_recur, move_file, copy_file2
+from ..utils import listdir_recur, move_file, copy_file2, check_dir_async
 
 
 class EncodingConfig(BaseModel):
@@ -31,7 +32,7 @@ class EncodingExecutor:
     def __init__(self, env: BatchEnv):
         conf_path = env.encoding_config_path
         if conf_path is None:
-            raise ValueError("loss_config_path is required")
+            raise ValueError("encoding_config_path is required")
         self.conf = read_encoding_config(conf_path)
         self.src_dir_path = self.conf.src_dir_path
         self.out_dir_path = self.conf.out_dir_path
@@ -45,17 +46,24 @@ class EncodingExecutor:
 
         for file_path in await listdir_recur(self.src_dir_path):
             sub_path = file_path.replace(self.src_dir_path, "")
-            tmp_src_path = path_join(self.tmp_dir_path, filename(file_path))
-            await copy_file2(file_path, tmp_src_path)
+            uid = str(uuid.uuid4())
+            ext = get_ext(file_path)
+            if ext is None:
+                raise ValueError(f"File without extension: {file_path}")
 
             try:
-                tmp_out_path = path_join(self.tmp_dir_path, sub_path)
+                tmp_src_path = path_join(self.tmp_dir_path, f"{uid}_src.{ext}")
+                tmp_out_path = path_join(self.tmp_dir_path, f"{uid}_out.{ext}")
+                await copy_file2(file_path, tmp_src_path)
 
-                request = self.conf.request.copy(update={"src_path": tmp_src_path, "out_path": tmp_out_path})
+                request: EncodingRequest = self.conf.request.copy()
+                request.src_file_path = tmp_src_path
+                request.out_file_path = tmp_out_path
                 await self.encoder.encode(request, logging=False)
                 await aios.remove(tmp_src_path)
 
                 out_file_path = path_join(self.out_dir_path, sub_path)
+                await check_dir_async(out_file_path)
                 await move_file(tmp_out_path, out_file_path)
             except Exception as e:
                 await self.notifier.notify(f"Failed to encoding: {sub_path}, err={e}")

@@ -5,6 +5,7 @@ from .file import (
     stem,
     write_file,
     check_dir,
+    check_dir_async,
     ensure_dir,
     read_dir_recur,
     move_directory_not_recur,
