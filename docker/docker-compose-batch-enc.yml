@@ -24,10 +24,3 @@ services:
       options:
         labels: app,host
         tag: "container_image={{.ImageName}},container_name={{.Name}}"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu,video]
