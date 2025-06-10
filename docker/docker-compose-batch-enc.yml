@@ -1,5 +1,5 @@
 services:
-  vtask-gpu:
+  vtask-enc:
     image: vtask-enc:latest
     container_name: vtask-enc
     working_dir: /app
