@@ -12,7 +12,7 @@ def stdl_done(dct: dict):
     deps = WorkerDependencyManager()
     msg = StdlDoneMsg(**dct)
 
-    task_uname = f"{msg.platform}:{msg.uid}:{msg.video_name}"
+    task_uname = f"{msg.platform.value}:{msg.uid}:{msg.video_name}"
     exists_result = deps.task_status_repository.check(task_uname=task_uname)
     if exists_result is not None:
         return exists_result
