@@ -11,6 +11,13 @@ from .progress_parser import parse_encoding_progress
 from ..utils import exec_process, cur_duration, check_returncode
 
 
+FILTER_PREFIXES = ["Svt[info]", "Svt[warn]"]
+FILTER_KEYWORDS = [
+    "deprecated pixel format used, make sure you did set range correctly",
+    "Last message repeated",
+]
+
+
 class VideoEncoder:
     async def encode(self, req: EncodingRequest, logging: bool = False) -> None:
         if await aios.path.exists(req.out_file_path):
@@ -50,8 +57,10 @@ class VideoEncoder:
         check_returncode(process, command, stdout, stderr)
         if len(stderr) > 0:
             lines = stderr.decode("utf-8").splitlines()
-            lines, _ = filter_by_prefix(lines, "Svt[info]")
-            lines, _ = filter_by_prefix(lines, "Svt[warn]")
+            for prefix in FILTER_PREFIXES:
+                lines, _ = filter_by_prefix(lines, prefix)
+            for keyword in FILTER_KEYWORDS:
+                lines, _ = filter_by_keyword(lines, keyword)
             stderr_str = "\n".join(lines)
             if len(stderr_str) > 0:
                 await aios.remove(req.out_file_path)
@@ -68,11 +77,22 @@ class VideoEncoder:
         log.info("Encoding completed", attr)
 
 
-def filter_by_prefix(lines, prefix: str) -> tuple[list[str], list[str]]:
+def filter_by_prefix(lines: list[str], prefix: str) -> tuple[list[str], list[str]]:
     a = []
     b = []
     for line in lines:
         if not line.startswith(prefix):
+            a.append(line)
+        else:
+            b.append(line)
+    return a, b
+
+
+def filter_by_keyword(lines: list[str], keyword: str) -> tuple[list[str], list[str]]:
+    a = []
+    b = []
+    for line in lines:
+        if not line.find(keyword) >= 0:
             a.append(line)
         else:
             b.append(line)
