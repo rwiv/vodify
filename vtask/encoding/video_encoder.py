@@ -13,8 +13,14 @@ from ..utils import exec_process, cur_duration, check_returncode
 
 FILTER_PREFIXES = ["Svt[info]", "Svt[warn]"]
 FILTER_KEYWORDS = [
-    "deprecated pixel format used, make sure you did set range correctly",
     "Last message repeated",
+    "error while decoding",
+
+    "deprecated pixel format used, make sure you did set range correctly",
+
+    "corrupt decoded frame",
+ 
+    "cabac decode of qscale diff failed",
 ]
 
 
@@ -58,9 +64,13 @@ class VideoEncoder:
         if len(stderr) > 0:
             lines = stderr.decode("utf-8").splitlines()
             for prefix in FILTER_PREFIXES:
-                lines, _ = filter_by_prefix(lines, prefix)
+                lines, filtered = filter_by_prefix(lines, prefix)
+                for line in filtered:
+                    log.debug("Filtered stderr line", {"line": line})
             for keyword in FILTER_KEYWORDS:
-                lines, _ = filter_by_keyword(lines, keyword)
+                lines, filtered = filter_by_keyword(lines, keyword)
+                for line in filtered:
+                    log.debug("Filtered stderr line", {"line": line})
             stderr_str = "\n".join(lines)
             if len(stderr_str) > 0:
                 await aios.remove(req.out_file_path)

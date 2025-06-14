@@ -10,7 +10,7 @@ from .encoding_request import EncodingRequest
 from .video_encoder import VideoEncoder
 from ..common.env import BatchEnv
 from ..common.notifier import create_notifier
-from ..utils import listdir_recur, move_file, copy_file2, check_dir_async
+from ..utils import listdir_recur, move_file, copy_file2, check_dir_async, stem
 
 
 class EncodingConfig(BaseModel):
@@ -46,15 +46,15 @@ class EncodingExecutor:
 
         for file_path in await listdir_recur(self.src_dir_path):
             sub_path = file_path.replace(self.src_dir_path, "")
-            uid = str(uuid.uuid4())
+            file_stem = f"{stem(file_path)}_{str(uuid.uuid4())}"
             ext = get_ext(file_path)
             if ext is None:
                 raise ValueError(f"File without extension: {file_path}")
-            tmp_src_path = path_join(self.tmp_dir_path, f"{uid}_src.{ext}")
+            tmp_src_path = path_join(self.tmp_dir_path, f"{file_stem}_src.{ext}")
             await copy_file2(file_path, tmp_src_path)
 
             try:
-                tmp_out_path = path_join(self.tmp_dir_path, f"{uid}_out.{ext}")
+                tmp_out_path = path_join(self.tmp_dir_path, f"{file_stem}_out.{ext}")
 
                 request: EncodingRequest = self.conf.request.copy()
                 request.src_file_path = tmp_src_path
