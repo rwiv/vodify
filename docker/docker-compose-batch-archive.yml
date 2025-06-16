@@ -1,6 +1,6 @@
 services:
   vtask-archive:
-    image: harbor.rwiv.xyz/private/vtask:0.6.8
+    image: harbor.rwiv.xyz/private/vtask:0.7.1
     container_name: vtask-archive
     working_dir: /app
     entrypoint: python -m vtask batch

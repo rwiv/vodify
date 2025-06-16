@@ -16,6 +16,11 @@ FILTER_KEYWORDS = [
     "Last message repeated",
     "error while decoding",
 
+    # Case where empty frames were found
+    "More than 1000 frames duplicated",
+    "More than 10000 frames duplicated",
+    "More than 100000 frames duplicated",
+
     "deprecated pixel format used, make sure you did set range correctly",
 
     "corrupt decoded frame",
