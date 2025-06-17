@@ -13,6 +13,7 @@ def test_resolver():
         videoPreset="p4",
         videoScale={"width": 1280, "height": 720},  # type: ignore
         videoFrame=30,
+        videoMaxBitrate=3000,
         audioCodec="opus",  # type: ignore
         audioBitrateKb=128,
         enableGpu=True,
@@ -65,5 +66,25 @@ def test_resolver():
         enableGpu=False,
     )
     expected = ["ffmpeg", "-i", src_file_path, "-c:v", "copy", "-vf", "fps=30", "-c:a", "copy"]
+    expected.extend(["-v", "warning", "-progress", "-", out_file_path])
+    assert resolve_command(req) == expected
+
+    req = EncodingRequest(
+        srcFilePath=src_file_path,
+        outFilePath=out_file_path,
+        videoCodec="av1",  # type: ignore
+        videoQuality=23,
+        videoPreset="4",
+        videoScale=None,
+        videoFrame=None,
+        videoMaxBitrate=3000,
+        audioBitrateKb=None,
+        enableGpu=False,
+    )
+    expected = ["ffmpeg", "-i", src_file_path]
+    expected.extend(["-c:v", "libsvtav1"])
+    expected.extend(["-crf", "23", "-preset", "4"])
+    expected.extend(["-svtav1-params", f"mbr=3000"])
+    expected.extend(["-c:a", "copy"])
     expected.extend(["-v", "warning", "-progress", "-", out_file_path])
     assert resolve_command(req) == expected
