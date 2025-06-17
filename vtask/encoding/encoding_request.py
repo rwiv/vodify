@@ -28,6 +28,7 @@ class EncodingRequest(BaseModel):
     video_preset: str | None = Field(alias="videoPreset", default=None)
     video_scale: VideoScale | None = Field(alias="videoScale", default=None)
     video_frame: int | None = Field(alias="videoFrame", default=None)
+    video_max_bitrate: int | None = Field(alias="videoMaxBitrate", default=None)
     audio_codec: AudioCodec = Field(alias="audioCodec", default=AudioCodec.COPY)
     audio_bitrate_kb: int | None = Field(alias="audioBitrateKb", default=None)
     enable_gpu: bool = Field(alias="enableGpu", default=False)

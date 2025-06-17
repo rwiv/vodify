@@ -5,28 +5,11 @@ import sys
 from aiofiles import os as aios
 from pyutils import log
 
+from .encoding_filters import FILTER_PREFIXES, FILTER_KEYWORDS
 from .encoding_request import EncodingRequest
 from .encoding_resolver import resolve_command
 from .progress_parser import parse_encoding_progress
 from ..utils import exec_process, cur_duration, check_returncode
-
-
-FILTER_PREFIXES = ["Svt[info]", "Svt[warn]"]
-FILTER_KEYWORDS = [
-    "Last message repeated",
-    "error while decoding",
-
-    # Case where empty frames were found
-    "More than 1000 frames duplicated",
-    "More than 10000 frames duplicated",
-    "More than 100000 frames duplicated",
-
-    "deprecated pixel format used, make sure you did set range correctly",
-
-    "corrupt decoded frame",
- 
-    "cabac decode of qscale diff failed",
-]
 
 
 class VideoEncoder:

@@ -61,8 +61,16 @@ def resolve_command(req: EncodingRequest) -> list[str]:
             command.extend(["-crf", str(req.video_quality)])
     if req.video_preset:
         command.extend(["-preset", req.video_preset])
+
+    if req.video_max_bitrate and not req.enable_gpu:
+        if video_codec == VideoCodec.AV1:
+            command.extend(["-svtav1-params", f"mbr={req.video_max_bitrate}"])
+        elif video_codec == VideoCodec.H265:
+            command.extend(["-x265-params", f"vbv-maxrate={req.video_max_bitrate}:vbv-bufsize={req.video_max_bitrate}"])
+
     if vf:
         command.extend(["-vf", vf])
+
     command.extend(["-c:a", audio_codec])
     if audio_bitrate:
         command.extend(["-b:a", audio_bitrate])
