@@ -18,7 +18,7 @@ def test_resolver():
         audioBitrateKb=128,
         enableGpu=True,
     )
-    expected = ["ffmpeg", "-i", src_file_path]
+    expected = ["ffmpeg", "-hwaccel", "nvdec", "-hwaccel_output_format", "cuda", "-i", src_file_path]
     expected.extend(["-c:v", "hevc_nvenc"])
     expected.extend(["-cq", "23", "-preset", "p4"])
     expected.extend(["-vf", "scale=1280:720,fps=30"])

@@ -52,7 +52,12 @@ def resolve_command(req: EncodingRequest) -> list[str]:
     audio_bitrate = resolve_audio_bitrate(req)
     vf = resolve_vf(req)
 
-    command = ["ffmpeg", "-i", req.src_file_path, "-c:v", video_codec]
+    command = ["ffmpeg"]
+
+    if req.enable_gpu:
+        command.extend(["-hwaccel", "nvdec", "-hwaccel_output_format", "cuda"])
+
+    command.extend(["-i", req.src_file_path, "-c:v", video_codec])
 
     if req.video_quality is not None:
         if req.enable_gpu:
