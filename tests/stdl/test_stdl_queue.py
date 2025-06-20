@@ -7,6 +7,7 @@ from pyutils import path_join, find_project_root, dirpath
 
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.env import get_celery_env
+from vtask.common.status import TaskStatusRepository
 from vtask.stdl import StdlDoneMsg, StdlDoneQueue
 
 load_test_dotenv(".env-worker-dev")
@@ -15,6 +16,7 @@ load_test_dotenv(".env-worker-dev")
 celery_env = get_celery_env()
 
 queue = StdlDoneQueue(celery_env.redis)
+task_status_repository = TaskStatusRepository(celery_env.redis)
 
 
 def test_publish():
@@ -38,4 +40,6 @@ def publish_by_archive(src_path: str, done_queue: StdlDoneQueue):
         message_dicts = json.loads(f.read())
     state = StdlQueueState(**message_dicts)
     for msg in state.queue_items:
+        task_uname = f"{msg.platform.value}:{msg.uid}:{msg.video_name}"
+        task_status_repository.delete(task_uname=task_uname)
         done_queue.push(msg)
