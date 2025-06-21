@@ -7,6 +7,7 @@ from pyutils import path_join, log, find_project_root
 
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
 from tests.testutils.test_utils_misc import load_test_dotenv
+from vtask.common.fs import S3ObjectWriter
 from vtask.common.notifier import MockNotifier
 from vtask.stdl import (
     StdlDoneMsg,
@@ -18,7 +19,8 @@ from vtask.stdl import (
     StdlArchiver,
     ArchiveTarget,
 )
-from vtask.utils import S3ObjectWriter, rmtree, S3AsyncClient
+from vtask.external.s3 import S3AsyncClient
+from vtask.utils import rmtree
 
 load_test_dotenv(".env-server-dev")
 

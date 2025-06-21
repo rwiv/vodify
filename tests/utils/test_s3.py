@@ -5,7 +5,8 @@ import pytest
 from pyutils import find_project_root, path_join
 
 from vtask.common.fs import read_fs_config, FsConfig
-from vtask.utils import S3ListResponse, S3AsyncClient, cur_duration
+from vtask.external.s3 import S3ListResponse, S3AsyncClient
+from vtask.utils import cur_duration
 
 fs_configs = read_fs_config(path_join(find_project_root(), "dev", "fs_conf_test.yaml"))
 

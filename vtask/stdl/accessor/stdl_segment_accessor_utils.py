@@ -6,7 +6,7 @@ from .stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
 from ...common.env import WorkerEnv
 from ...common.fs import FsType, FsConfig
-from ...utils import S3AsyncClient
+from ...external.s3 import S3AsyncClient
 
 
 def create_stdl_accessor(

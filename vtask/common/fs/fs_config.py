@@ -2,7 +2,7 @@ import yaml
 from pydantic import BaseModel, constr
 
 from .fs_types import FsType
-from ...utils import S3Config
+from ...external.s3 import S3Config
 
 
 class FsConfig(BaseModel):

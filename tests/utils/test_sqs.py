@@ -2,7 +2,7 @@ import pytest
 
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.env import get_server_env
-from vtask.utils import SQSAsyncClient
+from vtask.external.sqs import SQSAsyncClient
 
 load_test_dotenv(".env-server-dev")
 # load_test_dotenv(".env-worker-prod")

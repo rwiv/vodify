@@ -4,8 +4,8 @@ import aiofiles
 from aiofiles import os as aios
 from pyutils import filename, dirpath
 
-from vtask.common.fs import FsType
-from vtask.utils import S3AsyncClient
+from .fs_types import FsType
+from ...external.s3 import S3AsyncClient
 
 
 class ObjectWriter(ABC):

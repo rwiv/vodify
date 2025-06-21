@@ -1,14 +1,10 @@
 import os
 import sys
 
-from .fs_config import FsConfig, read_fs_config
-from .fs_types import FsType
-from .fs_constants import LOCAL_FILE_NAME
-from .object_writer import ObjectWriter, LocalObjectWriter, S3ObjectWriter
+from .sqs_client import SQSAsyncClient, SQSConfig
 
 targets = [
-    "fs_config",
-    "fs_types",
+    "sqs_client",
 ]
 if os.getenv("PY_ENV") != "prod":
     for name in list(sys.modules.keys()):

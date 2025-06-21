@@ -2,7 +2,7 @@ import os
 
 from pydantic import BaseModel, conint, constr
 
-from vtask.utils import SQSConfig
+from ...external.sqs import SQSConfig
 
 
 class ServerConfig(BaseModel):
