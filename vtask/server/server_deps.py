@@ -1,10 +1,11 @@
 from fastapi import APIRouter
 
 from .celery import CeleryController
-from .stdl import StdlController, StdlTaskRegisterJob, StdlTaskRegistrar
+from .stdl import StdlController, StdlTaskRegistrar, StdlTaskRegisterJob, StdlMsgConsumeJob
 from ..celery import CeleryRedisBrokerClient
 from ..common.job import CronJob
 from ..env import get_server_env, get_celery_env
+from ..external.sqs import SQSAsyncClient
 from ..stdl import StdlMsgQueue
 
 
@@ -19,7 +20,7 @@ class DefaultController:
 
 class ServerDependencyManager:
     def __init__(self):
-        self.env = get_server_env()
+        self.server_env = get_server_env()
         self.celery_env = get_celery_env()
 
         default_controller = DefaultController()
@@ -34,6 +35,10 @@ class ServerDependencyManager:
 
         stdl_register_job = StdlTaskRegisterJob(stdl_queue, stdl_requester, celery_redis_broker)
         self.stdl_register_cron = CronJob(job=stdl_register_job, interval_sec=5, unstoppable=True)
+
+        sqs_client = SQSAsyncClient(self.server_env.sqs)
+        stdl_consume_job = StdlMsgConsumeJob(sqs_client, stdl_queue)
+        self.stdl_consume_cron = CronJob(job=stdl_consume_job, interval_sec=1, unstoppable=True)
 
         stdl_controller = StdlController(stdl_queue, self.stdl_register_cron, stdl_requester)
         self.stdl_router = stdl_controller.router

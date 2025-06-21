@@ -26,10 +26,7 @@ class StdlTaskRegisterJob(Job):
         self.received_task_threshold = received_task_threshold
         self.request_delay_sec = register_delay_sec
 
-    def run(self):
-        asyncio.run(self._run())
-
-    async def _run(self):
+    async def run(self):
         workers = await asyncio.to_thread(find_active_worker_names, app)
         if len(workers) == 0:
             return

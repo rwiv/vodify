@@ -6,5 +6,5 @@ class Job(ABC):
         self.name = name
 
     @abstractmethod
-    def run(self):
+    async def run(self):
         pass

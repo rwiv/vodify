@@ -1,5 +1,6 @@
-import asyncio
 import json
+
+from pyutils import log
 
 from ...common.job import Job
 from ...external.sqs import SQSAsyncClient
@@ -16,10 +17,7 @@ class StdlMsgConsumeJob(Job):
         self.__queue = queue
         self.request_delay_sec = request_delay_sec
 
-    def run(self):
-        asyncio.run(self._run())
-
-    async def _run(self):
+    async def run(self):
         bodies, handles = await self.__sqs.receive()
 
         for stdl_msg in [StdlDoneMsg(**json.loads(body)) for body in bodies]:

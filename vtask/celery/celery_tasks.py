@@ -7,12 +7,12 @@ from .celery_worker_deps import WorkerDependencyManager
 from ..stdl import StdlDoneMsg, StdlDoneStatus
 
 
-@app.task(name="vtask.stdl.done")
-def stdl_done(dct: dict):
-    asyncio.run(_stdl_done(dct))
+@app.task(name="vtask.stdl.transcode")
+def stdl_transcode(dct: dict):
+    asyncio.run(_stdl_transcode(dct))
 
 
-async def _stdl_done(dct: dict):
+async def _stdl_transcode(dct: dict):
     deps = WorkerDependencyManager()
     msg = StdlDoneMsg(**dct)
 

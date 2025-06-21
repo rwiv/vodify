@@ -3,7 +3,7 @@ import sys
 
 from .celery_app import app
 from .celery_app_run import run
-from .celery_tasks import stdl_done
+from .celery_tasks import stdl_transcode
 from .celery_utils import *
 from .celery_redis_broker_client import CeleryRedisBrokerClient
 from .celery_constants import *

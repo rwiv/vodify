@@ -37,6 +37,26 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: {{ .Values.redis.passwordKey }}
+            - name: SQS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.sqs.secretName }}
+                  key: {{ .Values.secrets.sqs.accessKeyKey }}
+            - name: SQS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.sqs.secretName }}
+                  key: {{ .Values.secrets.sqs.secretKeyKey }}
+            - name: SQS_REGION_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.stdlQueue.secretName }}
+                  key: {{ .Values.secrets.stdlQueue.regionNameKey }}
+            - name: SQS_QUEUE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.stdlQueue.secretName }}
+                  key: {{ .Values.secrets.stdlQueue.queueUrlKey }}
       imagePullSecrets:
         - name: {{ .Values.image.pullSecret }}
       {{- with .Values.affinity }}

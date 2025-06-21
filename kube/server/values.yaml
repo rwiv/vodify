@@ -13,6 +13,15 @@ redis:
   port: 6379
   secretName: vtask-redis
   passwordKey: password
+secrets:
+  sqs:
+    secretName: sqs-credentials
+    accessKeyKey: access-key
+    secretKeyKey: secret-key
+  stdlQueue:
+    secretName: stdl-queue
+    regionNameKey: region-name
+    queueUrlKey: queue-url
 server:
   replicas: 1
   service:

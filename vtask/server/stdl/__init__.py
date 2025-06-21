@@ -3,6 +3,7 @@ import sys
 
 from .stdl_controller import StdlController
 from .stdl_task_register_job import StdlTaskRegisterJob
+from .stdl_msg_consume_job import StdlMsgConsumeJob
 from .stdl_task_registrar import StdlTaskRegistrar
 
 targets = [

@@ -12,10 +12,10 @@ services:
       REDIS_PORT: "${REDIS_PORT}"
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
 
-      AMQP_HOST: "${AMQP_HOST}"
-      AMQP_PORT: "${AMQP_PORT}"
-      AMQP_USERNAME: "${AMQP_USERNAME}"
-      AMQP_PASSWORD: "${AMQP_PASSWORD}"
+      SQS_ACCESS_KEY: "${SQS_ACCESS_KEY}"
+      SQS_SECRET_KEY: "${SQS_SECRET_KEY}"
+      SQS_REGION_NAME: "${SQS_REGION_NAME}"
+      SQS_QUEUE_URL: "${SQS_QUEUE_URL}"
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
