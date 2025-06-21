@@ -11,7 +11,7 @@ from .loss_inspector import LossInspector, InspectResult
 from .loss_inspector_size import SizeLossInspector
 from .loss_inspector_time import TimeLossInspector
 from ..env import BatchEnv
-from ..notifier import create_notifier
+from ...external.notifier import create_notifier
 from ...utils import check_dir, read_dir_recur
 
 

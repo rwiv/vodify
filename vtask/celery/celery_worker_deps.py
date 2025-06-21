@@ -1,7 +1,7 @@
 from ..common.env import get_worker_env, get_celery_env
 from ..common.fs import read_fs_config
-from ..common.notifier import create_notifier
 from ..common.status import TaskStatusRepository
+from ..external.notifier import create_notifier
 from ..stdl import StdlTranscoder, create_stdl_accessor
 
 

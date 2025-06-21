@@ -10,7 +10,7 @@ from pyutils import log, path_join
 
 from ..accessor.stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_types import StdlSegmentsInfo
-from ...common.notifier import Notifier
+from ...external.notifier import Notifier
 from ...ffmpeg import remux_video
 from ...utils import (
     cur_duration,

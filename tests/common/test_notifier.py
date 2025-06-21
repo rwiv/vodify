@@ -3,8 +3,8 @@ from pyutils import load_dotenv, path_join, find_project_root
 
 load_dotenv(path_join(find_project_root(), "dev", ".env-batch-dev"))
 
-from vtask.common.env.env_batch import get_batch_env
-from vtask.common.notifier import UntfNotifier
+from vtask.common.env import get_batch_env
+from vtask.external.notifier import UntfNotifier
 
 env = get_batch_env()
 

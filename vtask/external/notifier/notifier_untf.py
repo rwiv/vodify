@@ -1,16 +1,13 @@
-from abc import ABC, abstractmethod
-
 import aiohttp
-from pydantic import BaseModel
-from pyutils import log
+from pydantic import BaseModel, constr
 
-from ...common.env import UntfConfig
+from .notifier import Notifier
 
 
-class Notifier(ABC):
-    @abstractmethod
-    async def notify(self, message: str):
-        pass
+class UntfConfig(BaseModel):
+    endpoint: constr(min_length=1)
+    api_key: constr(min_length=1)
+    topic: constr(min_length=1)
 
 
 class UntfSendRequest(BaseModel):
@@ -32,8 +29,3 @@ class UntfNotifier(Notifier):
             async with session.post(url, json=body) as response:
                 if response.status >= 400:
                     raise Exception(f"Failed to notify: {await response.text()}")
-
-
-class MockNotifier(Notifier):
-    async def notify(self, message: str):
-        log.info(f"MockNotifier.notify_async({message})")

@@ -3,7 +3,7 @@ from pyutils import log, error_dict
 from .video_download_config import read_video_download_config
 from ..video_downloader import VideoDownloader
 from ...common.env import BatchEnv
-from ...common.notifier import create_notifier
+from ...external.notifier import create_notifier
 
 
 class VideoDownloadExecutor:
