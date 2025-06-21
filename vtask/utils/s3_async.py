@@ -53,7 +53,7 @@ class S3AsyncClient:
         self.__presigned_url_expires_in = 3600
 
     async def head(self, key: str) -> S3ObjectInfoResponse | None:
-        async with create_async_client(self.__conf) as client:
+        async with create_client(self.__conf) as client:
             try:
                 s3_res = await client.head_object(Bucket=self.__bucket_name, Key=key)
                 return S3ObjectInfoResponse.new(s3_res, key)
@@ -71,7 +71,7 @@ class S3AsyncClient:
         next_token: str | None = None,
         max_keys: int | None = None,
     ) -> S3ListResponse:
-        async with create_async_client(self.__conf) as client:
+        async with create_client(self.__conf) as client:
             kwargs = {"Bucket": self.__bucket_name, "Prefix": prefix}
             if delimiter is not None:
                 kwargs["Delimiter"] = delimiter
@@ -95,17 +95,17 @@ class S3AsyncClient:
             next_token = res.next_continuation_token
 
     async def write(self, key: str, data: bytes):
-        async with create_async_client(self.__conf) as client:
+        async with create_client(self.__conf) as client:
             await client.put_object(Bucket=self.__bucket_name, Key=key, Body=data)
 
     async def read(self, key: str) -> bytes:
-        async with create_async_client(self.__conf) as client:
+        async with create_client(self.__conf) as client:
             res = await client.get_object(Bucket=self.__bucket_name, Key=key)
             async with res["Body"] as body:
                 return await body.read()
 
     async def generate_presigned_url(self, key: str) -> str:
-        async with create_async_client(self.__conf) as client:
+        async with create_client(self.__conf) as client:
             return await client.generate_presigned_url(
                 "get_object",
                 Params={"Bucket": self.__bucket_name, "Key": key},
@@ -176,7 +176,7 @@ class S3AsyncClient:
     async def delete(self, key: str):
         for retry_cnt in range(self.__retry_limit + 1):
             try:
-                async with create_async_client(self.__conf) as client:
+                async with create_client(self.__conf) as client:
                     await client.delete_object(Bucket=self.__bucket_name, Key=key)
                 break
             except Exception as e:
@@ -186,7 +186,7 @@ class S3AsyncClient:
                 log.warn(f"Failed to delete object", _retry_error_attr(e, retry_cnt, key))
 
 
-def create_async_client(conf: S3Config) -> S3Client:
+def create_client(conf: S3Config) -> S3Client:
     client = get_session().create_client(
         "s3",
         endpoint_url=conf.endpoint_url,
