@@ -2,6 +2,7 @@ import asyncio
 
 from aiobotocore.session import get_session
 from pydantic import BaseModel, constr
+from pyutils import log
 from types_aiobotocore_sqs.client import SQSClient
 from types_aiobotocore_sqs.type_defs import MessageTypeDef
 
@@ -21,7 +22,7 @@ class SQSAsyncClient:
         async with create_client(self.__conf) as client:
             await client.send_message(QueueUrl=self.__conf.queue_url, MessageBody=body)
 
-    async def receive(self, wait_time_sec: int = 20, max_num: int = 10) -> list[str | None]:
+    async def receive(self, wait_time_sec: int = 20, max_num: int = 10) -> tuple[list[str], list[str]]:
         async with create_client(self.__conf) as client:
             response = await client.receive_message(
                 QueueUrl=self.__conf.queue_url,
@@ -30,17 +31,27 @@ class SQSAsyncClient:
             )
             messages: list[MessageTypeDef] = response.get("Messages", [])
 
-            result: list[str | None] = []
+            bodies: list[str] = []
+            handles: list[str] = []
             for message in messages:
-                result.append(message.get("Body"))
-
-            coroutines = []
-            for message in messages:
+                body = message.get("Body")
+                if body is not None:
+                    bodies.append(body)
+                else:
+                    log.warn("Received message without body")
                 handle = message.get("ReceiptHandle")
                 if handle is not None:
-                    coroutines.append(client.delete_message(QueueUrl=self.__conf.queue_url, ReceiptHandle=handle))
+                    handles.append(handle)
+                else:
+                    log.warn("Received message without receipt handle")
+            return bodies, handles
+
+    async def delete_batch(self, handles: list[str]):
+        async with create_client(self.__conf) as client:
+            coroutines = []
+            for handle in handles:
+                coroutines.append(client.delete_message(QueueUrl=self.__conf.queue_url, ReceiptHandle=handle))
             await asyncio.gather(*coroutines)
-            return result
 
 
 def create_client(conf: SQSConfig) -> SQSClient:

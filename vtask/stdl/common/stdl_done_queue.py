@@ -3,8 +3,7 @@ import json
 from redis import Redis
 
 from ..schema.stdl_types import StdlDoneMsg
-from ...env import RedisConfig
-from ...external.redis import RedisQueue
+from ...external.redis import RedisConfig, RedisQueue
 
 
 REDIS_STDL_DONE_LIST_KEY = "vtask:stdl:done"

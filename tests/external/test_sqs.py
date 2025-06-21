@@ -19,5 +19,6 @@ async def test_send():
 
 @pytest.mark.asyncio
 async def test_receive():
-    result = await client.receive()
-    print(result)
+    bodies, handles = await client.receive()
+    print(bodies)
+    await client.delete_batch(handles)

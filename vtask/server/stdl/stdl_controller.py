@@ -2,16 +2,16 @@ import json
 
 from fastapi import APIRouter
 
-from .stdl_task_requester import StdlTaskRequester
+from .stdl_task_registrar import StdlTaskRegistrar
 from ...common.job import CronJob
 from ...stdl import StdlDoneMsg, StdlDoneStatus, StdlDoneQueue
 
 
 class StdlController:
-    def __init__(self, queue: StdlDoneQueue, cron: CronJob, requester: StdlTaskRequester):
+    def __init__(self, queue: StdlDoneQueue, cron: CronJob, registrar: StdlTaskRegistrar):
         self.__queue = queue
         self.__cron = cron
-        self.__requester = requester
+        self.__registrar = registrar
 
         self.router = APIRouter(prefix="/api/stdl")
         self.router.add_api_route("/health", self.health, methods=["GET"])
@@ -46,17 +46,17 @@ class StdlController:
         if msg.status == StdlDoneStatus.COMPLETE:
             self.__queue.push(msg)
         elif msg.status == StdlDoneStatus.CANCELED:
-            queue_name = self.__requester.resolve_queue(msg)
-            self.__requester.request_done(msg, queue_name)
+            queue_name = self.__registrar.resolve_queue(msg)
+            self.__registrar.register(msg, queue_name)
         return "ok"
 
     def extract_cancel_requests(self):
         for value in self.__queue.redis_queue.list_items():
             msg = StdlDoneMsg(**json.loads(value))
             if msg.status == StdlDoneStatus.CANCELED:
-                queue_name = self.__requester.resolve_queue(msg)
+                queue_name = self.__registrar.resolve_queue(msg)
                 self.__queue.redis_queue.remove_by_value(value)
-                self.__requester.request_done(msg, queue_name)
+                self.__registrar.register(msg, queue_name)
         return "ok"
 
     def convert_to_cancel_by_video_name(self, video_name: str):
@@ -65,7 +65,7 @@ class StdlController:
             if msg.video_name == video_name:
                 new_msg = msg.model_copy()
                 new_msg.status = StdlDoneStatus.CANCELED
-                queue_name = self.__requester.resolve_queue(new_msg)
+                queue_name = self.__registrar.resolve_queue(new_msg)
                 self.__queue.redis_queue.remove_by_value(value)
-                self.__requester.request_done(new_msg, queue_name)
+                self.__registrar.register(new_msg, queue_name)
                 return new_msg

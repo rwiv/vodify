@@ -5,8 +5,8 @@ from ...common.fs import LOCAL_FILE_NAME
 from ...stdl import StdlDoneMsg, StdlDoneStatus
 
 
-class StdlTaskRequester:
-    def request_done(self, msg: StdlDoneMsg, queue_name: str):
+class StdlTaskRegistrar:
+    def register(self, msg: StdlDoneMsg, queue_name: str):
         msg_dict = msg.model_dump(mode="json", by_alias=True)
         stdl_done.apply_async(args=[msg_dict], queue=queue_name)  # type: ignore
         log.info("stdl.done task started", msg_dict)
@@ -19,8 +19,3 @@ class StdlTaskRequester:
             return IO_LFS_QUEUE_NAME
         else:
             return IO_NET_QUEUE_NAME
-
-
-class MockStdlTaskRequester(StdlTaskRequester):
-    def request_done(self, msg: StdlDoneMsg, queue_name: str):
-        log.info("MockStdlTaskRequester.request_done()", msg.model_dump(mode="json", by_alias=True))

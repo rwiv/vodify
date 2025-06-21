@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from .celery import CeleryController
-from .stdl import StdlController, StdlDoneJob, StdlTaskRequester
+from .stdl import StdlController, StdlTaskRegisterJob, StdlTaskRegistrar
 from ..celery import CeleryRedisBrokerClient
 from ..common.job import CronJob
 from ..env import get_server_env, get_celery_env
@@ -29,9 +29,11 @@ class ServerDependencyManager:
         celery_controller = CeleryController(celery_redis_broker)
         self.celery_router = celery_controller.router
 
-        stdl_requester = StdlTaskRequester()
+        stdl_requester = StdlTaskRegistrar()
         stdl_queue = StdlDoneQueue(self.celery_env.redis)
-        stdl_job = StdlDoneJob(stdl_queue, stdl_requester, celery_redis_broker)
-        self.stdl_cron = CronJob(job=stdl_job, interval_sec=5, unstoppable=True)
-        stdl_controller = StdlController(stdl_queue, self.stdl_cron, stdl_requester)
+
+        stdl_register_job = StdlTaskRegisterJob(stdl_queue, stdl_requester, celery_redis_broker)
+        self.stdl_register_cron = CronJob(job=stdl_register_job, interval_sec=5, unstoppable=True)
+
+        stdl_controller = StdlController(stdl_queue, self.stdl_register_cron, stdl_requester)
         self.stdl_router = stdl_controller.router

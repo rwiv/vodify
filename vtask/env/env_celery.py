@@ -2,7 +2,8 @@ import os
 
 from pydantic import BaseModel, constr, conint
 
-from .env_configs import RedisConfig, read_redis_config
+from .env_configs import read_redis_config
+from ..external.redis import RedisConfig
 
 DEFAULT_CELERY_WORKER_CONCURRENCY = 1
 DEFAULT_CELERY_VISIBILITY_TIMEOUT = 7200  # 2 hours

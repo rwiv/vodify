@@ -3,6 +3,7 @@ import os
 from pydantic import BaseModel, conint, constr
 
 from ..external.notifier import UntfConfig
+from ..external.redis import RedisConfig
 
 
 class AmqpConfig(BaseModel):
@@ -19,12 +20,6 @@ def read_amqp_config():
         username=os.getenv("AMQP_USERNAME"),
         password=os.getenv("AMQP_PASSWORD"),
     )
-
-
-class RedisConfig(BaseModel):
-    host: constr(min_length=1)
-    port: conint(ge=1)
-    password: constr(min_length=1)
 
 
 def read_redis_config():
