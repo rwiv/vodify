@@ -1,20 +1,14 @@
-import asyncio
+from datetime import datetime
 from datetime import datetime
 from typing import Any
 
-import aiofiles
-import aiohttp
 from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
-from aiofiles import os as aios
 from aiohttp import ClientResponse
-from botocore.exceptions import ClientError
-from pydantic import BaseModel, Field, constr
-from pyutils import log, error_dict
+from pyutils import error_dict
 from types_aiobotocore_s3.client import S3Client
 
-from .s3_types import S3ListResponse, S3ObjectInfoResponse, S3Config
-from ...utils import utime, nio_limiter
+from .s3_types import S3Config
 
 
 def create_client(conf: S3Config) -> S3Client:

@@ -7,18 +7,16 @@ class RedisString:
     def __init__(self, client: Redis):
         self.__redis = client
 
-    async def set_pexpire(self, key: str, px_ms: int) -> bool:  # return True if set
-        return await self.__redis.pexpire(name=key, time=px_ms)
-
     async def set(
         self,
         key: str,
         value: str,
         nx: bool = False,
         xx: bool = False,
+        ex: int | None = None,
         px: int | None = None,
     ) -> bool:  # return True if set
-        ok = await self.__redis.set(name=key, value=value, nx=nx, xx=xx, px=px)
+        ok = await self.__redis.set(name=key, value=value, nx=nx, xx=xx, ex=ex, px=px)
         if ok is None:
             return False
         if not isinstance(ok, bool):

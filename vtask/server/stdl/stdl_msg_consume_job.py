@@ -3,13 +3,13 @@ import json
 
 from ...common.job import Job
 from ...external.sqs import SQSAsyncClient
-from ...stdl import StdlDoneMsg, StdlDoneQueue
+from ...stdl import StdlDoneMsg, StdlMsgQueue
 
 STDL_MSG_CONSUME_JOB_NAME = "stdl_msg_consume_job"
 
 
 class StdlMsgConsumeJob(Job):
-    def __init__(self, sqs: SQSAsyncClient, queue: StdlDoneQueue, request_delay_sec: float = 3):
+    def __init__(self, sqs: SQSAsyncClient, queue: StdlMsgQueue, request_delay_sec: float = 3):
         super().__init__(name=STDL_MSG_CONSUME_JOB_NAME)
 
         self.__sqs = sqs
@@ -23,7 +23,7 @@ class StdlMsgConsumeJob(Job):
         bodies, handles = await self.__sqs.receive()
 
         for stdl_msg in [StdlDoneMsg(**json.loads(body)) for body in bodies]:
-            self.__queue.push(stdl_msg)
+            await self.__queue.push(stdl_msg)
 
         if len(handles) > 0:
             await self.__sqs.delete_batch(handles)

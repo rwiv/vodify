@@ -36,15 +36,15 @@ class CeleryController:
     def get_prefetched_tasks(self):
         return get_prefetched_tasks(app)
 
-    def get_queue_tasks_bodies(self, queue_name: str):
-        bodies = self.redis_broker.get_received_task_bodies(queue_name=queue_name)
+    async def get_queue_tasks_bodies(self, queue_name: str):
+        bodies = await self.redis_broker.get_received_task_bodies(queue_name=queue_name)
         return {
             "count": len(bodies),
             "bodies": bodies,
         }
 
-    def get_queue_tasks_args(self, queue_name: str):
-        bodies = self.redis_broker.get_received_task_bodies(queue_name=queue_name)
+    async def get_queue_tasks_args(self, queue_name: str):
+        bodies = await self.redis_broker.get_received_task_bodies(queue_name=queue_name)
         return {
             "count": len(bodies),
             "args": [json.dumps(body["args"]) for body in bodies],

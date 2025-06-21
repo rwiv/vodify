@@ -1,3 +1,6 @@
+import asyncio
+
+import pytest
 from pyutils import load_dotenv, path_join, find_project_root
 
 # load_dotenv(path_join(find_project_root(), "dev", ".env-worker-dev"))
@@ -27,7 +30,8 @@ def test_inspect_tasks():
     # print(done_result["message"])
 
 
-def test_inspect_worker_names():
+@pytest.mark.asyncio
+async def test_inspect_worker_names():
     print()
-    for worker in find_active_worker_names(app):
+    for worker in await asyncio.to_thread(find_active_worker_names, app):
         print(worker)

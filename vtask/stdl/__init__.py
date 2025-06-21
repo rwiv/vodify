@@ -6,7 +6,7 @@ from .accessor.stdl_segment_accessor_s3 import StdlS3SegmentAccessor
 from .accessor.stdl_segment_accessor_utils import create_stdl_accessor
 from .archiver.stdl_archive_executor import StdlArchiveExecutor
 from .archiver.stdl_archiver import StdlArchiver, ArchiveTarget
-from .common.stdl_done_queue import StdlDoneQueue
+from .common.stdl_done_queue import StdlMsgQueue
 from .loss.stdl_loss_inspector import StdlLossInspector
 from .schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
 from .schema.stdl_types import StdlDoneMsg, StdlDoneStatus, StdlPlatformType, StdlSegmentsInfo

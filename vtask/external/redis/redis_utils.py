@@ -1,9 +1,9 @@
-from redis import Redis
+from redis.asyncio import Redis
 
 from .redis_types import RedisConfig
 
 
-def create_sync_redis_client(conf: RedisConfig):
+def create_redis_client(conf: RedisConfig) -> Redis:
     return Redis(
         host=conf.host,
         port=conf.port,

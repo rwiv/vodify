@@ -5,7 +5,7 @@ from .stdl import StdlController, StdlTaskRegisterJob, StdlTaskRegistrar
 from ..celery import CeleryRedisBrokerClient
 from ..common.job import CronJob
 from ..env import get_server_env, get_celery_env
-from ..stdl import StdlDoneQueue
+from ..stdl import StdlMsgQueue
 
 
 class DefaultController:
@@ -30,7 +30,7 @@ class ServerDependencyManager:
         self.celery_router = celery_controller.router
 
         stdl_requester = StdlTaskRegistrar()
-        stdl_queue = StdlDoneQueue(self.celery_env.redis)
+        stdl_queue = StdlMsgQueue(self.celery_env.redis)
 
         stdl_register_job = StdlTaskRegisterJob(stdl_queue, stdl_requester, celery_redis_broker)
         self.stdl_register_cron = CronJob(job=stdl_register_job, interval_sec=5, unstoppable=True)

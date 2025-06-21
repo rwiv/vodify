@@ -1,19 +1,17 @@
 import os
 import sys
 
-from .redis_queue_sync import RedisQueue
-from .redis_string_sync import RedisString
+from .redis_queue import RedisQueue
+from .redis_string import RedisString
 from .redis_types import RedisConfig
+from .redis_utils import create_redis_client
 
 targets = [
     "redis_errors",
-    "redis_queue_async",
-    "redis_queue_sync",
-    "redis_string_async",
-    "redis_string_sync",
+    "redis_queue",
+    "redis_string",
     "redis_types",
-    "redis_utils_async",
-    "redis_utils_sync",
+    "redis_utils",
 ]
 if os.getenv("PY_ENV") != "prod":
     for name in list(sys.modules.keys()):

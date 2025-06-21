@@ -3,9 +3,8 @@ import json
 from typing import Any
 
 from pydantic import BaseModel
-from redis import Redis
 
-from ..external.redis import RedisConfig
+from ..external.redis import RedisConfig, create_redis_client
 
 
 class CeleryTaskHeaders(BaseModel):
@@ -51,14 +50,14 @@ class CeleryTaskInfo(BaseModel):
 
 class CeleryRedisBrokerClient:
     def __init__(self, conf: RedisConfig):
-        self.__redis = Redis(host=conf.host, port=conf.port, password=conf.password, db=0)
+        self.__redis = create_redis_client(conf)
 
-    def get_received_tasks(self, queue_name: str):
-        tasks = self.__redis.lrange(queue_name, 0, -1)
+    async def get_received_tasks(self, queue_name: str):
+        tasks = await self.__redis.lrange(queue_name, 0, -1)  # type: ignore
         if not isinstance(tasks, list):
             raise ValueError("Expected list data")
         return [CeleryTaskInfo(**json.loads(task.decode())) for task in tasks]
 
-    def get_received_task_bodies(self, queue_name: str):
-        tasks = self.get_received_tasks(queue_name=queue_name)
+    async def get_received_task_bodies(self, queue_name: str):
+        tasks = await self.get_received_tasks(queue_name=queue_name)
         return [task.get_parsed_body() for task in tasks]

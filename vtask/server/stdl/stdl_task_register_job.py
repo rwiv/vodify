@@ -1,7 +1,9 @@
+import asyncio
+
 from .stdl_task_registrar import StdlTaskRegistrar
 from ...celery import CeleryRedisBrokerClient, find_active_worker_names, app
 from ...common.job import Job
-from ...stdl import StdlDoneMsg, StdlDoneQueue
+from ...stdl import StdlDoneMsg, StdlMsgQueue
 
 STDL_TASK_REGISTER_JOB_NAME = "stdl_task_register_job"
 
@@ -9,7 +11,7 @@ STDL_TASK_REGISTER_JOB_NAME = "stdl_task_register_job"
 class StdlTaskRegisterJob(Job):
     def __init__(
         self,
-        queue: StdlDoneQueue,
+        queue: StdlMsgQueue,
         registrar: StdlTaskRegistrar,
         celery_redis: CeleryRedisBrokerClient,
         received_task_threshold: int = 1,
@@ -25,16 +27,19 @@ class StdlTaskRegisterJob(Job):
         self.request_delay_sec = register_delay_sec
 
     def run(self):
-        workers = find_active_worker_names(app)
+        asyncio.run(self._run())
+
+    async def _run(self):
+        workers = await asyncio.to_thread(find_active_worker_names, app)
         if len(workers) == 0:
             return
 
-        msg: StdlDoneMsg | None = self.__queue.get()
+        msg: StdlDoneMsg | None = await self.__queue.get()
         if msg is None:
             return
 
         queue_name = self.__registrar.resolve_queue(msg)
-        received_tasks = self.__celery_redis.get_received_tasks(queue_name)
+        received_tasks = await self.__celery_redis.get_received_tasks(queue_name)
         if len(received_tasks) < self.received_task_threshold:
             self.__registrar.register(msg, queue_name)
-            self.__queue.pop()
+            await self.__queue.pop()

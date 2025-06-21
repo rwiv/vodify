@@ -4,11 +4,11 @@ from fastapi import APIRouter
 
 from .stdl_task_registrar import StdlTaskRegistrar
 from ...common.job import CronJob
-from ...stdl import StdlDoneMsg, StdlDoneStatus, StdlDoneQueue
+from ...stdl import StdlDoneMsg, StdlDoneStatus, StdlMsgQueue
 
 
 class StdlController:
-    def __init__(self, queue: StdlDoneQueue, cron: CronJob, registrar: StdlTaskRegistrar):
+    def __init__(self, queue: StdlMsgQueue, cron: CronJob, registrar: StdlTaskRegistrar):
         self.__queue = queue
         self.__cron = cron
         self.__registrar = registrar
@@ -27,12 +27,12 @@ class StdlController:
     def health(self):
         return {"status": "UP"}
 
-    def get_stats(self):
-        items = self.__queue.list_items()
+    async def get_stats(self):
+        items = await self.__queue.list_items()
         items.reverse()
         return {
             "listening": self.__cron.is_running(),
-            "queue_size": self.__queue.size(),
+            "queue_size": await self.__queue.size(),
             "queue_items": items,
         }
 
@@ -42,30 +42,30 @@ class StdlController:
     def stop_listening(self):
         self.__cron.stop()
 
-    def push_task(self, msg: StdlDoneMsg):
+    async def push_task(self, msg: StdlDoneMsg):
         if msg.status == StdlDoneStatus.COMPLETE:
-            self.__queue.push(msg)
+            await self.__queue.push(msg)
         elif msg.status == StdlDoneStatus.CANCELED:
             queue_name = self.__registrar.resolve_queue(msg)
             self.__registrar.register(msg, queue_name)
         return "ok"
 
-    def extract_cancel_requests(self):
-        for value in self.__queue.redis_queue.list_items():
+    async def extract_cancel_requests(self):
+        for value in await self.__queue.redis_queue.list_items():
             msg = StdlDoneMsg(**json.loads(value))
             if msg.status == StdlDoneStatus.CANCELED:
                 queue_name = self.__registrar.resolve_queue(msg)
-                self.__queue.redis_queue.remove_by_value(value)
+                await self.__queue.redis_queue.remove_by_value(value)
                 self.__registrar.register(msg, queue_name)
         return "ok"
 
-    def convert_to_cancel_by_video_name(self, video_name: str):
-        for value in self.__queue.redis_queue.list_items():
+    async def convert_to_cancel_by_video_name(self, video_name: str):
+        for value in await self.__queue.redis_queue.list_items():
             msg = StdlDoneMsg(**json.loads(value))
             if msg.video_name == video_name:
                 new_msg = msg.model_copy()
                 new_msg.status = StdlDoneStatus.CANCELED
                 queue_name = self.__registrar.resolve_queue(new_msg)
-                self.__queue.redis_queue.remove_by_value(value)
+                await self.__queue.redis_queue.remove_by_value(value)
                 self.__registrar.register(new_msg, queue_name)
                 return new_msg
