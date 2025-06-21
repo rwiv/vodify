@@ -7,7 +7,7 @@ from vtask.celery.celery_constants import DEFAULT_QUEUE_NAME
 load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
 
 from vtask.celery import CeleryRedisBrokerClient
-from vtask.common.env import get_celery_env
+from vtask.env import get_celery_env
 
 env = get_celery_env()
 conf = env.redis

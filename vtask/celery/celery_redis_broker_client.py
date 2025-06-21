@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import BaseModel
 from redis import Redis
 
-from ..common.env import RedisConfig
+from ..env import RedisConfig
 
 
 class CeleryTaskHeaders(BaseModel):

@@ -3,7 +3,7 @@ import sys
 
 from .env_batch import BatchEnv, BatchCommand, get_batch_env
 from .env_celery import CeleryEnv, get_celery_env
-from .env_configs import AmqpConfig, RedisConfig
+from .env_configs import RedisConfig
 from .env_server import ServerEnv, get_server_env
 from .env_worker import WorkerEnv, get_worker_env
 

@@ -1,6 +1,6 @@
 from celery import Celery
 
-from ..common.env import get_celery_env
+from ..env import get_celery_env
 
 env = get_celery_env()
 

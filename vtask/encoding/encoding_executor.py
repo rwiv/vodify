@@ -8,7 +8,7 @@ from pyutils import log, get_ext, path_join
 
 from .encoding_request import EncodingRequest
 from .video_encoder import VideoEncoder
-from ..common.env import BatchEnv
+from ..env import BatchEnv
 from ..external.notifier import create_notifier
 from ..utils import listdir_recur, move_file, copy_file2, check_dir_async, stem
 

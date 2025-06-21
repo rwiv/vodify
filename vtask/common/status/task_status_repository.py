@@ -3,7 +3,7 @@ from enum import Enum
 from pyutils import log
 from redis import Redis
 
-from ...common.env import RedisConfig
+from ...env import RedisConfig
 from ...external.redis import RedisMap
 
 

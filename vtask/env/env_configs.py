@@ -2,7 +2,7 @@ import os
 
 from pydantic import BaseModel, conint, constr
 
-from ...external.notifier import UntfConfig
+from ..external.notifier import UntfConfig
 
 
 class AmqpConfig(BaseModel):

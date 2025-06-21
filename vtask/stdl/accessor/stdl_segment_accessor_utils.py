@@ -4,8 +4,8 @@ from .stdl_segment_accessor_local import StdlLocalSegmentAccessor
 from .stdl_segment_accessor_s3 import StdlS3SegmentAccessor
 from .stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
-from ...common.env import WorkerEnv
 from ...common.fs import FsType, FsConfig
+from ...env import WorkerEnv
 from ...external.s3 import S3AsyncClient
 
 

@@ -3,9 +3,9 @@ import logging
 
 from pyutils import log
 
-from ..env import get_batch_env, BatchCommand
 from ..loss import LossExecutor
 from ...encoding import EncodingExecutor
+from ...env import get_batch_env, BatchCommand
 from ...stdl import StdlArchiveExecutor
 from ...video import VideoDownloadExecutor
 

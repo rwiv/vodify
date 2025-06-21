@@ -5,7 +5,7 @@ import yaml
 from pydantic import BaseModel
 
 from .stdl_archiver import ArchiveTarget, StdlArchiver
-from ...common.env import BatchEnv
+from ...env import BatchEnv
 from ...external.notifier import create_notifier
 from ...external.s3 import S3AsyncClient, S3Config
 

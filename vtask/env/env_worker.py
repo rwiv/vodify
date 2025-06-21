@@ -3,7 +3,7 @@ import os
 from pydantic import BaseModel, constr
 
 from .env_configs import read_untf_env
-from ...external.notifier import UntfConfig
+from ..external.notifier import UntfConfig
 
 
 class WorkerConfig(BaseModel):

@@ -1,6 +1,6 @@
 from tests.testutils.test_utils_misc import load_test_dotenv
-from vtask.common.env import get_celery_env
 from vtask.common.status import TaskStatusRepository, TaskStatus
+from vtask.env import get_celery_env
 
 load_test_dotenv(".env-worker-dev")
 # load_test_dotenv(".env-worker-prod")

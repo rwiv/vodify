@@ -3,7 +3,7 @@ import json
 from redis import Redis
 
 from ..schema.stdl_types import StdlDoneMsg
-from ...common.env import RedisConfig
+from ...env import RedisConfig
 from ...external.redis import RedisQueue
 
 
