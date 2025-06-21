@@ -2,7 +2,7 @@ from redis import Redis
 
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vtask.common.env import get_celery_env
-from vtask.utils import RedisQueue
+from vtask.external.redis import RedisQueue
 
 load_test_dotenv(".env-worker-dev")
 # load_test_dotenv(".env-worker-prod")

@@ -2,9 +2,9 @@ from pathlib import Path
 
 from aiofiles import os as aios
 
+from ..external.hls import merge_ts
 from ..ffmpeg import remux_video
 from ..utils import rmtree, move_file
-from ..utils.hls import merge_ts
 
 
 async def convert_to_mp4(file_path: str, segments_path: str):

@@ -2,7 +2,7 @@ import aiofiles
 from aiofiles import os as aios
 from pyutils import path_join
 
-from .utils import stem
+from .hls_utils import stem
 
 
 async def merge_ts(chunks_path: str) -> str:

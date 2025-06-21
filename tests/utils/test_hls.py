@@ -1,6 +1,6 @@
 from pyutils import path_join, find_project_root
 
-from vtask.utils.hls import parse_master_playlist, merge_intersected_strings, parse_media_playlist
+from vtask.external.hls import parse_master_playlist, merge_intersected_strings, parse_media_playlist
 
 
 def test_master_playlist():

@@ -6,8 +6,8 @@ from aiofiles import os as aios
 from pyutils import path_join, log, error_dict, get_base_url
 
 from .hls_url_extractor import HlsUrlExtractor
-from .parser import parse_media_playlist
-from .utils import sub_lists_with_idx
+from .hls_parser import parse_media_playlist
+from .hls_utils import sub_lists_with_idx
 from ...utils import nio_limiter, fetch_text
 
 

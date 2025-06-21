@@ -1,6 +1,6 @@
 from pyutils import get_base_url
 
-from .parser import parse_master_playlist, parse_media_playlist, Resolution
+from .hls_parser import parse_master_playlist, parse_media_playlist, Resolution
 from ...utils import fetch_text
 
 

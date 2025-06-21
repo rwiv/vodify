@@ -4,7 +4,7 @@ from redis import Redis
 
 from ..schema.stdl_types import StdlDoneMsg
 from ...common.env import RedisConfig
-from ...utils import RedisQueue
+from ...external.redis import RedisQueue
 
 
 REDIS_STDL_DONE_LIST_KEY = "vtask:stdl:done"

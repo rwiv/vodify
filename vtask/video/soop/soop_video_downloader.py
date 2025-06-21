@@ -5,9 +5,9 @@ from pyutils import path_join
 from .soop_hls_url_extractor import SoopHlsUrlExtractor
 from .soop_video_client import SoopVideoClient, SoopVideoInfo
 from ..schema.video_schema import VideoDownloadContext
+from ...external.hls import HlsDownloader, merge_ts
 from ...ffmpeg import concat_streams, remux_video, get_info, concat_by_list
 from ...utils import get_headers, stem, move_file, rmtree, write_file
-from ...utils.hls import HlsDownloader, merge_ts
 
 
 class SegmentsPathInfo(BaseModel):

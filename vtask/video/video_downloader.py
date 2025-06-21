@@ -12,8 +12,8 @@ from .schema.video_schema import VideoPlatform, VideoDownloadContext
 from .soop.soop_video_downloader import SoopVideoDownloader
 from .video_utils import convert_to_mp4
 from .ytdl.ytdl_downloader import YtdlDownloader
+from ..external.hls import HlsDownloader
 from ..utils import get_headers
-from ..utils.hls import HlsDownloader
 
 
 class VideoDownloader:

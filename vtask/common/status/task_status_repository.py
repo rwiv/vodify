@@ -4,7 +4,7 @@ from pyutils import log
 from redis import Redis
 
 from ...common.env import RedisConfig
-from ...utils import RedisMap
+from ...external.redis import RedisMap
 
 
 REDIS_TASK_STATUS_KEY_PREFIX = "vtask:task:status"

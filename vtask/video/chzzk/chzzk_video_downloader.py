@@ -4,8 +4,8 @@ from pyutils import path_join
 from .chzzk_video_client import ChzzkVideoClient
 from ..schema.video_schema import VideoDownloadContext
 from ..video_utils import convert_to_mp4
+from ...external.hls import HlsDownloader
 from ...utils import get_headers
-from ...utils.hls import HlsDownloader
 
 
 class ChzzkVideoDownloader:

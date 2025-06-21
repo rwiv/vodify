@@ -1,15 +1,15 @@
 import os
 import sys
 
-from .downloader import HlsDownloader
+from .hls_downloader import HlsDownloader
 from .hls_url_extractor import HlsUrlExtractor
-from .merge import merge_ts
-from .parser import parse_master_playlist, parse_media_playlist, Resolution
-from .utils import merge_intersected_strings
+from .hls_merge import merge_ts
+from .hls_parser import parse_master_playlist, parse_media_playlist, Resolution
+from .hls_utils import merge_intersected_strings
 
 targets = [
     "downloader",
-    "hls_url_extractor",
+    "url_extractor",
     "merge",
     "parser",
     "utils",
