@@ -6,9 +6,8 @@ from pydantic import BaseModel
 
 from .stdl_archiver import ArchiveTarget, StdlArchiver
 from ...common.env import BatchEnv
-from ...common.fs import S3Config
 from ...common.notifier import create_notifier
-from ...utils import S3AsyncClient
+from ...utils import S3AsyncClient, S3Config
 
 
 class ArchiveMode(Enum):

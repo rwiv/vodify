@@ -1,7 +1,7 @@
 import os
 import sys
 
-from .fs_config import FsConfig, S3Config, read_fs_config
+from .fs_config import FsConfig, read_fs_config
 from .fs_types import FsType
 from .fs_constants import LOCAL_FILE_NAME
 

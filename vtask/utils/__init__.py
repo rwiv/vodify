@@ -19,7 +19,7 @@ from .file import (
 )
 from .http import get_headers, fetch_text, fetch_json
 from .limiter import nio_limiter
-from .s3_async import S3AsyncClient
+from .s3_async import S3AsyncClient, S3Config
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
 from .object_writer import ObjectWriter, LocalObjectWriter, S3ObjectWriter
 from .process import check_which, check_which_async, check_returncode, run_process, exec_process

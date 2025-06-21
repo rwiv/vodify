@@ -9,14 +9,21 @@ from aiobotocore.session import get_session
 from aiofiles import os as aios
 from aiohttp import ClientResponse
 from botocore.exceptions import ClientError
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, constr
 from pyutils import log, error_dict
 from types_aiobotocore_s3.client import S3Client
 
 from .file import utime
 from .limiter import nio_limiter
 from .s3_responses import S3ListResponse, S3ObjectInfoResponse
-from ..common.fs import S3Config
+
+
+class S3Config(BaseModel):
+    endpoint_url: constr(min_length=1) = Field(alias="endpointUrl")
+    access_key: constr(min_length=1) = Field(alias="accessKey")
+    secret_key: constr(min_length=1) = Field(alias="secretKey")
+    verify: bool
+    bucket_name: constr(min_length=1) = Field(alias="bucketName")
 
 
 class WriteFileResult(BaseModel):

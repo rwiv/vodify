@@ -1,15 +1,8 @@
 import yaml
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, constr
 
 from .fs_types import FsType
-
-
-class S3Config(BaseModel):
-    endpoint_url: constr(min_length=1) = Field(alias="endpointUrl")
-    access_key: constr(min_length=1) = Field(alias="accessKey")
-    secret_key: constr(min_length=1) = Field(alias="secretKey")
-    verify: bool
-    bucket_name: constr(min_length=1) = Field(alias="bucketName")
+from ...utils import S3Config
 
 
 class FsConfig(BaseModel):
