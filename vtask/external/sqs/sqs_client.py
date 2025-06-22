@@ -1,10 +1,7 @@
-import asyncio
-
 from aiobotocore.session import get_session
 from pydantic import BaseModel, constr
-from pyutils import log
 from types_aiobotocore_sqs.client import SQSClient
-from types_aiobotocore_sqs.type_defs import MessageTypeDef
+from types_aiobotocore_sqs.type_defs import MessageTypeDef, DeleteMessageBatchRequestEntryTypeDef
 
 
 class SQSConfig(BaseModel):
@@ -12,6 +9,12 @@ class SQSConfig(BaseModel):
     secret_key: constr(min_length=1)
     region_name: constr(min_length=1)
     queue_url: constr(min_length=1)
+
+
+class SQSMessage(BaseModel):
+    id: str
+    body: str
+    handle: str
 
 
 class SQSAsyncClient:
@@ -22,7 +25,7 @@ class SQSAsyncClient:
         async with create_client(self.__conf) as client:
             await client.send_message(QueueUrl=self.__conf.queue_url, MessageBody=body)
 
-    async def receive(self, wait_time_sec: int = 20, max_num: int = 10) -> tuple[list[str], list[str]]:
+    async def receive(self, wait_time_sec: int = 20, max_num: int = 10) -> list[SQSMessage]:
         async with create_client(self.__conf) as client:
             response = await client.receive_message(
                 QueueUrl=self.__conf.queue_url,
@@ -30,28 +33,27 @@ class SQSAsyncClient:
                 MaxNumberOfMessages=max_num,
             )
             messages: list[MessageTypeDef] = response.get("Messages", [])
+            result: list[SQSMessage] = []
+            for msg in messages:
+                msg_id = msg.get("MessageId")
+                body = msg.get("Body")
+                handle = msg.get("ReceiptHandle")
+                if not msg_id or not body or not handle:
+                    raise ValueError(f"Received message with missing fields: {msg}")
+                result.append(SQSMessage(id=msg_id, body=body, handle=handle))
+            return result
 
-            bodies: list[str] = []
-            handles: list[str] = []
-            for message in messages:
-                body = message.get("Body")
-                if body is not None:
-                    bodies.append(body)
-                else:
-                    log.warn("Received message without body")
-                handle = message.get("ReceiptHandle")
-                if handle is not None:
-                    handles.append(handle)
-                else:
-                    log.warn("Received message without receipt handle")
-            return bodies, handles
-
-    async def delete_batch(self, handles: list[str]):
+    async def delete(self, messages: list[SQSMessage]):
+        if len(messages) == 0:
+            return
         async with create_client(self.__conf) as client:
-            coroutines = []
-            for handle in handles:
-                coroutines.append(client.delete_message(QueueUrl=self.__conf.queue_url, ReceiptHandle=handle))
-            await asyncio.gather(*coroutines)
+            if len(messages) == 1:
+                await client.delete_message(QueueUrl=self.__conf.queue_url, ReceiptHandle=messages[0].handle)
+            else:
+                entries: list[DeleteMessageBatchRequestEntryTypeDef] = []
+                for msg in messages:
+                    entries.append({"Id": msg.id, "ReceiptHandle": msg.handle})
+                await client.delete_message_batch(QueueUrl=self.__conf.queue_url, Entries=entries)
 
 
 def create_client(conf: SQSConfig) -> SQSClient:

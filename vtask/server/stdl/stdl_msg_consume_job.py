@@ -1,7 +1,5 @@
 import json
 
-from pyutils import log
-
 from ...common.job import Job
 from ...external.sqs import SQSAsyncClient
 from ...stdl import StdlDoneMsg, StdlMsgQueue
@@ -18,10 +16,10 @@ class StdlMsgConsumeJob(Job):
         self.request_delay_sec = request_delay_sec
 
     async def run(self):
-        bodies, handles = await self.__sqs.receive()
+        messages = await self.__sqs.receive()
 
-        for stdl_msg in [StdlDoneMsg(**json.loads(body)) for body in bodies]:
+        for stdl_msg in [StdlDoneMsg(**json.loads(msg.body)) for msg in messages]:
             await self.__queue.push(stdl_msg)
 
-        if len(handles) > 0:
-            await self.__sqs.delete_batch(handles)
+        if len(messages) > 0:
+            await self.__sqs.delete(messages)
