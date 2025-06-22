@@ -5,9 +5,8 @@ image:
   repository: harbor.rwiv.xyz/private/vtask
   tag: 0.0.0
   pullSecret: image-pull-secret
-affinity: {}
-podLabels:
-  sidecar.istio.io/inject: "true"
+affinity: ~
+podLabels: ~
 redis:
   host: vtask-redis-master.media.svc.cluster.local
   port: 6379
@@ -15,7 +14,7 @@ redis:
   passwordKey: password
 secrets:
   sqs:
-    secretName: sqs-credentials
+    secretName: sqs-auth
     accessKeyKey: access-key
     secretKeyKey: secret-key
   stdlQueue:
