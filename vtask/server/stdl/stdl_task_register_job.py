@@ -3,6 +3,7 @@ import asyncio
 from .stdl_task_registrar import StdlTaskRegistrar
 from ...celery import CeleryRedisBrokerClient, find_active_worker_names, app
 from ...common.job import Job
+from ...external.redis import RedisConfig
 from ...stdl import StdlDoneMsg, StdlMsgQueue
 
 STDL_TASK_REGISTER_JOB_NAME = "stdl_task_register_job"
@@ -11,7 +12,7 @@ STDL_TASK_REGISTER_JOB_NAME = "stdl_task_register_job"
 class StdlTaskRegisterJob(Job):
     def __init__(
         self,
-        queue: StdlMsgQueue,
+        redis_conf: RedisConfig,
         registrar: StdlTaskRegistrar,
         celery_redis: CeleryRedisBrokerClient,
         received_task_threshold: int = 1,
@@ -19,7 +20,7 @@ class StdlTaskRegisterJob(Job):
     ):
         super().__init__(name=STDL_TASK_REGISTER_JOB_NAME)
 
-        self.__queue = queue
+        self.__queue = StdlMsgQueue(redis_conf)
         self.__registrar = registrar
         self.__celery_redis = celery_redis
 

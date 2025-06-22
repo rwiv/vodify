@@ -4,12 +4,13 @@ from fastapi import APIRouter
 
 from .stdl_task_registrar import StdlTaskRegistrar
 from ...common.job import CronJob
+from ...external.redis import RedisConfig
 from ...stdl import StdlDoneMsg, StdlDoneStatus, StdlMsgQueue
 
 
 class StdlController:
-    def __init__(self, queue: StdlMsgQueue, cron: CronJob, registrar: StdlTaskRegistrar):
-        self.__queue = queue
+    def __init__(self, redis_conf: RedisConfig, cron: CronJob, registrar: StdlTaskRegistrar):
+        self.__queue = StdlMsgQueue(redis_conf)
         self.__cron = cron
         self.__registrar = registrar
 

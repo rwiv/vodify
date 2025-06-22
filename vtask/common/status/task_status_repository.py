@@ -16,12 +16,12 @@ class TaskStatus(Enum):
 class TaskStatusRepository:
     def __init__(
         self,
-        conf: RedisConfig,
+        redis_conf: RedisConfig,
         start_ex_sec: int = 3 * 24 * 60 * 60,  # 3 days
         done_ex_sec: int = 3 * 24 * 60 * 60,  # 3 days
     ):
         self.__prefix = REDIS_TASK_STATUS_KEY_PREFIX
-        self.__str = RedisString(client=create_redis_client(conf))
+        self.__str = RedisString(client=create_redis_client(redis_conf))
         self.__start_ex_sec = start_ex_sec
         self.__done_ex_sec = done_ex_sec
 

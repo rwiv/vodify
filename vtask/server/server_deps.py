@@ -6,7 +6,6 @@ from ..celery import CeleryRedisBrokerClient
 from ..common.job import CronJob
 from ..env import get_server_env, get_celery_env
 from ..external.sqs import SQSAsyncClient
-from ..stdl import StdlMsgQueue
 
 
 class DefaultController:
@@ -22,23 +21,25 @@ class ServerDependencyManager:
     def __init__(self):
         self.server_env = get_server_env()
         self.celery_env = get_celery_env()
+        redis_conf = self.celery_env.redis
 
+        # default
         default_controller = DefaultController()
         self.default_router = default_controller.router
 
+        # celery
         celery_redis_broker = CeleryRedisBrokerClient(self.celery_env.redis)
         celery_controller = CeleryController(celery_redis_broker)
         self.celery_router = celery_controller.router
 
+        # stdl
         stdl_requester = StdlTaskRegistrar()
-        stdl_queue = StdlMsgQueue(self.celery_env.redis)
 
-        stdl_register_job = StdlTaskRegisterJob(stdl_queue, stdl_requester, celery_redis_broker)
+        stdl_register_job = StdlTaskRegisterJob(redis_conf, stdl_requester, celery_redis_broker)
         self.stdl_register_cron = CronJob(job=stdl_register_job, interval_sec=5, unstoppable=True)
 
-        sqs_client = SQSAsyncClient(self.server_env.sqs)
-        stdl_consume_job = StdlMsgConsumeJob(sqs_client, stdl_queue)
+        stdl_consume_job = StdlMsgConsumeJob(redis_conf, SQSAsyncClient(self.server_env.sqs))
         self.stdl_consume_cron = CronJob(job=stdl_consume_job, interval_sec=1, unstoppable=True)
 
-        stdl_controller = StdlController(stdl_queue, self.stdl_register_cron, stdl_requester)
+        stdl_controller = StdlController(redis_conf, self.stdl_register_cron, stdl_requester)
         self.stdl_router = stdl_controller.router
