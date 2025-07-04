@@ -16,7 +16,6 @@ class StdlTaskRegisterJob(Job):
         registrar: StdlTaskRegistrar,
         celery_redis: CeleryRedisBrokerClient,
         received_task_threshold: int = 1,
-        register_delay_sec: float = 3,
     ):
         super().__init__(name=STDL_TASK_REGISTER_JOB_NAME)
 
@@ -25,7 +24,6 @@ class StdlTaskRegisterJob(Job):
         self.__celery_redis = celery_redis
 
         self.received_task_threshold = received_task_threshold
-        self.request_delay_sec = register_delay_sec
 
     async def run(self):
         workers = await asyncio.to_thread(find_active_worker_names, app)

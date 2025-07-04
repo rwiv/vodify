@@ -33,13 +33,13 @@ class ServerDependencyManager:
         self.celery_router = celery_controller.router
 
         # stdl
-        stdl_requester = StdlTaskRegistrar()
+        stdl_registrar = StdlTaskRegistrar()
 
-        stdl_register_job = StdlTaskRegisterJob(redis_conf, stdl_requester, celery_redis_broker)
+        stdl_register_job = StdlTaskRegisterJob(redis_conf, stdl_registrar, celery_redis_broker)
         self.stdl_register_cron = CronJob(job=stdl_register_job, interval_sec=5, unstoppable=True)
 
-        stdl_consume_job = StdlMsgConsumeJob(redis_conf, SQSAsyncClient(self.server_env.sqs))
+        stdl_consume_job = StdlMsgConsumeJob(redis_conf, SQSAsyncClient(self.server_env.sqs), stdl_registrar)
         self.stdl_consume_cron = CronJob(job=stdl_consume_job, interval_sec=1, unstoppable=True)
 
-        stdl_controller = StdlController(redis_conf, self.stdl_register_cron, stdl_requester)
+        stdl_controller = StdlController(redis_conf, self.stdl_register_cron, stdl_registrar)
         self.stdl_router = stdl_controller.router
