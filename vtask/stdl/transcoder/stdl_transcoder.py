@@ -6,7 +6,7 @@ from typing import TypedDict
 import aiofiles
 from aiofiles import os as aios
 from pydantic import BaseModel, Field
-from pyutils import log, path_join
+from pyutils import log, path_join, error_dict
 
 from ..accessor.stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_types import StdlSegmentsInfo
@@ -76,6 +76,17 @@ class StdlTranscoder:
         return _get_success_result("Clear success")
 
     async def transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
+        try:
+            return await self.__transcode(info)
+        except Exception as e:
+            attr = info.to_dict()
+            for k, v in error_dict(e).items():
+                attr[k] = v
+            log.error("Failed to Transcode", attr)
+            await rmtree(path_join(self.__tmp_path, info.platform_name, info.channel_id, info.video_name))
+            raise e
+
+    async def __transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
         # Initialize local variables
         transcoding_start = asyncio.get_event_loop().time()
 
