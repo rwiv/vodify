@@ -35,6 +35,7 @@ def create_stdl_accessor(
             retry_limit=env.network_retry_limit,
             min_read_timeout_sec=env.min_read_timeout_sec,
             read_timeout_threshold=env.read_timeout_threshold,
+            proxy_conf=env.proxy,
         )
         return StdlS3SegmentAccessor(s3_client=s3_client)
     else:

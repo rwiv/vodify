@@ -4,11 +4,22 @@ from pydantic import BaseModel, constr
 
 from .env_configs import read_untf_env
 from ..external.notifier import UntfConfig
+from ..utils import ProxyConfig
 
 
 class WorkerConfig(BaseModel):
     name: constr(min_length=1)
     queues: constr(min_length=1)
+
+
+def read_proxy_config() -> ProxyConfig:
+    return ProxyConfig(
+        host=os.getenv("PROXY_HOST") or None,
+        port=os.getenv("PROXY_PORT") or None,  # type: ignore
+        username=os.getenv("PROXY_USERNAME") or None,
+        password=os.getenv("PROXY_PASSWORD") or None,
+        rdns=os.getenv("PROXY_RDNS") == "true",
+    )
 
 
 class StdlConfig(BaseModel):
@@ -30,6 +41,7 @@ class WorkerEnv(BaseModel):
     worker: WorkerConfig
     stdl: StdlConfig
     untf: UntfConfig
+    proxy: ProxyConfig | None
 
 
 def get_worker_env() -> WorkerEnv:
@@ -43,6 +55,7 @@ def get_worker_env() -> WorkerEnv:
         is_archive=os.getenv("STDL_IS_ARCHIVE") == "true",
         video_size_limit_gb=os.getenv("STDL_VIDEO_SIZE_LIMIT_GB"),  # type: ignore
     )
+    proxy_enabled = os.getenv("PROXY_ENABLED") == "true"
 
     return WorkerEnv(
         env=env,
@@ -57,4 +70,5 @@ def get_worker_env() -> WorkerEnv:
         read_timeout_threshold=os.getenv("READ_TIMEOUT_THRESHOLD"),  # type: ignore
         stdl=stdl_config,
         untf=read_untf_env(),
+        proxy=read_proxy_config() if proxy_enabled else None,
     )

@@ -10,7 +10,7 @@ from pyutils import log
 
 from .s3_types import S3Config, S3ListResponse, S3ObjectInfoResponse
 from .s3_utils import create_client, _parse_get_object_res_headers, _retry_error_attr
-from ...utils import utime, nio_limiter
+from ...utils import utime, nio_limiter, ProxyConfig
 
 
 class WriteFileResult(BaseModel):
@@ -28,6 +28,7 @@ class S3AsyncClient:
         retry_limit: int,
         min_read_timeout_sec: float,
         read_timeout_threshold: float,
+        proxy_conf: ProxyConfig | None = None,
     ):
         self.__conf = conf
         self.__bucket_name = conf.bucket_name
@@ -36,6 +37,7 @@ class S3AsyncClient:
         self.__retry_limit = retry_limit
         self.__min_read_timeout_sec = min_read_timeout_sec
         self.__read_timeout_threshold = read_timeout_threshold
+        self.__proxy_conf = proxy_conf
         self.__small_chunk_count_ratio = 0.9
         self.__presigned_url_expires_in = 3600
 
@@ -114,7 +116,10 @@ class S3AsyncClient:
                 write_sum = 0
                 small_chunk_cnt = 0
                 limiter = nio_limiter(self.__network_mbit, self.__network_buf_size)
-                async with aiohttp.ClientSession() as session:
+                connector = None
+                if self.__proxy_conf is not None:
+                    connector = self.__proxy_conf.proxy_connector()
+                async with aiohttp.ClientSession(connector=connector) as session:
                     async with session.get(url) as res:
                         if res.status >= 400:
                             raise ValueError(f"Failed to download: status={res.status}, key={key}")

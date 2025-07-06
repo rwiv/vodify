@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import datetime
 from typing import Any
 
 from aiobotocore.config import AioConfig
