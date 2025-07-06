@@ -3,7 +3,7 @@ services:
     image: harbor.rwiv.xyz/private/vtask:0.7.5
     container_name: vtask-video
     working_dir: /app
-    entrypoint: python -m vtask batch
+    entrypoint: .venv/bin/python3 -m vtask batch
     environment:
       PY_ENV: prod
       BATCH_COMMAND: video
