@@ -19,7 +19,7 @@ spec:
       containers:
         - name: {{ .Values.global.name }}-flower
           workingDir: "/app"
-          command: ["celery", "-A", "vtask.celery.celery_app.app", "flower"]
+          command: [".venv/bin/celery", "-A", "vtask.celery.celery_app.app", "flower"]
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           ports:
             - containerPort: {{ .Values.flower.service.targetPort }}
