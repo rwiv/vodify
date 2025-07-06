@@ -20,6 +20,9 @@ services:
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vtask worker
     restart: always
+    depends_on:
+      gluetun:
+        condition: service_healthy
     network_mode: container:gluetun
     environment:
       PY_ENV: prod
@@ -66,6 +69,9 @@ services:
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vtask worker
     restart: always
+    depends_on:
+      gluetun:
+        condition: service_healthy
     network_mode: container:gluetun
     environment:
       PY_ENV: prod
