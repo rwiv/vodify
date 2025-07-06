@@ -34,10 +34,5 @@ async def test_queue():
 async def get_all_keys(client: Redis, pattern: str) -> list[str]:
     keys = []
     async for key in client.scan_iter(pattern):
-        if isinstance(key, bytes):
-            keys.append(key.decode())
-        elif isinstance(key, str):
-            keys.append(key)
-        else:
-            raise ValueError(f"Unknown key type: {type(key)}")
+        keys.append(key)
     return keys
