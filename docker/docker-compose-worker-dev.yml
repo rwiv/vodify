@@ -42,7 +42,7 @@ services:
     image: vtask:latest
     container_name: vtask-io
     working_dir: /app
-    entrypoint: python -m vtask worker
+    entrypoint: .venv/bin/python3 -m vtask worker
     restart: always
     environment:
       PY_ENV: dev
