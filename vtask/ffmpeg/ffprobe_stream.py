@@ -21,7 +21,7 @@ class FfprobeFormat(BaseModel):
     nb_programs: int
     nb_stream_groups: int
     format_name: str
-    format_long_name: str
+    format_long_name: str | None = None
     size: int
     probe_score: int
     tags: dict[str, str]
