@@ -49,8 +49,11 @@ class CeleryTaskInfo(BaseModel):
 
 
 class CeleryRedisBrokerClient:
+    def __init__(self, conf: RedisConfig):
+        self.__conf = conf
+
     async def get_received_tasks(self, queue_name: str):
-        tasks = await create_redis_client(conf).lrange(queue_name, 0, -1)  # type: ignore
+        tasks = await create_redis_client(self.__conf).lrange(queue_name, 0, -1)  # type: ignore
         if not isinstance(tasks, list):
             raise ValueError("Expected list data")
         return [CeleryTaskInfo(**json.loads(task)) for task in tasks]
