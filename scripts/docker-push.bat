@@ -1,5 +1,5 @@
 cd ..
-set IMG=harbor.rwiv.xyz/private/vtask:0.7.8
+set IMG=harbor.rwiv.xyz/private/vtask:0.8.1
 set DOCKERFILE=./docker/Dockerfile-prod
 
 docker build -t %IMG% -f %DOCKERFILE% .

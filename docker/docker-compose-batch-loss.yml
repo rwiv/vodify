@@ -1,6 +1,6 @@
 services:
   vtask-loss:
-    image: harbor.rwiv.xyz/private/vtask:0.7.8
+    image: harbor.rwiv.xyz/private/vtask:0.8.1
     container_name: vtask-loss
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vtask batch

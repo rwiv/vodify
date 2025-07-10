@@ -2,11 +2,11 @@ import pytest
 from pyutils import load_dotenv, path_join, find_project_root
 from redis.asyncio import Redis
 
-from vtask.celery.celery_constants import DEFAULT_QUEUE_NAME
-from vtask.external.redis import create_redis_client
-
 load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
+# load_dotenv(path_join(find_project_root(), "dev", ".env-server-prod"))
 
+from vtask.celery import IO_NET_QUEUE_NAME
+from vtask.external.redis import create_redis_client
 from vtask.celery import CeleryRedisBrokerClient
 from vtask.env import get_celery_env
 
@@ -28,7 +28,7 @@ async def test_all_redis_keys():
 @pytest.mark.asyncio
 async def test_queue():
     print()
-    print(await client.get_received_task_bodies(DEFAULT_QUEUE_NAME))
+    print(await client.get_received_task_bodies(IO_NET_QUEUE_NAME))
 
 
 async def get_all_keys(client: Redis, pattern: str) -> list[str]:

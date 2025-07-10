@@ -1,5 +1,5 @@
 cd ..
-set TAG_NAME=v0.7.8
+set TAG_NAME=v0.8.1
 
 git tag %TAG_NAME%
 git push --tag
