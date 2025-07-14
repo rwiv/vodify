@@ -1,6 +1,6 @@
 services:
   vtask-enc:
-    image: harbor.rwiv.xyz/private/vtask:0.8.1
+    image: harbor.rwiv.xyz/private/vtask:0.8.2
     container_name: vtask-enc
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vtask batch

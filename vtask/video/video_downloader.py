@@ -76,7 +76,7 @@ class VideoDownloader:
 
     async def __download_soop_video(self, url: str):
         dl = SoopVideoDownloader(self.tmp_dir_path, self.out_dir_path, self.ctx)
-        video_no = int(url.split("/")[-1])
+        video_no = int(url.replace("/catch", "").split("/")[-1])
         await dl.download_one(video_no)
 
 
