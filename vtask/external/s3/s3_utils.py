@@ -29,6 +29,13 @@ def _retry_error_attr(ex: Exception, retry_cnt: int, key: str) -> dict[str, Any]
     return attr
 
 
+def _retry_error_attr2(ex: Exception, retry_cnt: int, keys: list[str]) -> dict[str, Any]:
+    attr = error_dict(ex)
+    attr["cnt"] = retry_cnt
+    attr["keys"] = keys
+    return attr
+
+
 def _parse_get_object_res_headers(res: ClientResponse):
     content_length_str = res.headers.get("Content-Length")
     last_modified_str = res.headers.get("Last-Modified")

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any
+from typing import Any, List
 
 import aiofiles
 import aiohttp
@@ -7,9 +7,10 @@ from aiofiles import os as aios
 from botocore.exceptions import ClientError
 from pydantic import BaseModel
 from pyutils import log
+from types_aiobotocore_s3.type_defs import DeleteTypeDef
 
 from .s3_types import S3Config, S3ListResponse, S3ObjectInfoResponse
-from .s3_utils import create_client, _parse_get_object_res_headers, _retry_error_attr
+from .s3_utils import create_client, _parse_get_object_res_headers, _retry_error_attr, _retry_error_attr2
 from ...utils import utime, nio_limiter, ProxyConfig
 
 
@@ -176,3 +177,16 @@ class S3AsyncClient:
                     log.error(f"delete object retry limit exceeded", _retry_error_attr(e, retry_cnt, key))
                     raise
                 log.warn(f"Failed to delete object", _retry_error_attr(e, retry_cnt, key))
+
+    async def delete_batch(self, keys: List[str]):
+        for retry_cnt in range(self.__retry_limit + 1):
+            try:
+                async with create_client(self.__conf) as client:
+                    req: DeleteTypeDef = {"Objects": [{"Key": key} for key in keys]}
+                    await client.delete_objects(Bucket=self.__bucket_name, Delete=req)
+                break
+            except Exception as e:
+                if retry_cnt == self.__retry_limit:
+                    log.error(f"delete object retry limit exceeded", _retry_error_attr2(e, retry_cnt, keys))
+                    raise
+                log.warn(f"Failed to delete object", _retry_error_attr2(e, retry_cnt, keys))

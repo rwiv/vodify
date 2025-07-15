@@ -37,6 +37,6 @@ def create_stdl_accessor(
             read_timeout_threshold=env.read_timeout_threshold,
             proxy_conf=env.proxy,
         )
-        return StdlS3SegmentAccessor(s3_client=s3_client)
+        return StdlS3SegmentAccessor(s3_client=s3_client, delete_batch_size=env.stdl.delete_batch_size)
     else:
         raise ValueError(f"Unknown fs_name: {fs_name}")

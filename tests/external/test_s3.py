@@ -106,8 +106,7 @@ async def clear_all():
     res = await s3.list("")
     if res.contents is None:
         return
-    for f in res.contents:
-        await s3.delete(f.key)
+    await s3.delete_batch([f.key for f in res.contents])
 
 
 async def set_environment():

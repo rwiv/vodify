@@ -91,7 +91,7 @@ async def test_transcode():
     await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
     transcoder = StdlTranscoder(
-        accessor=StdlS3SegmentAccessor(s3_client=s3_client),
+        accessor=StdlS3SegmentAccessor(s3_client=s3_client, delete_batch_size=100),
         notifier=MockNotifier(),
         out_dir_path=base_dir_path,
         tmp_path=tmp_dir_path,

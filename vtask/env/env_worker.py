@@ -26,6 +26,7 @@ class StdlConfig(BaseModel):
     base_dir_path: constr(min_length=1)
     is_archive: bool
     video_size_limit_gb: int
+    delete_batch_size: int
 
 
 class WorkerEnv(BaseModel):
@@ -54,6 +55,7 @@ def get_worker_env() -> WorkerEnv:
         base_dir_path=os.getenv("STDL_BASE_DIR_PATH"),
         is_archive=os.getenv("STDL_IS_ARCHIVE") == "true",
         video_size_limit_gb=os.getenv("STDL_VIDEO_SIZE_LIMIT_GB"),  # type: ignore
+        delete_batch_size=os.getenv("STDL_DELETE_BATCH_SIZE"),  # type: ignore
     )
     proxy_enabled = os.getenv("PROXY_ENABLED") == "true"
 

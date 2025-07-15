@@ -17,9 +17,10 @@ async def _stdl_transcode(dct: dict):
     msg = StdlDoneMsg(**dct)
 
     task_uname = f"{msg.platform.value}:{msg.uid}:{msg.video_name}"
-    exists_result = await deps.task_status_repository.check(task_uname=task_uname)
-    if exists_result is not None:
-        return exists_result
+    if msg.status == StdlDoneStatus.COMPLETE:
+        exists_result = await deps.task_status_repository.check(task_uname=task_uname)
+        if exists_result is not None:
+            return exists_result
 
     await deps.task_status_repository.set_pending(task_uname=task_uname)
 

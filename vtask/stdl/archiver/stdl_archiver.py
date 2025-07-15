@@ -40,7 +40,7 @@ class StdlArchiver:
 
     async def transcode_by_s3(self, targets: list[ArchiveTarget]):
         trans = StdlTranscoder(
-            accessor=StdlS3SegmentAccessor(s3_client=self.s3_client),
+            accessor=StdlS3SegmentAccessor(s3_client=self.s3_client, delete_batch_size=100),
             notifier=self.notifier,
             out_dir_path=path_join(self.out_dir_path, "complete"),
             tmp_path=self.tmp_dir_path,

@@ -1,3 +1,4 @@
+import pyutils
 from pyutils import path_join, filename, log
 
 from .stdl_segment_accessor import StdlSegmentAccessor
@@ -9,9 +10,10 @@ from ...utils import avg
 
 
 class StdlS3SegmentAccessor(StdlSegmentAccessor):
-    def __init__(self, s3_client: S3AsyncClient):
+    def __init__(self, s3_client: S3AsyncClient, delete_batch_size: int):
         super().__init__(FsType.S3)
         self.__s3 = s3_client
+        self.__delete_batch_size = delete_batch_size
 
     async def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
         return await self.__get_keys(info)
@@ -57,5 +59,5 @@ class StdlS3SegmentAccessor(StdlSegmentAccessor):
         await self.clear_by_paths(keys)
 
     async def clear_by_paths(self, paths: list[str]):
-        for key in paths:
-            await self.__s3.delete(key)
+        for keys in pyutils.sublist(paths, self.__delete_batch_size):
+            await self.__s3.delete_batch(keys)
