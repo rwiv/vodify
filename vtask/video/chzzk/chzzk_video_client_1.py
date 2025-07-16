@@ -2,9 +2,7 @@ from typing import Any
 from urllib.parse import urlparse, parse_qs
 from xml.etree.ElementTree import fromstring, Element
 
-from pyutils import get_base_url
-
-from .chzzk_video_client import ChzzkVideoInfo, ChzzkVideoClient
+from .chzzk_video_client import ChzzkVideoInfo, ChzzkVideoClient, VideoResponse
 from ...utils import get_headers, fetch_json, fetch_text
 
 
@@ -14,19 +12,17 @@ class ChzzkVideoClient1(ChzzkVideoClient):
 
     async def get_video_info(self, video_no: int) -> ChzzkVideoInfo:
         res = await self.__request_video_info(video_no)
+        content = VideoResponse(**res).content
 
-        channelId = res["content"]["channel"]["channelId"]
-        title = res["content"]["videoTitle"]
-        videoId = res["content"]["videoId"]
-        key = res["content"]["inKey"]
-
-        m3u_url, lsu_sa, base_url = await self.__request_play_info(videoId, key)
+        if content.in_key is None:
+            raise ValueError("in_key is null")
+        m3u_url, lsu_sa = await self.__request_play_info(content.video_id, content.in_key)
 
         return ChzzkVideoInfo(
             m3u8_url=m3u_url,
-            qs=f"_lsu_sa_={lsu_sa}",
-            title=title,
-            channel_id=channelId,
+            query_params={"_lsu_sa_": [lsu_sa]},
+            title=content.video_title.strip(),
+            channel_id=content.channel.channel_id,
         )
 
     async def __request_video_info(self, video_no: int) -> dict[str, Any]:
@@ -57,8 +53,7 @@ class ChzzkVideoClient1(ChzzkVideoClient):
             raise ValueError("m3u_url not found")
 
         lsu_sa = find_query_value_one(m3u_url, "_lsu_sa_")
-        base_url = get_base_url(m3u_url)
-        return m3u_url, lsu_sa, base_url
+        return m3u_url, lsu_sa
 
 
 def find_query_value_one(url: str, key: str) -> str:

@@ -1,6 +1,8 @@
 import re
 from dataclasses import dataclass
 
+from pyutils import parse_query_params, strip_query_string, to_query_string
+
 from .hls_utils import merge_intersected_strings, get_ext
 
 
@@ -63,9 +65,9 @@ def parse_master_playlist(m3u8: str) -> MasterPlaylist:
     return MasterPlaylist(resolutions=resolutions)
 
 
-def parse_media_playlist(m3u8: str, base_url: str = "", qs: str | None = None) -> MediaPaths:
+def parse_media_playlist(m3u8_url: str, base_url: str = "", query_params: dict[str, list[str]] | None = None) -> MediaPaths:
     base_url_new = base_url.rstrip("/")
-    media_playlist = __parse_media_playlist_raw(m3u8)
+    media_playlist = __parse_media_playlist_raw(m3u8_url)
     origin_paths = [media_playlist.init_section_path] if media_playlist.init_section_path else []
     origin_paths.extend(media_playlist.segment_paths)
 
@@ -77,10 +79,14 @@ def parse_media_playlist(m3u8: str, base_url: str = "", qs: str | None = None) -
             new_path = path
             if not new_path.startswith("/"):
                 new_path = "/" + new_path
-            segment = merge_intersected_strings(base_url_new, new_path)
-            if qs is not None and qs != "":
-                segment += f"?{qs}"
-            segment_paths.append(segment)
+            segment_url = merge_intersected_strings(base_url_new, new_path)
+            if query_params is not None:
+                new_params = parse_query_params(segment_url)
+                for k, v in query_params.items():
+                    new_params[k] = v
+                qs = to_query_string(params=new_params, url_encode=False)
+                segment_url = f"{strip_query_string(segment_url)}?{qs}"
+            segment_paths.append(segment_url)
 
     return MediaPaths(segment_paths=segment_paths, ext=media_playlist.ext)
 

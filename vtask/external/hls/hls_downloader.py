@@ -34,12 +34,12 @@ class HlsDownloader:
         self.__retry_limit = 8
         self.__retry_base_delay_sec = 0.5
 
-    async def get_seg_urls_by_master(self, m3u8_url: str, qs: str | None) -> list[str]:
-        return await self.__url_extractor.get_urls(m3u8_url, qs)
+    async def get_seg_urls_by_master(self, m3u8_url: str, query_params: dict[str, list[str]] | None) -> list[str]:
+        return await self.__url_extractor.get_urls(m3u8_url, query_params)
 
-    async def get_seg_urls_by_media(self, m3u8_url: str, qs: str | None) -> list[str]:
+    async def get_seg_urls_by_media(self, m3u8_url: str, query_params: dict[str, list[str]] | None) -> list[str]:
         text = await fetch_text(url=m3u8_url, headers=self.__headers)
-        return parse_media_playlist(text, get_base_url(m3u8_url), qs).segment_paths
+        return parse_media_playlist(text, get_base_url(m3u8_url), query_params).segment_paths
 
     async def download(self, urls: list[str], segments_path: str) -> str:
         await aios.makedirs(segments_path, exist_ok=True)

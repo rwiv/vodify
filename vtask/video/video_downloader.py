@@ -3,7 +3,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 from aiofiles import os as aios
-from pyutils import get_query_string, path_join
+from pyutils import path_join, parse_query_params
 
 from .chzzk.chzzk_video_client_1 import ChzzkVideoClient1
 from .chzzk.chzzk_video_client_2 import ChzzkVideoClient2
@@ -43,11 +43,11 @@ class VideoDownloader:
             parallel_num=self.ctx.parallel_num,
             network_mbit=self.ctx.network_mbit,
         )
-        qs = None
+        query_params = None
         if self.ctx.use_qs:
-            qs = get_query_string(m3u8_url) or None
+            query_params = parse_query_params(m3u8_url)
         file_stem = datetime.now().strftime("%Y%m%d_%H%M%S")
-        urls = await hls.get_seg_urls_by_media(m3u8_url, qs)
+        urls = await hls.get_seg_urls_by_media(m3u8_url, query_params)
         dir_name = "hls"
         segments_path = path_join(self.tmp_dir_path, dir_name, file_stem)
         if self.ctx.is_parallel:

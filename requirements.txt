@@ -13,4 +13,4 @@ flower==2.0.1
 PyYAML==6.0.2
 yt-dlp==2025.3.31
 
-git+https://github.com/rwiv/pyutils.git@v0.2.4
+git+https://github.com/rwiv/pyutils.git@v0.2.8

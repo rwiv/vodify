@@ -32,7 +32,7 @@ class ChzzkVideoDownloader:
         channel_id = info.channel_id
         file_name = str(video_no)
 
-        urls = await self.hls.get_seg_urls_by_master(info.m3u8_url, info.qs)
+        urls = await self.hls.get_seg_urls_by_master(info.m3u8_url, info.query_params)
         segments_path = path_join(self.tmp_dir_path, channel_id, file_name)
 
         if self.ctx.is_parallel:

@@ -6,6 +6,21 @@ from pydantic import BaseModel
 from ...utils import get_headers
 
 
+class VideoFile(BaseModel):
+    file: str
+    radio_url: str
+
+
+class VideoData(BaseModel):
+    bj_id: str
+    full_title: str
+    files: list[VideoFile]
+
+
+class VideoResponse(BaseModel):
+    data: VideoData
+
+
 class SoopM3u8Info(BaseModel):
     video_master_url: str
     audio_media_url: str
@@ -28,13 +43,9 @@ class SoopVideoClient:
             async with session.post(url, data=data) as res:
                 if res.status >= 400:
                     raise ValueError(f"Failed to fetch video info: {res.status}")
-                res_json = json.loads(await res.text())
-                data = res_json["data"]
-                m3u8_infos = [
-                    SoopM3u8Info(video_master_url=f["file"], audio_media_url=f["radio_url"]) for f in data["files"]
-                ]
+                data = VideoResponse(**json.loads(await res.text())).data
                 return SoopVideoInfo(
-                    m3u8_infos=m3u8_infos,
-                    title=data["full_title"].strip(),
-                    bj_id=data["bj_id"],
+                    m3u8_infos=[SoopM3u8Info(video_master_url=f.file, audio_media_url=f.radio_url) for f in data.files],
+                    title=data.full_title.strip(),
+                    bj_id=data.bj_id,
                 )
