@@ -1,9 +1,7 @@
 import re
 from dataclasses import dataclass
 
-from pyutils import parse_query_params, strip_query_string, to_query_string
-
-from .hls_utils import merge_intersected_strings, get_ext
+from pyutils import merge_query_string, get_ext, merge_intersected_strings
 
 
 class M3u8ElemError(Exception):
@@ -81,11 +79,7 @@ def parse_media_playlist(m3u8_url: str, base_url: str = "", query_params: dict[s
                 new_path = "/" + new_path
             segment_url = merge_intersected_strings(base_url_new, new_path)
             if query_params is not None:
-                new_params = parse_query_params(segment_url)
-                for k, v in query_params.items():
-                    new_params[k] = v
-                qs = to_query_string(params=new_params, url_encode=False)
-                segment_url = f"{strip_query_string(segment_url)}?{qs}"
+                segment_url = merge_query_string(segment_url, query_params, overwrite=True, url_encode=False)
             segment_paths.append(segment_url)
 
     return MediaPaths(segment_paths=segment_paths, ext=media_playlist.ext)

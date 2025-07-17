@@ -1,4 +1,4 @@
-from pyutils import get_base_url, parse_query_params, strip_query_string, to_query_string
+from pyutils import get_base_url, merge_query_string
 
 from .hls_parser import parse_master_playlist, parse_media_playlist, Resolution
 from ...utils import fetch_text
@@ -22,11 +22,7 @@ class HlsUrlExtractor:
 
         base_url = self._get_base_url(m3u8_url, r)
         if query_params is not None:
-            new_params = parse_query_params(base_url)
-            for k, v in query_params.items():
-                new_params[k] = v
-            qs = to_query_string(params=new_params, url_encode=False)
-            base_url = f"{strip_query_string(base_url)}?{qs}"
+            base_url = merge_query_string(base_url, query_params, overwrite=True, url_encode=False)
         m3u8 = await fetch_text(url=base_url, headers=self.__headers)
         pl = parse_media_playlist(m3u8, get_base_url(base_url), query_params)
         return pl.segment_paths

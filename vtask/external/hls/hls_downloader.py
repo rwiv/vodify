@@ -3,11 +3,10 @@ import asyncio
 import aiofiles
 import aiohttp
 from aiofiles import os as aios
-from pyutils import path_join, log, error_dict, get_base_url
+from pyutils import path_join, log, error_dict, get_base_url, sublist_with_idx
 
-from .hls_url_extractor import HlsUrlExtractor
 from .hls_parser import parse_media_playlist
-from .hls_utils import sub_lists_with_idx
+from .hls_url_extractor import HlsUrlExtractor
 from ...utils import nio_limiter, fetch_text
 
 
@@ -59,9 +58,9 @@ class HlsDownloader:
     async def download_parallel(self, urls: list[str], segments_path: str) -> str:
         await aios.makedirs(segments_path, exist_ok=True)
         retry_cnt_sum = 0
-        for sub in sub_lists_with_idx(urls, self.__parallel_num):
-            log.info(f"{sub[0].idx}-{sub[0].idx + self.__parallel_num}")
-            coroutines = [self.__download_file_wrapper(elem.value, elem.idx, segments_path) for elem in sub]
+        for sub in sublist_with_idx(urls, self.__parallel_num):
+            log.info(f"{sub[0][0]}-{sub[0][0]+ self.__parallel_num}")
+            coroutines = [self.__download_file_wrapper(value, idx, segments_path) for idx, value in sub]
             retry_counts = await asyncio.gather(*coroutines)
             retry_cnt_sum += sum(retry_counts)
         if retry_cnt_sum > 0:
