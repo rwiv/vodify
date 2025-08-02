@@ -5,7 +5,7 @@ from aiofiles import os as aios
 import pytest
 from pyutils import find_project_root, path_join, log
 
-from vtask.encoding import VideoEncoder, EncodingRequest
+from vidt.encoding import VideoEncoder, EncodingRequest
 
 base_dir_path = path_join(find_project_root(), "dev", "test")
 

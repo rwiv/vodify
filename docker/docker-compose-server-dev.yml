@@ -1,9 +1,9 @@
 services:
-  vtask-server:
-    image: vtask:latest
-    container_name: vtask-server
+  vidt-server:
+    image: vidt:latest
+    container_name: vidt-server
     working_dir: /app
-    entrypoint: .venv/bin/python3 -m vtask server
+    entrypoint: .venv/bin/python3 -m vidt server
     environment:
       PY_ENV: prod
       SERVER_PORT: "${SERVER_PORT}"
@@ -19,12 +19,12 @@ services:
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
-      - ../vtask:/app/vtask
-  vtask-flower:
-    image: vtask:latest
-    container_name: vtask-flower
+      - ../vidt:/app/vidt
+  vidt-flower:
+    image: vidt:latest
+    container_name: vidt-flower
     working_dir: /app
-    entrypoint: .venv/bin/celery -A vtask.celery.celery_app.app flower
+    entrypoint: .venv/bin/celery -A vidt.celery.celery_app.app flower
     environment:
       FLOWER_UNAUTHENTICATED_API: "${FLOWER_UNAUTHENTICATED_API}"
 
@@ -34,4 +34,4 @@ services:
     ports:
       - "${FLOWER_PORT}:5555"
     volumes:
-      - ../vtask:/app/vtask
+      - ../vidt:/app/vidt

@@ -1,4 +1,4 @@
-from vtask.encoding import resolve_command, EncodingRequest
+from vidt.encoding import resolve_command, EncodingRequest
 
 
 def test_resolver():

@@ -1,5 +1,5 @@
 {
-  "include": ["vtask", "tests"],
+  "include": ["vidt", "tests"],
   "exclude": ["**/node_modules", "**/__pycache__"],
   "ignore": [],
   "venvPath": ".",

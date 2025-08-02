@@ -2,5 +2,5 @@
 
 cd ..
 
-docker rmi vtask-gpu:latest
-docker build -t vtask-gpu:latest -f ./docker/Dockerfile-gpu .
+docker rmi vidt-gpu:latest
+docker build -t vidt-gpu:latest -f ./docker/Dockerfile-gpu .

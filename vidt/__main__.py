@@ -4,7 +4,7 @@ from pyutils import load_dotenv, path_join, find_project_root, log
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        log.info("Usage: python -m vtask [worker|server|batch]")
+        log.info("Usage: python -m vidt [worker|server|batch]")
         sys.exit(1)
 
     mode = sys.argv[1]

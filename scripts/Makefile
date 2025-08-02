@@ -11,20 +11,20 @@ worker-rm:
 	sudo docker compose -f ../docker/docker-compose-worker-prod.yml --env-file ../secret/.env rm -f
 
 worker-local-logs:
-	sudo docker logs vtask-worker-local --tail 20
+	sudo docker logs vidt-worker-local --tail 20
 
 worker-remote-logs:
-	sudo docker logs vtask-worker-remote --tail 20
+	sudo docker logs vidt-worker-remote --tail 20
 
 
 helm-redis-dep:
 	@helm dependency update ./redis
 
 helm-redis-run:
-	helm install vtask-redis ../kube/redis -n media
+	helm install vidt-redis ../kube/redis -n media
 
 helm-redis-rm:
-	helm uninstall vtask-redis -n media
+	helm uninstall vidt-redis -n media
 
 delete-redis-pvc:
-	kubectl delete pvc redis-data-vtask-redis-master-0 -n media
+	kubectl delete pvc redis-data-vidt-redis-master-0 -n media

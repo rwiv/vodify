@@ -1,6 +1,6 @@
 import pytest
 
-from vtask.video import SoopVideoClient, SoopHlsUrlExtractor
+from vidt.video import SoopVideoClient, SoopHlsUrlExtractor
 
 
 @pytest.mark.asyncio

@@ -1,5 +1,0 @@
-DEFAULT_QUEUE_NAME = "celery:vtask:default"
-IO_LFS_QUEUE_NAME = "celery:vtask:io:lfs"
-IO_NET_QUEUE_NAME = "celery:vtask:io:net"
-CPU_SINGLE_QUEUE_NAME = "celery:vtask:cpu:single"
-CPU_MULTIPLE_QUEUE_NAME = "celery:vtask:cpu:multiple"

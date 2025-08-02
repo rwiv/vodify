@@ -1,5 +1,5 @@
 cd ..
-set IMG=vtask-gpu:latest
+set IMG=vidt-gpu:latest
 set DOCKERFILE=./docker/Dockerfile-gpu
 
 docker rmi %IMG%

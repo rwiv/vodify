@@ -1,9 +1,9 @@
 services:
-  vtask-enc:
-    image: harbor.rwiv.xyz/private/vtask:0.8.6
-    container_name: vtask-enc
+  vidt-enc:
+    image: harbor.rwiv.xyz/private/vidt:0.8.7
+    container_name: vidt-enc
     working_dir: /app
-    entrypoint: .venv/bin/python3 -m vtask batch
+    entrypoint: .venv/bin/python3 -m vidt batch
     environment:
       PY_ENV: prod
       BATCH_COMMAND: encoding
@@ -17,7 +17,7 @@ services:
       - "${ENCODING_BASE_DIR_PATH}:/mnt/volume/app"
       - "${ENCODING_CONFIG_PATH}:/mnt/app/encoding_conf.yaml"
     labels:
-      app: vtask
+      app: vidt
       host: ${HOSTNAME}
     logging:
       driver: json-file

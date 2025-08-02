@@ -1,18 +1,18 @@
 metadata:
-  name: vtask-redis
+  name: vidt-redis
   namespace: media
 vault:
   mount: kube
-  path: media/vtask/redis
+  path: media/vidt/redis
   version: 1
-  secretName: vtask-redis
+  secretName: vidt-redis
   refreshAfter: 30s
 
 redis:
   global:
     storageClass: rook-ceph-block
   auth:
-    existingSecret: vtask-redis
+    existingSecret: vidt-redis
     existingSecretPasswordKey: password
   master:
     count: 1

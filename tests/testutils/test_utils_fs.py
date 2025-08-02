@@ -1,6 +1,6 @@
 from pyutils import path_join, find_project_root
 
-from vtask.common.fs import read_fs_config, FsConfig
+from vidt.common.fs import read_fs_config, FsConfig
 
 
 def read_test_fs_configs(is_prod: bool = False):

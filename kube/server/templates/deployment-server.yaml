@@ -19,7 +19,7 @@ spec:
       containers:
         - name: {{ .Values.global.name }}-server
           workingDir: "/app"
-          command: [".venv/bin/python3", "-m", "vtask", "server"]
+          command: [".venv/bin/python3", "-m", "vidt", "server"]
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           ports:
             - containerPort: {{ .Values.server.service.targetPort }}

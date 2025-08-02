@@ -7,10 +7,10 @@ env = get_celery_env()
 redis_url = f"redis://:{env.redis.password}@{env.redis.host}:{env.redis.port}/0"
 
 app = Celery(
-    "vtask",
+    "vidt",
     broker=redis_url,
     backend=redis_url,
-    include=["vtask.celery.celery_tasks"],
+    include=["vidt.celery.celery_tasks"],
 )
 
 app.conf.update(

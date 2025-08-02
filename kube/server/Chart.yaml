@@ -1,5 +1,5 @@
 apiVersion: v2
-name: vtask
-description: vtask
+name: vidt
+description: vidt
 type: application
 version: 0.1.0

@@ -1,7 +1,7 @@
 import pytest
 from pyutils import path_join, find_project_root
 
-from vtask.ffmpeg import get_info
+from vidt.ffmpeg import get_info
 
 
 @pytest.mark.asyncio

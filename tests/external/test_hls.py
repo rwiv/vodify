@@ -1,6 +1,6 @@
 from pyutils import path_join, find_project_root
 
-from vtask.external.hls import parse_master_playlist, parse_media_playlist
+from vidt.external.hls import parse_master_playlist, parse_media_playlist
 
 
 def test_master_playlist():

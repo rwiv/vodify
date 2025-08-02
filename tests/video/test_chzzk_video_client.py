@@ -1,6 +1,6 @@
 import pytest
 
-from vtask.video import ChzzkVideoClient1
+from vidt.video import ChzzkVideoClient1
 
 
 @pytest.mark.asyncio

@@ -1,13 +1,13 @@
 import pytest
 
 from tests.testutils.test_utils_misc import load_test_dotenv
-from vtask.env import get_celery_env
-from vtask.external.redis import RedisQueue, create_redis_client
+from vidt.env import get_celery_env
+from vidt.external.redis import RedisQueue, create_redis_client
 
 load_test_dotenv(".env-worker-dev")
 # load_test_dotenv(".env-worker-prod")
 
-key = "vtask:test:list"
+key = "vidt:test:list"
 celery_env = get_celery_env()
 conf = celery_env.redis
 queue = RedisQueue(create_redis_client(conf), key=key)

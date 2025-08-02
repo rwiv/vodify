@@ -1,6 +1,6 @@
 apiVersion: v2
-name: vtask-redis
-description: vtask-redis
+name: vidt-redis
+description: vidt-redis
 type: application
 version: 0.1.0
 appVersion: "1.16.0"

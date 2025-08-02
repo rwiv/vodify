@@ -1,4 +1,4 @@
-from vtask.encoding import parse_encoding_progress, ProgressInfo
+from vidt.encoding import parse_encoding_progress, ProgressInfo
 
 
 def test_progress_parser():

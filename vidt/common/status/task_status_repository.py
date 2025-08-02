@@ -4,7 +4,7 @@ from pyutils import log
 
 from ...external.redis import RedisString, RedisConfig, create_redis_client
 
-REDIS_TASK_STATUS_KEY_PREFIX = "vtask:task:status"
+REDIS_TASK_STATUS_KEY_PREFIX = "vidt:task:status"
 
 
 class TaskStatus(Enum):

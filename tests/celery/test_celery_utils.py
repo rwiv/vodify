@@ -6,7 +6,7 @@ from pyutils import load_dotenv, path_join, find_project_root
 # load_dotenv(path_join(find_project_root(), "dev", ".env-worker-dev"))
 load_dotenv(path_join(find_project_root(), "dev", ".env-worker-prod"))
 
-from vtask.celery import app, get_running_tasks, find_active_worker_names
+from vidt.celery import app, get_running_tasks, find_active_worker_names
 
 
 def test_inspect_tasks():

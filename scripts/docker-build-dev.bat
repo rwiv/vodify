@@ -1,5 +1,5 @@
 cd ..
-set IMG=vtask:latest
+set IMG=vidt:latest
 set DOCKERFILE=./docker/Dockerfile-dev
 
 docker rmi %IMG%

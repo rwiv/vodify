@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: vtask
+  name: vidt
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/rwiv/gitops-prod.git
     targetRevision: HEAD
-    path: apps/media/vtask-server
+    path: apps/media/vidt-server
   destination:
     namespace: default
     server: https://kubernetes.default.svc

@@ -1,7 +1,7 @@
 import yaml
 from pyutils import path_join, find_project_root
 
-from vtask.common.loss import TimeLossInspector, SizeLossInspector
+from vidt.common.loss import TimeLossInspector, SizeLossInspector
 
 
 def test_analyze_by_key_frames():
