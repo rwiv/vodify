@@ -4,7 +4,7 @@ import sys
 from .redis_queue import RedisQueue
 from .redis_string import RedisString
 from .redis_types import RedisConfig
-from .redis_utils import create_redis_client
+from .redis_utils import create_app_redis_client, create_celery_redis_client
 
 targets = [
     "redis_errors",

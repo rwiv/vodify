@@ -1,7 +1,7 @@
 import json
 
 from ..schema.stdl_types import StdlDoneMsg
-from ...external.redis import RedisConfig, RedisQueue, create_redis_client
+from ...external.redis import RedisConfig, RedisQueue, create_app_redis_client
 
 REDIS_STDL_DONE_LIST_KEY = "vidt:stdl:done"
 
@@ -9,7 +9,7 @@ REDIS_STDL_DONE_LIST_KEY = "vidt:stdl:done"
 class StdlMsgQueue:
     def __init__(self, conf: RedisConfig):
         self.__key = REDIS_STDL_DONE_LIST_KEY
-        self.redis_queue = RedisQueue(redis=create_redis_client(conf), key=self.__key)
+        self.redis_queue = RedisQueue(redis=create_app_redis_client(conf), key=self.__key)
 
     async def push(self, value: StdlDoneMsg):
         await self.redis_queue.push(value.model_dump_json(by_alias=True))

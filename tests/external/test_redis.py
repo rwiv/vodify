@@ -2,7 +2,7 @@ import pytest
 
 from tests.testutils.test_utils_misc import load_test_dotenv
 from vidt.env import get_celery_env
-from vidt.external.redis import RedisQueue, create_redis_client
+from vidt.external.redis import RedisQueue, create_app_redis_client
 
 load_test_dotenv(".env-worker-dev")
 # load_test_dotenv(".env-worker-prod")
@@ -10,7 +10,7 @@ load_test_dotenv(".env-worker-dev")
 key = "vidt:test:list"
 celery_env = get_celery_env()
 conf = celery_env.redis
-queue = RedisQueue(create_redis_client(conf), key=key)
+queue = RedisQueue(create_app_redis_client(conf), key=key)
 
 
 @pytest.mark.asyncio

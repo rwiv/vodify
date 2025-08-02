@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from ..external.redis import RedisConfig, create_redis_client
+from ..external.redis import RedisConfig, create_celery_redis_client
 
 
 class CeleryTaskHeaders(BaseModel):
@@ -53,7 +53,7 @@ class CeleryRedisBrokerClient:
         self.__conf = conf
 
     async def get_received_tasks(self, queue_name: str):
-        tasks = await create_redis_client(self.__conf).lrange(queue_name, 0, -1)  # type: ignore
+        tasks = await create_celery_redis_client(self.__conf).lrange(queue_name, 0, -1)  # type: ignore
         if not isinstance(tasks, list):
             raise ValueError("Expected list data")
         return [CeleryTaskInfo(**json.loads(task)) for task in tasks]

@@ -2,7 +2,7 @@ from enum import Enum
 
 from pyutils import log
 
-from ...external.redis import RedisString, RedisConfig, create_redis_client
+from ...external.redis import RedisString, RedisConfig, create_app_redis_client
 
 REDIS_TASK_STATUS_KEY_PREFIX = "vidt:task:status"
 
@@ -21,7 +21,7 @@ class TaskStatusRepository:
         done_ex_sec: int = 3 * 24 * 60 * 60,  # 3 days
     ):
         self.__prefix = REDIS_TASK_STATUS_KEY_PREFIX
-        self.__str = RedisString(client=create_redis_client(redis_conf))
+        self.__str = RedisString(client=create_app_redis_client(redis_conf))
         self.__start_ex_sec = start_ex_sec
         self.__done_ex_sec = done_ex_sec
 

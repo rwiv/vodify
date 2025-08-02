@@ -4,7 +4,7 @@ from ..env import get_celery_env
 
 env = get_celery_env()
 
-redis_url = f"redis://:{env.redis.password}@{env.redis.host}:{env.redis.port}/0"
+redis_url = f"redis://:{env.redis.password}@{env.redis.host}:{env.redis.port}/1"
 
 app = Celery(
     "vidt",

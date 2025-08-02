@@ -6,7 +6,7 @@ load_dotenv(path_join(find_project_root(), "dev", ".env-server-dev"))
 # load_dotenv(path_join(find_project_root(), "dev", ".env-server-prod"))
 
 from vidt.celery import IO_NET_QUEUE_NAME
-from vidt.external.redis import create_redis_client
+from vidt.external.redis import create_celery_redis_client
 from vidt.celery import CeleryRedisBrokerClient
 from vidt.env import get_celery_env
 
@@ -14,7 +14,7 @@ env = get_celery_env()
 conf = env.redis
 
 QUEUE_NAME = "celery"
-redis_client = create_redis_client(conf)
+redis_client = create_celery_redis_client(conf)
 client = CeleryRedisBrokerClient(env.redis)
 
 

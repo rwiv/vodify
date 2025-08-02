@@ -1,6 +1,6 @@
 services:
   vidt-default:
-    image: harbor.rwiv.xyz/private/vidt:0.8.7
+    image: harbor.rwiv.xyz/private/vidt:0.8.8
     container_name: vidt-default
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vidt worker
@@ -46,7 +46,7 @@ services:
         labels: app,host
         tag: "container_image={{.ImageName}},container_name={{.Name}}"
   vidt-io:
-    image: harbor.rwiv.xyz/private/vidt:0.8.7
+    image: harbor.rwiv.xyz/private/vidt:0.8.8
     container_name: vidt-io
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vidt worker

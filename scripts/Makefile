@@ -18,7 +18,7 @@ worker-remote-logs:
 
 
 helm-redis-dep:
-	@helm dependency update ./redis
+	helm dependency update ../kube/redis
 
 helm-redis-run:
 	helm install vidt-redis ../kube/redis -n media

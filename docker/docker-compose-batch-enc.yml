@@ -1,6 +1,6 @@
 services:
   vidt-enc:
-    image: harbor.rwiv.xyz/private/vidt:0.8.7
+    image: harbor.rwiv.xyz/private/vidt:0.8.8
     container_name: vidt-enc
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vidt batch
