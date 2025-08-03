@@ -1,6 +1,6 @@
 services:
   vidt-loss:
-    image: harbor.rwiv.xyz/private/vidt:0.8.8
+    image: harbor.rwiv.xyz/private/vidt:0.9.1
     container_name: vidt-loss
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vidt batch

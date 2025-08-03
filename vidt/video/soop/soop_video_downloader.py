@@ -15,7 +15,7 @@ class SegmentsPathInfo(BaseModel):
     video_name: str
     out_dir_path: str
     video_segments_path: str
-    audio_segments_path: str
+    audio_segments_path: str | None
 
 
 class FfprobeStream(BaseModel):
@@ -46,7 +46,9 @@ class SoopVideoDownloader:
         path_infos: list[SegmentsPathInfo] = []
         for i, m3u8_info in enumerate(video_info.m3u8_infos):
             video_path = await self.__download_segments(m3u8_info.video_master_url, bj_id, f"{i}_video", True)
-            audio_path = await self.__download_segments(m3u8_info.audio_media_url, bj_id, f"{i}_audio", False)
+            audio_path = None
+            if await is_separated_video(path_join(video_path, "0.ts")):
+                audio_path = await self.__download_segments(m3u8_info.audio_media_url, bj_id, f"{i}_audio", False)
             segments_path = SegmentsPathInfo(
                 bj_id=bj_id,
                 video_name=str(i),
@@ -125,11 +127,38 @@ class SoopVideoDownloader:
         return out_mp4_path
 
 
+async def is_separated_video(file_path: str) -> bool:
+    info = await get_info(file_path)
+    if len(info.streams) == 1:
+        return True
+    for stream in info.streams:
+        if stream.codec_type == "audio":
+            return False
+    raise Exception("Unexpected streams")
+
+
 async def mux_to_mp4(info: SegmentsPathInfo) -> str:
+    if info.audio_segments_path is None:
+        merged_ts_path = await merge_ts(info.video_segments_path)
+        await rmtree(info.video_segments_path)
+    else:
+        merged_ts_path = await merge_video_and_audio(info=info)
+
+    # convert ts to mp4
+    mp4_path = path_join(info.out_dir_path, info.bj_id, f"{info.video_name}.mp4")
+    await remux_video(merged_ts_path, mp4_path)
+    await aios.remove(merged_ts_path)
+    return mp4_path
+
+
+async def merge_video_and_audio(info: SegmentsPathInfo) -> str:
+    if info.audio_segments_path is None:
+        raise ValueError("Audio segments path is None")
+
     # validate segments
     video_seg_names = await aios.listdir(info.video_segments_path)
     video_seg_names.sort(key=lambda x: int(stem(x)))
-    audio_seg_names = await aios.listdir(info.video_segments_path)
+    audio_seg_names = await aios.listdir(info.audio_segments_path)
     audio_seg_names.sort(key=lambda x: int(stem(x)))
     if len(video_seg_names) != len(audio_seg_names):
         raise ValueError("Video and audio segments count mismatch")
@@ -147,12 +176,7 @@ async def mux_to_mp4(info: SegmentsPathInfo) -> str:
     await concat_streams(video_path=video_path, audio_path=audio_path, out_path=merged_ts_path)
     await aios.remove(video_path)
     await aios.remove(audio_path)
-
-    # convert ts to mp4
-    mp4_path = path_join(info.out_dir_path, info.bj_id, f"{info.video_name}.mp4")
-    await remux_video(merged_ts_path, mp4_path)
-    await aios.remove(merged_ts_path)
-    return mp4_path
+    return merged_ts_path
 
 
 async def check_stream(file_path: str, is_video: bool):
