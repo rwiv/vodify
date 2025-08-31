@@ -10,7 +10,6 @@ class BatchEnv(BaseModel):
     env: constr(min_length=1)
     loss_config_path: constr(min_length=1) | None = None
     archive_config_path: constr(min_length=1) | None = None
-    encoding_config_path: constr(min_length=1) | None = None
     untf: UntfConfig
 
 
@@ -23,6 +22,5 @@ def get_batch_env() -> BatchEnv:
         env=env,
         loss_config_path=os.getenv("LOSS_CONFIG_PATH") or None,
         archive_config_path=os.getenv("ARCHIVE_CONFIG_PATH") or None,
-        encoding_config_path=os.getenv("ENCODING_CONFIG_PATH") or None,
         untf=read_untf_env(),
     )

@@ -7,13 +7,12 @@ from typing import TypedDict
 import aiofiles
 from aiofiles import os as aios
 from pydantic import BaseModel, Field
-from pyutils import log, path_join, error_dict
+from pyutils import log, path_join, error_dict, run_process, cur_duration
 
 from ..accessor.stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_types import StdlSegmentsInfo
 from ...external.notifier import Notifier
 from ...utils import (
-    cur_duration,
     write_yaml_file,
     ensure_dir,
     move_directory_not_recur,
@@ -22,7 +21,6 @@ from ...utils import (
     rmtree,
     open_tar,
     stem,
-    run_process,
 )
 
 

@@ -2,7 +2,7 @@ import asyncio
 
 from aiofiles import os as aios
 from pydantic import BaseModel
-from pyutils import path_join, filename, log
+from pyutils import path_join, filename, cur_duration, log
 
 from ..accessor.stdl_segment_accessor_local import StdlLocalSegmentAccessor
 from ..accessor.stdl_segment_accessor_s3 import StdlS3SegmentAccessor
@@ -11,7 +11,6 @@ from ..schema.stdl_types import StdlSegmentsInfo
 from ..transcoder.stdl_transcoder import StdlTranscoder
 from ...external.notifier import Notifier
 from ...external.s3 import S3AsyncClient
-from ...utils import cur_duration
 
 
 class ArchiveTarget(BaseModel):

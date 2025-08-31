@@ -19,10 +19,7 @@ from .file import (
 )
 from .http import get_headers, fetch_text, fetch_json
 from .limiter import nio_limiter
-from .process import check_which, check_which_async, check_returncode, run_process, exec_process
 from .proxy import ProxyConfig
-from .stats import avg
-from .time import cur_duration
 from .yaml import write_yaml_file
 
 targets = [

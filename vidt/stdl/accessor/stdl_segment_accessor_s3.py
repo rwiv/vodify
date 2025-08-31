@@ -1,12 +1,11 @@
 import pyutils
-from pyutils import path_join, filename, log
+from pyutils import path_join, filename, avg, log
 
 from .stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
 from ..schema.stdl_types import StdlSegmentsInfo
 from ...common.fs import FsType
 from ...external.s3 import S3AsyncClient
-from ...utils import avg
 
 
 class StdlS3SegmentAccessor(StdlSegmentAccessor):

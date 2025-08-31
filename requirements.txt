@@ -11,6 +11,5 @@ uvicorn==0.34.0
 pydantic==2.10.6
 flower==2.0.1
 PyYAML==6.0.2
-yt-dlp==2025.3.31
 
-git+https://github.com/rwiv/pyutils.git@v0.3.3
+git+https://github.com/rwiv/pyutils.git@v0.3.5
