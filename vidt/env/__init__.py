@@ -1,7 +1,7 @@
 import os
 import sys
 
-from .env_batch import BatchEnv, BatchCommand, get_batch_env
+from .env_batch import BatchEnv, get_batch_env
 from .env_celery import CeleryEnv, get_celery_env
 from .env_server import ServerEnv, get_server_env
 from .env_worker import WorkerEnv, get_worker_env, ProxyConfig

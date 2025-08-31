@@ -1,4 +1,5 @@
 import asyncio
+import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import TypedDict
@@ -11,7 +12,6 @@ from pyutils import log, path_join, error_dict
 from ..accessor.stdl_segment_accessor import StdlSegmentAccessor
 from ..schema.stdl_types import StdlSegmentsInfo
 from ...external.notifier import Notifier
-from ...ffmpeg import remux_video
 from ...utils import (
     cur_duration,
     write_yaml_file,
@@ -22,6 +22,7 @@ from ...utils import (
     rmtree,
     open_tar,
     stem,
+    run_process,
 )
 
 
@@ -375,3 +376,8 @@ def _get_success_result(message: str) -> StdlDoneTaskResult:
         "status": StdlDoneTaskStatus.SUCCESS.value,
         "message": message,
     }
+
+
+async def remux_video(src_path: str, out_path: str):
+    command = ["ffmpeg", "-i", src_path, "-c", "copy", out_path]
+    await run_process(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

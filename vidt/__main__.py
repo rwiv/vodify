@@ -1,6 +1,13 @@
 import sys
 
+import asyncio
+import logging
+
 from pyutils import load_dotenv, path_join, find_project_root, log
+
+from .env import get_batch_env
+from .stdl import StdlArchiveExecutor
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -24,9 +31,9 @@ if __name__ == "__main__":
 
         run_server()
     elif mode == "batch":
-        from .common.batch import BatchRunner
-
-        BatchRunner().run()
+        log.set_level(logging.DEBUG)
+        env = get_batch_env()
+        asyncio.run(StdlArchiveExecutor(env).run())
     else:
         log.info(f"Unknown mode: {mode}")
         sys.exit(1)

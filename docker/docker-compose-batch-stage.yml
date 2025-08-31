@@ -8,22 +8,12 @@ services:
     entrypoint: .venv/bin/python3 -m vidt batch
     environment:
       PY_ENV: prod
-      BATCH_COMMAND: "${BATCH_COMMAND}"
-
-      LOSS_CONFIG_PATH: /mnt/app/loss_conf.yaml
-      VIDEO_DOWNLOAD_CONFIG_PATH: /mnt/app/video_conf.yaml
-      ARCHIVE_CONFIG_PATH: /mnt/app/archive_conf.yaml
-      ENCODING_CONFIG_PATH: /mnt/app/encoding_conf.yaml
-
       UNTF_ENDPOINT: "${UNTF_ENDPOINT}"
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
       - "${BASE_DIR_PATH}:/mnt/volume/app"
-      - "${LOSS_CONFIG_PATH}:/mnt/app/loss_conf.yaml"
-      - "${VIDEO_DOWNLOAD_CONFIG_PATH}:/mnt/app/video_conf.yaml"
       - "${ARCHIVE_CONFIG_PATH}:/mnt/app/archive_conf.yaml"
-      - "${ENCODING_CONFIG_PATH}:/mnt/app/encoding_conf.yaml"
 #    deploy:
 #      resources:
 #        reservations:
