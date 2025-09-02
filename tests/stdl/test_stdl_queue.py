@@ -11,8 +11,8 @@ from vidt.common.status import TaskStatusRepository
 from vidt.env import get_celery_env
 from vidt.stdl import StdlDoneMsg, StdlMsgQueue
 
-# load_test_dotenv(".env-worker-dev")
-load_test_dotenv(".env-worker-prod")
+load_test_dotenv(".env-worker-dev")
+# load_test_dotenv(".env-worker-prod")
 
 celery_env = get_celery_env()
 
