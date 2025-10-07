@@ -1,18 +1,18 @@
 services:
-  vidt-archive:
-    image: harbor.rwiv.xyz/private/vidt:0.9.1
-    container_name: vidt-archive
+  vidt-batch:
+    image: harbor.rwiv.xyz/private/vidt:0.9.2
+    container_name: vidt-batch
     working_dir: /app
     entrypoint: .venv/bin/python3 -m vidt batch
     environment:
       PY_ENV: prod
-      ARCHIVE_CONFIG_PATH: /mnt/app/archive_conf.yaml
+      ARCHIVE_CONFIG_PATH: /mnt/app/conf.yaml
       UNTF_ENDPOINT: "${UNTF_ENDPOINT}"
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
       - "${ARCHIVE_OUT_DIR_PATH}:/mnt/volume/out"
-      - "${ARCHIVE_CONFIG_PATH}:/mnt/app/archive_conf.yaml"
+      - "${ARCHIVE_CONFIG_PATH}:/mnt/app/conf.yaml"
     labels:
       app: vidt
       host: ${HOSTNAME}
