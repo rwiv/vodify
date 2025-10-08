@@ -11,8 +11,8 @@ services:
       UNTF_API_KEY: "${UNTF_API_KEY}"
       UNTF_TOPIC: "${UNTF_TOPIC}"
     volumes:
-      - "${ARCHIVE_OUT_DIR_PATH}:/mnt/volume/out"
-      - "${ARCHIVE_CONFIG_PATH}:/mnt/app/conf.yaml"
+      - "${BASE_DIR_PATH}:/mnt/volume"
+      - "${CONFIG_PATH}:/mnt/app/conf.yaml"
     labels:
       app: vidt
       host: ${HOSTNAME}
