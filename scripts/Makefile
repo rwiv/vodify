@@ -2,18 +2,18 @@ argo-run:
 	kubectl create -f ../kube/argocd/application.yaml
 
 
-worker-up:
+workers-up:
 	sudo docker compose -f ../docker/docker-compose-worker-prod.yml --env-file ../secret/.env rm
 	sudo docker compose -f ../docker/docker-compose-worker-prod.yml --env-file ../secret/.env up -d
 
-worker-rm:
+workers-rm:
 	sudo docker compose -f ../docker/docker-compose-worker-prod.yml --env-file ../secret/.env stop
 	sudo docker compose -f ../docker/docker-compose-worker-prod.yml --env-file ../secret/.env rm -f
 
-worker-local-logs:
+workers-local-logs:
 	sudo docker logs vodify-worker-local --tail 20
 
-worker-remote-logs:
+workers-remote-logs:
 	sudo docker logs vodify-worker-remote --tail 20
 
 
