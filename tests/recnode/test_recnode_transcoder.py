@@ -10,14 +10,14 @@ from tests.testutils.test_utils_misc import load_test_dotenv
 from vodify.common.fs import S3ObjectWriter
 from vodify.external.notifier import MockNotifier
 from vodify.external.s3 import S3AsyncClient
-from vodify.stdl import (
-    StdlDoneMsg,
-    StdlDoneStatus,
-    StdlPlatformType,
-    StdlSegmentsInfo,
-    StdlTranscoder,
-    StdlS3SegmentAccessor,
-    StdlArchiver,
+from vodify.recnode import (
+    RecnodeMsg,
+    RecnodeDoneStatus,
+    RecnodePlatformType,
+    RecnodeSegmentsInfo,
+    RecnodeTranscoder,
+    S3SegmentAccessor,
+    RecnodeArchiver,
     ArchiveTarget,
 )
 from vodify.utils import rmtree
@@ -28,17 +28,17 @@ load_test_dotenv(".env-server-dev")
 # fs_name = "local"
 fs = "minio"
 
-pf = StdlPlatformType.CHZZK
+pf = RecnodePlatformType.CHZZK
 vid = "test_video"
-o = StdlDoneStatus.COMPLETE
-x = StdlDoneStatus.CANCELED
+o = RecnodeDoneStatus.COMPLETE
+x = RecnodeDoneStatus.CANCELED
 
 done_messages = [
-    StdlDoneMsg(platform=pf, uid="test_uid1", videoName=vid, fsName=fs, status=o),
-    StdlDoneMsg(platform=pf, uid="test_uid2", videoName=vid, fsName=fs, status=o),
-    StdlDoneMsg(platform=pf, uid="test_uid3", videoName=vid, fsName=fs, status=x),
-    StdlDoneMsg(platform=pf, uid="test_uid4", videoName=vid, fsName=fs, status=x),
-    StdlDoneMsg(platform=pf, uid="test_uid5", videoName=vid, fsName=fs, status=o),
+    RecnodeMsg(platform=pf, uid="test_uid1", videoName=vid, fsName=fs, status=o),
+    RecnodeMsg(platform=pf, uid="test_uid2", videoName=vid, fsName=fs, status=o),
+    RecnodeMsg(platform=pf, uid="test_uid3", videoName=vid, fsName=fs, status=x),
+    RecnodeMsg(platform=pf, uid="test_uid4", videoName=vid, fsName=fs, status=x),
+    RecnodeMsg(platform=pf, uid="test_uid5", videoName=vid, fsName=fs, status=o),
 ]
 
 fs_configs = read_test_fs_configs(is_prod=False)
@@ -58,7 +58,7 @@ src_writer = S3ObjectWriter(s3_client)
 
 dev_test_dir_path = path_join(find_project_root(), "dev", "test")
 
-local_chunks_path = path_join(dev_test_dir_path, "assets", "stdl", "dup_o_miss_o_loss_o")
+local_chunks_path = path_join(dev_test_dir_path, "assets", "recnode", "dup_o_miss_o_loss_o")
 base_dir_path = path_join(dev_test_dir_path, "out")
 tmp_dir_path = path_join(dev_test_dir_path, "tmp")
 
@@ -90,8 +90,8 @@ async def test_transcode():
 
     await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
-    transcoder = StdlTranscoder(
-        accessor=StdlS3SegmentAccessor(s3_client=s3_client, delete_batch_size=100),
+    transcoder = RecnodeTranscoder(
+        accessor=S3SegmentAccessor(s3_client=s3_client, delete_batch_size=100),
         notifier=MockNotifier(),
         out_dir_path=base_dir_path,
         tmp_path=tmp_dir_path,
@@ -99,7 +99,7 @@ async def test_transcode():
         video_size_limit_gb=1024,
     )
     result = await transcoder.transcode(
-        StdlSegmentsInfo(
+        RecnodeSegmentsInfo(
             platform_name=target.platform.value,
             channel_id=target.uid,
             video_name=target.video_name,
@@ -119,7 +119,7 @@ async def test_transcode_by_archiver():
 
     await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
-    archiver = StdlArchiver(
+    archiver = RecnodeArchiver(
         s3_client=s3_client,
         out_dir_path=base_dir_path,
         tmp_dir_path=tmp_dir_path,
@@ -146,7 +146,7 @@ async def test_download():
 
     await write_test_context_files(target.platform.value, target.uid, target.video_name)
 
-    archiver = StdlArchiver(
+    archiver = RecnodeArchiver(
         s3_client=s3_client,
         out_dir_path=base_dir_path,
         tmp_dir_path=tmp_dir_path,

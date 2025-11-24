@@ -4,11 +4,11 @@ from aiofiles import os as aios
 from pydantic import BaseModel
 from pyutils import path_join, filename, cur_duration, log
 
-from ..accessor.stdl_segment_accessor_local import StdlLocalSegmentAccessor
-from ..accessor.stdl_segment_accessor_s3 import StdlS3SegmentAccessor
-from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
-from ..schema.stdl_types import StdlSegmentsInfo
-from ..transcoder.stdl_transcoder import StdlTranscoder
+from ..accessor.segment_accessor_local import LocalSegmentAccessor
+from ..accessor.segment_accessor_s3 import S3SegmentAccessor
+from ..schema.recnode_constrants import RECNODE_INCOMPLETE_DIR_NAME
+from ..schema.recnode_types import RecnodeSegmentsInfo
+from ..transcoder.recnode_transcoder import RecnodeTranscoder
 from ...external.notifier import Notifier
 from ...external.s3 import S3AsyncClient
 
@@ -19,7 +19,7 @@ class ArchiveTarget(BaseModel):
     video_name: str
 
 
-class StdlArchiver:
+class RecnodeArchiver:
     def __init__(
         self,
         s3_client: S3AsyncClient,
@@ -33,13 +33,13 @@ class StdlArchiver:
         self.notifier = notifier
         self.tmp_dir_path = tmp_dir_path
         self.out_dir_path = out_dir_path
-        self.incomplete_dir_path = path_join(out_dir_path, STDL_INCOMPLETE_DIR_NAME)
+        self.incomplete_dir_path = path_join(out_dir_path, RECNODE_INCOMPLETE_DIR_NAME)
         self.is_archive = is_archive
         self.video_size_limit_gb = video_size_limit_gb
 
     async def transcode_by_s3(self, targets: list[ArchiveTarget]):
-        trans = StdlTranscoder(
-            accessor=StdlS3SegmentAccessor(s3_client=self.s3_client, delete_batch_size=100),
+        trans = RecnodeTranscoder(
+            accessor=S3SegmentAccessor(s3_client=self.s3_client, delete_batch_size=100),
             notifier=self.notifier,
             out_dir_path=path_join(self.out_dir_path, "complete"),
             tmp_path=self.tmp_dir_path,
@@ -49,7 +49,7 @@ class StdlArchiver:
 
         for target in targets:
             start_time = asyncio.get_event_loop().time()
-            info = StdlSegmentsInfo(
+            info = RecnodeSegmentsInfo(
                 platform_name=target.platform,
                 channel_id=target.uid,
                 video_name=target.video_name,
@@ -59,8 +59,8 @@ class StdlArchiver:
         log.info("All transcoding is done")
 
     async def transcode_by_local(self):
-        trans = StdlTranscoder(
-            accessor=StdlLocalSegmentAccessor(local_incomplete_dir_path=self.incomplete_dir_path),
+        trans = RecnodeTranscoder(
+            accessor=LocalSegmentAccessor(local_incomplete_dir_path=self.incomplete_dir_path),
             notifier=self.notifier,
             out_dir_path=path_join(self.out_dir_path, "complete"),
             tmp_path=self.tmp_dir_path,
@@ -73,7 +73,7 @@ class StdlArchiver:
                 channel_dir_path = await checked_dir_path(platform_dir_path, channel_id)
                 for video_name in await aios.listdir(channel_dir_path):
                     await checked_dir_path(channel_dir_path, video_name)
-                    info = StdlSegmentsInfo(
+                    info = RecnodeSegmentsInfo(
                         platform_name=platform_name,
                         channel_id=channel_id,
                         video_name=video_name,

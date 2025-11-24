@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from .celery import CeleryController
-from .stdl import StdlController, StdlTaskRegistrar, StdlTaskRegisterJob, StdlMsgConsumeJob
+from .recnode import RecnodeController, RecnodeTaskRegistrar, RecnodeTaskRegisterJob, RecnodeMsgConsumeJob
 from ..celery import CeleryRedisBrokerClient
 from ..common.job import CronJob
 from ..env import get_server_env, get_celery_env
@@ -32,14 +32,14 @@ class ServerDependencyManager:
         celery_controller = CeleryController(celery_redis_broker)
         self.celery_router = celery_controller.router
 
-        # stdl
-        stdl_registrar = StdlTaskRegistrar()
+        # recnode
+        recnode_registrar = RecnodeTaskRegistrar()
 
-        stdl_register_job = StdlTaskRegisterJob(redis_conf, stdl_registrar, celery_redis_broker)
-        self.stdl_register_cron = CronJob(job=stdl_register_job, interval_sec=5, unstoppable=True)
+        recnode_register_job = RecnodeTaskRegisterJob(redis_conf, recnode_registrar, celery_redis_broker)
+        self.recnode_register_cron = CronJob(job=recnode_register_job, interval_sec=5, unstoppable=True)
 
-        stdl_consume_job = StdlMsgConsumeJob(redis_conf, SQSAsyncClient(self.server_env.sqs), stdl_registrar)
-        self.stdl_consume_cron = CronJob(job=stdl_consume_job, interval_sec=1, unstoppable=True)
+        recnode_consume_job = RecnodeMsgConsumeJob(redis_conf, SQSAsyncClient(self.server_env.sqs), recnode_registrar)
+        self.recnode_consume_cron = CronJob(job=recnode_consume_job, interval_sec=1, unstoppable=True)
 
-        stdl_controller = StdlController(redis_conf, self.stdl_register_cron, stdl_registrar)
-        self.stdl_router = stdl_controller.router
+        recnode_controller = RecnodeController(redis_conf, self.recnode_register_cron, recnode_registrar)
+        self.recnode_router = recnode_controller.router

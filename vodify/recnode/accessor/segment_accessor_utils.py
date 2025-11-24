@@ -1,19 +1,19 @@
 from pyutils import path_join
 
-from .stdl_segment_accessor_local import StdlLocalSegmentAccessor
-from .stdl_segment_accessor_s3 import StdlS3SegmentAccessor
-from .stdl_segment_accessor import StdlSegmentAccessor
-from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
+from .segment_accessor_local import LocalSegmentAccessor
+from .segment_accessor_s3 import S3SegmentAccessor
+from .segment_accessor import SegmentAccessor
+from ..schema.recnode_constrants import RECNODE_INCOMPLETE_DIR_NAME
 from ...common.fs import FsType, FsConfig
 from ...env import WorkerEnv
 from ...external.s3 import S3AsyncClient
 
 
-def create_stdl_accessor(
+def create_recnode_accessor(
     fs_name: str,
     fs_configs: list[FsConfig],
     env: WorkerEnv,
-) -> StdlSegmentAccessor:
+) -> SegmentAccessor:
     fs_conf: FsConfig | None = None
     for conf in fs_configs:
         if conf.name == fs_name:
@@ -22,8 +22,8 @@ def create_stdl_accessor(
     if fs_conf is None:
         raise ValueError(f"fs_name not found: {fs_name}")
     if fs_conf.type == FsType.LOCAL:
-        return StdlLocalSegmentAccessor(
-            local_incomplete_dir_path=path_join(env.stdl.base_dir_path, STDL_INCOMPLETE_DIR_NAME),
+        return LocalSegmentAccessor(
+            local_incomplete_dir_path=path_join(env.recnode.base_dir_path, RECNODE_INCOMPLETE_DIR_NAME),
         )
     elif fs_conf.type == FsType.S3:
         if fs_conf.s3 is None:
@@ -37,6 +37,6 @@ def create_stdl_accessor(
             read_timeout_threshold=env.read_timeout_threshold,
             proxy_conf=env.proxy,
         )
-        return StdlS3SegmentAccessor(s3_client=s3_client, delete_batch_size=env.stdl.delete_batch_size)
+        return S3SegmentAccessor(s3_client=s3_client, delete_batch_size=env.recnode.delete_batch_size)
     else:
         raise ValueError(f"Unknown fs_name: {fs_name}")

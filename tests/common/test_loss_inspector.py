@@ -4,9 +4,9 @@ import yaml
 from pydantic import BaseModel, Field
 from pyutils import path_join, find_project_root
 
-from vodify.stdl import StdlLossInspector
+from vodify.common.loss import LossInspector
 
-base_path = path_join(find_project_root(), "dev", "loss_stdl")
+base_path = path_join(find_project_root(), "dev", "loss_recnode")
 
 
 class YamlFile(BaseModel):
@@ -14,7 +14,7 @@ class YamlFile(BaseModel):
 
 
 def test_loss_check():
-    inspector = StdlLossInspector()
+    inspector = LossInspector()
 
     for file_name in os.listdir(path_join(base_path, "src")):
         with open(path_join(base_path, "src", file_name), "r") as file:

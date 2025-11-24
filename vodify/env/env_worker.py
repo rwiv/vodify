@@ -22,7 +22,7 @@ def read_proxy_config() -> ProxyConfig:
     )
 
 
-class StdlConfig(BaseModel):
+class RecnodeConfig(BaseModel):
     base_dir_path: constr(min_length=1)
     is_archive: bool
     video_size_limit_gb: int
@@ -40,7 +40,7 @@ class WorkerEnv(BaseModel):
     min_read_timeout_sec: float
     read_timeout_threshold: float
     worker: WorkerConfig
-    stdl: StdlConfig
+    recnode: RecnodeConfig
     untf: UntfConfig
     proxy: ProxyConfig | None
 
@@ -51,11 +51,11 @@ def get_worker_env() -> WorkerEnv:
         env = "dev"
 
     worker_config = WorkerConfig(name=os.getenv("WORKER_NAME"), queues=os.getenv("WORKER_QUEUES"))
-    stdl_config = StdlConfig(
-        base_dir_path=os.getenv("STDL_BASE_DIR_PATH"),
-        is_archive=os.getenv("STDL_IS_ARCHIVE") == "true",
-        video_size_limit_gb=os.getenv("STDL_VIDEO_SIZE_LIMIT_GB"),  # type: ignore
-        delete_batch_size=os.getenv("STDL_DELETE_BATCH_SIZE"),  # type: ignore
+    recnode_config = RecnodeConfig(
+        base_dir_path=os.getenv("RECNODE_BASE_DIR_PATH"),
+        is_archive=os.getenv("RECNODE_IS_ARCHIVE") == "true",
+        video_size_limit_gb=os.getenv("RECNODE_VIDEO_SIZE_LIMIT_GB"),  # type: ignore
+        delete_batch_size=os.getenv("RECNODE_DELETE_BATCH_SIZE"),  # type: ignore
     )
     proxy_enabled = os.getenv("PROXY_ENABLED") == "true"
 
@@ -70,7 +70,7 @@ def get_worker_env() -> WorkerEnv:
         network_retry_limit=os.getenv("NETWORK_RETRY_LIMIT"),  # type: ignore
         min_read_timeout_sec=os.getenv("MIN_READ_TIMEOUT_SEC"),  # type: ignore
         read_timeout_threshold=os.getenv("READ_TIMEOUT_THRESHOLD"),  # type: ignore
-        stdl=stdl_config,
+        recnode=recnode_config,
         untf=read_untf_env(),
         proxy=read_proxy_config() if proxy_enabled else None,
     )

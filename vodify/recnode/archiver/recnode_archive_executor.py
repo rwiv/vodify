@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel
 
-from .stdl_archiver import ArchiveTarget, StdlArchiver
+from .recnode_archiver import ArchiveTarget, RecnodeArchiver
 from ...env import BatchEnv
 from ...external.notifier import create_notifier
 from ...external.s3 import S3AsyncClient, S3Config
@@ -16,7 +16,7 @@ class ArchiveMode(Enum):
     TRANSCODE_S3 = "transcode_s3"
 
 
-class StdlArchiveConfig(BaseModel):
+class ArchiveConfig(BaseModel):
     mode: ArchiveMode
     out_dir_path: str
     tmp_dir_path: str
@@ -31,22 +31,22 @@ class StdlArchiveConfig(BaseModel):
     targets: list[ArchiveTarget]
 
 
-def read_archive_config(config_path: str) -> StdlArchiveConfig:
+def read_archive_config(config_path: str) -> ArchiveConfig:
     if not Path(config_path).exists():
         raise FileNotFoundError(f"File not found: {config_path}")
     with open(config_path, "r") as file:
         text = file.read()
-    return StdlArchiveConfig(**yaml.load(text, Loader=yaml.FullLoader))
+    return ArchiveConfig(**yaml.load(text, Loader=yaml.FullLoader))
 
 
-class StdlArchiveExecutor:
+class RecnodeArchiveExecutor:
     def __init__(self, env: BatchEnv):
         conf_path = env.archive_config_path
         if conf_path is None:
             raise ValueError("archive_config_path is required")
         self.conf = read_archive_config(conf_path)
         self.notifier = create_notifier(env=env.env, conf=env.untf)
-        self.archiver = StdlArchiver(
+        self.archiver = RecnodeArchiver(
             s3_client=S3AsyncClient(
                 conf=self.conf.s3_config,
                 network_mbit=self.conf.network_mbit,

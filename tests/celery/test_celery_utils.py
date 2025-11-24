@@ -26,7 +26,7 @@ def test_inspect_tasks():
     # task_id = ""
     # result = get_result(app, task_id)
     # print(result)
-    # done_result: StdlDoneTaskResult = result.result
+    # done_result: RecnodeDoneTaskResult = result.result
     # print(done_result["message"])
 
 

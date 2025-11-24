@@ -9,8 +9,8 @@ from aiofiles import os as aios
 from pydantic import BaseModel, Field
 from pyutils import log, path_join, error_dict, run_process, cur_duration
 
-from ..accessor.stdl_segment_accessor import StdlSegmentAccessor
-from ..schema.stdl_types import StdlSegmentsInfo
+from ..accessor.segment_accessor import SegmentAccessor
+from ..schema.recnode_types import RecnodeSegmentsInfo
 from ...external.notifier import Notifier
 from ...utils import (
     write_yaml_file,
@@ -24,12 +24,12 @@ from ...utils import (
 )
 
 
-class StdlDoneTaskStatus(Enum):
+class RecnodeDoneTaskStatus(Enum):
     SUCCESS = "SUCCESS"
     FAILURE = "FAILURE"
 
 
-class StdlDoneTaskResult(TypedDict):
+class RecnodeDoneTaskResult(TypedDict):
     status: str
     message: str
 
@@ -52,10 +52,10 @@ EXTRACTED_DIR_NAME = "extracted"
 SEGMENTS_DIR_NAME = "segments"
 
 
-class StdlTranscoder:
+class RecnodeTranscoder:
     def __init__(
         self,
-        accessor: StdlSegmentAccessor,
+        accessor: SegmentAccessor,
         notifier: Notifier,
         out_dir_path: str,
         tmp_path: str,
@@ -70,11 +70,11 @@ class StdlTranscoder:
         self.__is_archive = is_archive
         self.__video_size_limit_gb = video_size_limit_gb
 
-    async def clear(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
+    async def clear(self, info: RecnodeSegmentsInfo) -> RecnodeDoneTaskResult:
         await self.__accessor.clear_by_info(info)
         return _get_success_result("Clear success")
 
-    async def transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
+    async def transcode(self, info: RecnodeSegmentsInfo) -> RecnodeDoneTaskResult:
         try:
             return await self.__transcode(info)
         except Exception as e:
@@ -85,7 +85,7 @@ class StdlTranscoder:
             await rmtree(path_join(self.__tmp_path, info.platform_name, info.channel_id, info.video_name))
             raise e
 
-    async def __transcode(self, info: StdlSegmentsInfo) -> StdlDoneTaskResult:
+    async def __transcode(self, info: RecnodeSegmentsInfo) -> RecnodeDoneTaskResult:
         # Initialize local variables
         transcoding_start = asyncio.get_event_loop().time()
 
@@ -192,14 +192,14 @@ class StdlTranscoder:
         log.info(result_msg, info.to_dict({"duration": round(cur_duration(transcoding_start), 2)}))
         return _get_success_result(f"{result_msg}: platform={pf}, channel_id={ch_id}, video_name={vid}")
 
-    async def __copy_direct(self, info: StdlSegmentsInfo, base_dir_path: str, source_paths: list[str]) -> str:
+    async def __copy_direct(self, info: RecnodeSegmentsInfo, base_dir_path: str, source_paths: list[str]) -> str:
         start = asyncio.get_event_loop().time()
         tars_dir_path = await ensure_dir(path_join(base_dir_path, TAR_DIR_NAME))
         await self.__accessor.copy(source_paths, tars_dir_path)
         log.debug("Download segments", info.to_dict({"duration": round(cur_duration(start), 2)}))
         return tars_dir_path
 
-    async def __copy_pass_by_out_dir(self, info: StdlSegmentsInfo, base_dir_path: str, src_paths: list[str]) -> str:
+    async def __copy_pass_by_out_dir(self, info: RecnodeSegmentsInfo, base_dir_path: str, src_paths: list[str]) -> str:
         dl_start = asyncio.get_event_loop().time()
         out_tmp_tars_dir_path = await ensure_dir(
             path_join(self.__out_tmp_dir_path, info.platform_name, info.channel_id, info.video_name)
@@ -219,7 +219,7 @@ class StdlTranscoder:
         log.debug("Move segments to tmp directory", attr)
         return tars_dir_path
 
-    async def move_mp4(self, info: StdlSegmentsInfo, tmp_mp4_path: str):
+    async def move_mp4(self, info: RecnodeSegmentsInfo, tmp_mp4_path: str):
         pf = info.platform_name
         ch_id = info.channel_id
         vid = info.video_name
@@ -238,7 +238,7 @@ class StdlTranscoder:
         await move_file(src=out_tmp_mp4_path, dst=complete_mp4_path)
         log.debug("Move mp4", info.to_dict({"duration": round(cur_duration(start), 2)}))
 
-    async def __check_video_size(self, info: StdlSegmentsInfo, source_paths: list[str]):
+    async def __check_video_size(self, info: RecnodeSegmentsInfo, source_paths: list[str]):
         too_large, video_size_gb = _get_video_size_by_cnt(self.__video_size_limit_gb, source_paths)
         info.video_size_gb = video_size_gb
         if too_large:
@@ -336,7 +336,7 @@ def _check_missing_segments(segment_paths: list[str]) -> InspectResult:
 
 async def clear_dir(
     base_dir_path: str,
-    info: StdlSegmentsInfo,
+    info: RecnodeSegmentsInfo,
     delete_platform: bool = False,
     delete_self: bool = False,
 ):
@@ -363,19 +363,15 @@ async def _get_sorted_segment_paths(segments_path: str) -> list[str]:
     return sorted(paths, key=lambda x: int(stem(x)))
 
 
-async def _remux_video(src_path: str, out_path: str, info: StdlSegmentsInfo):
+async def _remux_video(src_path: str, out_path: str, info: RecnodeSegmentsInfo):
     start = asyncio.get_event_loop().time()
-    await remux_video(src_path=src_path, out_path=out_path)
+    command = ["ffmpeg", "-i", src_path, "-c", "copy", out_path]
+    await run_process(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     log.debug("Remux from ts to mp4", info.to_dict({"duration": round(cur_duration(start), 2)}))
 
 
-def _get_success_result(message: str) -> StdlDoneTaskResult:
+def _get_success_result(message: str) -> RecnodeDoneTaskResult:
     return {
-        "status": StdlDoneTaskStatus.SUCCESS.value,
+        "status": RecnodeDoneTaskStatus.SUCCESS.value,
         "message": message,
     }
-
-
-async def remux_video(src_path: str, out_path: str):
-    command = ["ffmpeg", "-i", src_path, "-c", "copy", out_path]
-    await run_process(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

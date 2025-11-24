@@ -1,1 +1,0 @@
-STDL_INCOMPLETE_DIR_NAME = "incomplete"

@@ -16,9 +16,9 @@ def run_server():
 
     app.include_router(deps.default_router)
     app.include_router(deps.celery_router)
-    app.include_router(deps.stdl_router)
+    app.include_router(deps.recnode_router)
 
-    deps.stdl_consume_cron.start()
-    deps.stdl_register_cron.start()
+    deps.recnode_consume_cron.start()
+    deps.recnode_register_cron.start()
 
     uvicorn.run(app, port=deps.server_env.server.port, host="0.0.0.0", access_log=False)

@@ -1,19 +1,19 @@
 from abc import ABC, abstractmethod
 
-from ..schema.stdl_types import StdlSegmentsInfo
+from ..schema.recnode_types import RecnodeSegmentsInfo
 from ...common.fs import FsType
 
 
-class StdlSegmentAccessor(ABC):
+class SegmentAccessor(ABC):
     def __init__(self, fs_type: FsType):
         self.fs_type = fs_type
 
     @abstractmethod
-    async def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
+    async def get_paths(self, info: RecnodeSegmentsInfo) -> list[str]:
         pass
 
     @abstractmethod
-    async def get_size_sum(self, info: StdlSegmentsInfo) -> int:
+    async def get_size_sum(self, info: RecnodeSegmentsInfo) -> int:
         pass
 
     @abstractmethod
@@ -21,7 +21,7 @@ class StdlSegmentAccessor(ABC):
         pass
 
     @abstractmethod
-    async def clear_by_info(self, info: StdlSegmentsInfo):
+    async def clear_by_info(self, info: RecnodeSegmentsInfo):
         pass
 
     @abstractmethod

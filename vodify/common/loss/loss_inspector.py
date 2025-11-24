@@ -8,7 +8,7 @@ class InspectResult(BaseModel):
         return self.model_dump(by_alias=True, exclude_none=True)
 
 
-class StdlLossInspector:
+class LossInspector:
     def inspect(self, seg_nums: list[int]):
         return InspectResult(missing_segments=format_ranges(seg_nums))
 

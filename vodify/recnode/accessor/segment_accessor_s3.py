@@ -1,23 +1,23 @@
 import pyutils
 from pyutils import path_join, filename, avg, log
 
-from .stdl_segment_accessor import StdlSegmentAccessor
-from ..schema.stdl_constrants import STDL_INCOMPLETE_DIR_NAME
-from ..schema.stdl_types import StdlSegmentsInfo
+from .segment_accessor import SegmentAccessor
+from ..schema.recnode_constrants import RECNODE_INCOMPLETE_DIR_NAME
+from ..schema.recnode_types import RecnodeSegmentsInfo
 from ...common.fs import FsType
 from ...external.s3 import S3AsyncClient
 
 
-class StdlS3SegmentAccessor(StdlSegmentAccessor):
+class S3SegmentAccessor(SegmentAccessor):
     def __init__(self, s3_client: S3AsyncClient, delete_batch_size: int):
         super().__init__(FsType.S3)
         self.__s3 = s3_client
         self.__delete_batch_size = delete_batch_size
 
-    async def get_paths(self, info: StdlSegmentsInfo) -> list[str]:
+    async def get_paths(self, info: RecnodeSegmentsInfo) -> list[str]:
         return await self.__get_keys(info)
 
-    async def get_size_sum(self, info: StdlSegmentsInfo) -> int:
+    async def get_size_sum(self, info: RecnodeSegmentsInfo) -> int:
         keys = await self.__get_keys(info)
         size_sum = 0
         for key in keys:
@@ -46,14 +46,14 @@ class StdlS3SegmentAccessor(StdlSegmentAccessor):
         }
         log.debug("Download objects from S3", attr)
 
-    async def __get_keys(self, info: StdlSegmentsInfo):
-        chunks_path = path_join(STDL_INCOMPLETE_DIR_NAME, info.platform_name, info.channel_id, info.video_name)
+    async def __get_keys(self, info: RecnodeSegmentsInfo):
+        chunks_path = path_join(RECNODE_INCOMPLETE_DIR_NAME, info.platform_name, info.channel_id, info.video_name)
         keys = []
         async for obj in self.__s3.list_all_objects(prefix=chunks_path):
             keys.append(obj.key)
         return keys
 
-    async def clear_by_info(self, info: StdlSegmentsInfo):
+    async def clear_by_info(self, info: RecnodeSegmentsInfo):
         keys = await self.__get_keys(info)
         await self.clear_by_paths(keys)
 

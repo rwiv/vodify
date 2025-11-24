@@ -3,18 +3,18 @@ from enum import Enum
 from pydantic import BaseModel, Field, constr
 
 
-class StdlPlatformType(Enum):
+class RecnodePlatformType(Enum):
     CHZZK = "chzzk"
     SOOP = "soop"
     TWITCH = "twitch"
 
 
-class StdlDoneStatus(Enum):
+class RecnodeDoneStatus(Enum):
     COMPLETE = "complete"
     CANCELED = "canceled"
 
 
-class StdlSegmentsInfo(BaseModel):
+class RecnodeSegmentsInfo(BaseModel):
     platform_name: str
     channel_id: str
     video_name: str
@@ -30,9 +30,9 @@ class StdlSegmentsInfo(BaseModel):
         return result
 
 
-class StdlDoneMsg(BaseModel):
-    status: StdlDoneStatus
-    platform: StdlPlatformType
+class RecnodeMsg(BaseModel):
+    status: RecnodeDoneStatus
+    platform: RecnodePlatformType
     uid: constr(min_length=1)
     video_name: constr(min_length=1) = Field(alias="videoName")
     fs_name: constr(min_length=1) = Field(alias="fsName")
@@ -44,10 +44,10 @@ class StdlDoneMsg(BaseModel):
 
     @staticmethod
     def from_dict(dct: dict):
-        return StdlDoneMsg(**dct)
+        return RecnodeMsg(**dct)
 
-    def to_segments_info(self) -> StdlSegmentsInfo:
-        return StdlSegmentsInfo(
+    def to_segments_info(self) -> RecnodeSegmentsInfo:
+        return RecnodeSegmentsInfo(
             platform_name=self.platform.value,
             channel_id=self.uid,
             video_name=self.video_name,

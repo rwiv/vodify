@@ -50,13 +50,13 @@ spec:
             - name: SQS_REGION_NAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.stdlQueue.secretName }}
-                  key: {{ .Values.secrets.stdlQueue.regionNameKey }}
+                  name: {{ .Values.secrets.recnodeQueue.secretName }}
+                  key: {{ .Values.secrets.recnodeQueue.regionNameKey }}
             - name: SQS_QUEUE_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.stdlQueue.secretName }}
-                  key: {{ .Values.secrets.stdlQueue.queueUrlKey }}
+                  name: {{ .Values.secrets.recnodeQueue.secretName }}
+                  key: {{ .Values.secrets.recnodeQueue.queueUrlKey }}
       imagePullSecrets:
         - name: {{ .Values.image.pullSecret }}
       {{- with .Values.affinity }}

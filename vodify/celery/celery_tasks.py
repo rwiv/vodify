@@ -4,20 +4,20 @@ from pyutils import log, error_dict
 
 from .celery_app import app
 from .celery_worker_deps import WorkerDependencyManager
-from ..stdl import StdlDoneMsg, StdlDoneStatus
+from ..recnode import RecnodeMsg, RecnodeDoneStatus
 
 
-@app.task(name="vodify.stdl.transcode")
-def stdl_transcode(dct: dict):
-    asyncio.run(_stdl_transcode(dct))
+@app.task(name="vodify.recnode.transcode")
+def recnode_transcode(dct: dict):
+    asyncio.run(_recnode_transcode(dct))
 
 
-async def _stdl_transcode(dct: dict):
+async def _recnode_transcode(dct: dict):
     deps = WorkerDependencyManager()
-    msg = StdlDoneMsg(**dct)
+    msg = RecnodeMsg(**dct)
 
     task_uname = f"{msg.platform.value}:{msg.uid}:{msg.video_name}"
-    if msg.status == StdlDoneStatus.COMPLETE:
+    if msg.status == RecnodeDoneStatus.COMPLETE:
         exists_result = await deps.task_status_repository.check(task_uname=task_uname)
         if exists_result is not None:
             return exists_result
@@ -25,10 +25,10 @@ async def _stdl_transcode(dct: dict):
     await deps.task_status_repository.set_pending(task_uname=task_uname)
 
     try:
-        transcoder = deps.create_stdl_transcoder(msg.fs_name)
-        if msg.status == StdlDoneStatus.COMPLETE:
+        transcoder = deps.create_recnode_transcoder(msg.fs_name)
+        if msg.status == RecnodeDoneStatus.COMPLETE:
             result = await transcoder.transcode(msg.to_segments_info())
-        elif msg.status == StdlDoneStatus.CANCELED:
+        elif msg.status == RecnodeDoneStatus.CANCELED:
             result = await transcoder.clear(msg.to_segments_info())
         else:
             raise ValueError(f"Unknown status: {msg.status}")

@@ -37,7 +37,7 @@ class TaskDict(TypedDict):
 @dataclass
 class TaskInfo:
     task_id: str
-    task_name: str  # e.g. "vodify.stdl.transcode"
+    task_name: str  # e.g. "vodify.recnode.transcode"
     task_args: list[Any]
     task_kwargs: dict
     worker_name: str  # e.g. "celery@worker-1"

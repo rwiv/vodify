@@ -17,8 +17,8 @@ secrets:
     secretName: sqs-auth
     accessKeyKey: access-key
     secretKeyKey: secret-key
-  stdlQueue:
-    secretName: stdl-queue
+  recnodeQueue:
+    secretName: recnode-queue
     regionNameKey: region-name
     queueUrlKey: queue-url
 server:

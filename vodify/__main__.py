@@ -6,7 +6,7 @@ import logging
 from pyutils import load_dotenv, path_join, find_project_root, log
 
 from .env import get_batch_env
-from .stdl import StdlArchiveExecutor
+from .recnode import RecnodeArchiveExecutor
 
 
 if __name__ == "__main__":
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     elif mode == "batch":
         log.set_level(logging.DEBUG)
         env = get_batch_env()
-        asyncio.run(StdlArchiveExecutor(env).run())
+        asyncio.run(RecnodeArchiveExecutor(env).run())
     else:
         log.info(f"Unknown mode: {mode}")
         sys.exit(1)
