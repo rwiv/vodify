@@ -1,7 +1,7 @@
 import pytest
 
 from tests.testutils.test_utils_misc import load_test_dotenv
-from vodify.common.status import TaskStatusRepository, TaskStatus
+from vodify.common.task import TaskStatusRepository, TaskStatus
 from vodify.env import get_celery_env
 
 load_test_dotenv(".env-worker-dev")

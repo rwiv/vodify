@@ -1,51 +1,20 @@
 import asyncio
 import subprocess
-from enum import Enum
 from pathlib import Path
-from typing import TypedDict
 
 import aiofiles
 from aiofiles import os as aios
-from pydantic import BaseModel, Field
-from pyutils import log, path_join, error_dict, run_process, cur_duration
+from pyutils import log, path_join, error_dict, cur_duration, run_process
 
+from .recnode_data import RecnodeDoneTaskResult, RecnodeDoneTaskStatus
+from .utils_preprocess_segments import _get_deduplicated_seg_paths, _get_sorted_segment_paths, _check_missing_segments
+from .utils_preprocess_tars import _validate_tar_files, _extract_tar_files
+from .utils_estimate_size import _get_video_size_by_cnt
+from .utils_postprocess import clear_dir
 from ..accessor.segment_accessor import SegmentAccessor
 from ..schema.recnode_types import RecnodeSegmentsInfo
 from ...external.notifier import Notifier
-from ...utils import (
-    write_yaml_file,
-    ensure_dir,
-    move_directory_not_recur,
-    listdir_recur,
-    move_file,
-    rmtree,
-    open_tar,
-    stem,
-)
-
-
-class RecnodeDoneTaskStatus(Enum):
-    SUCCESS = "SUCCESS"
-    FAILURE = "FAILURE"
-
-
-class RecnodeDoneTaskResult(TypedDict):
-    status: str
-    message: str
-
-
-class InspectResult(BaseModel):
-    # segment_period: float | None = Field(serialization_alias="segmentPeriod", default=None)
-    # loss_ranges: list[str] = Field(serialization_alias="lossRanges")
-    # total_loss_time: str = Field(serialization_alias="totalLossTime")
-    missing_segments: list[int] = Field(serialization_alias="missingSegments")
-
-    def to_out_dict(self):
-        return self.model_dump(by_alias=True, exclude_none=True)
-
-
-TAR_SIZE_MB = 18
-SEG_SIZE_MB = 2
+from ...utils import write_yaml_file, ensure_dir, move_directory_not_recur, move_file, rmtree
 
 TAR_DIR_NAME = "tars"
 EXTRACTED_DIR_NAME = "extracted"
@@ -168,7 +137,7 @@ class RecnodeTranscoder:
         await aios.remove(merged_tmp_ts_path)
 
         # Move result files
-        await self.move_mp4(info=info, tmp_mp4_path=tmp_mp4_path)
+        await self.__move_mp4(info=info, tmp_mp4_path=tmp_mp4_path)
         comp_chan_dir_path = path_join(self.__out_dir_path, pf, ch_id)
         await write_yaml_file(inspect_result.to_out_dict(), path_join(comp_chan_dir_path, f"{vid}.yaml"))
         if len(mismatch_seg_infos) > 0:
@@ -219,7 +188,7 @@ class RecnodeTranscoder:
         log.debug("Move segments to tmp directory", attr)
         return tars_dir_path
 
-    async def move_mp4(self, info: RecnodeSegmentsInfo, tmp_mp4_path: str):
+    async def __move_mp4(self, info: RecnodeSegmentsInfo, tmp_mp4_path: str):
         pf = info.platform_name
         ch_id = info.channel_id
         vid = info.video_name
@@ -248,119 +217,6 @@ class RecnodeTranscoder:
             message = f"{head}: platform={info.platform_name}, channel_id={info.channel_id}, video_name={info.video_name}, size={video_size_gb}GB"
             await self.__notifier.notify(message)
             raise ValueError(message)
-
-
-def _get_video_size_by_cnt(size_limit_gb: int, paths: list[str]) -> tuple[bool, float]:
-    tars_size_sum_mb = len(paths) * TAR_SIZE_MB
-    tars_size_sum_b = tars_size_sum_mb * 1024 * 1024
-    tars_size_sum_gb = round(tars_size_sum_b / 1024 / 1024 / 1024, 2)
-    is_too_large = tars_size_sum_b > (size_limit_gb * 1024 * 1024 * 1024)
-    return is_too_large, tars_size_sum_gb
-
-
-def _get_video_size_by_name(size_limit_gb: int, paths: list[str]) -> tuple[bool, float]:
-    tars_size_sum_mb = 0
-    for path in paths:
-        stem_name = stem(path)
-        if len(stem_name.split("_")) == 3:
-            tars_size_sum_mb += TAR_SIZE_MB
-        elif len(stem_name.split("_")) == 2:
-            tars_size_sum_mb += SEG_SIZE_MB
-        else:
-            raise ValueError(f"Invalid tar name: {stem_name}")
-    tars_size_sum_b = tars_size_sum_mb * 1024 * 1024
-    tars_size_sum_gb = round(tars_size_sum_b / 1024 / 1024 / 1024, 2)
-    is_too_large = tars_size_sum_b > (size_limit_gb * 1024 * 1024 * 1024)
-    return is_too_large, tars_size_sum_gb
-
-
-async def _validate_tar_files(tars_dir_path: str):
-    if not Path(tars_dir_path).exists():
-        raise ValueError(f"Source path {tars_dir_path} does not exist.")
-    tar_names = await aios.listdir(tars_dir_path)
-    if len(tar_names) == 0:
-        raise ValueError(f"Source path {tars_dir_path} is empty.")
-    for tar_name in tar_names:
-        if not tar_name.endswith(".tar"):
-            raise ValueError(f"Invalid file ext: {path_join(tars_dir_path, tar_name)}")
-
-
-async def _extract_tar_files(src_dir_path: str, out_dir_path: str) -> list[str]:
-    for tar_filename in await aios.listdir(src_dir_path):
-        extracted_dir_path = await ensure_dir(path_join(out_dir_path, stem(tar_filename)))
-        await open_tar(path_join(src_dir_path, tar_filename), extracted_dir_path)
-
-    extracted_seg_paths = []
-    for file_path in await listdir_recur(out_dir_path):
-        if not file_path.endswith(".ts"):
-            raise ValueError(f"Invalid file ext: {file_path}")
-        extracted_seg_paths.append(file_path)
-
-    return extracted_seg_paths
-
-
-async def _get_deduplicated_seg_paths(extract_seg_paths: list[str]):
-    seg_map: dict[int, str] = {}
-    mismatch_seg_infos = []
-    for seg_path in extract_seg_paths:
-        seg_num = int(stem(seg_path))
-        if seg_num not in seg_map:
-            seg_map[seg_num] = seg_path
-        else:
-            prev_size = (await aios.stat(seg_map[seg_num])).st_size
-            cur_size = (await aios.stat(seg_path)).st_size
-            if prev_size != cur_size:
-                mismatch_seg_infos.append({"path1": seg_map[seg_num], "path2": seg_path})
-    return list(seg_map.values()), mismatch_seg_infos
-
-
-def _check_missing_segments(segment_paths: list[str]) -> InspectResult:
-    seg_nums = [int(stem(path)) for path in segment_paths]
-    if -1 in seg_nums and seg_nums[0] != -1:  # check if segment sorted order is valid
-        raise ValueError(f"Invalid segment sorted order: {segment_paths}")
-
-    seg_nums = set([int(stem(path)) for path in segment_paths])
-    missing_seg_nums: list[int] = []
-    start_num = int(stem(segment_paths[0]))
-    if start_num in (0, -1) and len(segment_paths) > 0:
-        start_num = int(stem(segment_paths[1]))
-    end_num = int(stem(segment_paths[-1]))
-    for cur_num in range(start_num, end_num + 1):
-        if cur_num not in seg_nums:
-            missing_seg_nums.append(cur_num)
-
-    return InspectResult(
-        missing_segments=missing_seg_nums,
-    )
-
-
-async def clear_dir(
-    base_dir_path: str,
-    info: RecnodeSegmentsInfo,
-    delete_platform: bool = False,
-    delete_self: bool = False,
-):
-    platform_dir_path = path_join(base_dir_path, info.platform_name)
-    channel_dir_path = path_join(platform_dir_path, info.channel_id)
-    video_dir_path = path_join(channel_dir_path, info.video_name)
-    if Path(video_dir_path).exists() and len(await aios.listdir(video_dir_path)) == 0:
-        await aios.rmdir(video_dir_path)
-    if Path(channel_dir_path).exists() and len(await aios.listdir(channel_dir_path)) == 0:
-        await aios.rmdir(channel_dir_path)
-    if delete_platform:
-        if Path(platform_dir_path).exists() and len(await aios.listdir(platform_dir_path)) == 0:
-            await aios.rmdir(platform_dir_path)
-        if delete_self:
-            if Path(base_dir_path).exists() and len(await aios.listdir(base_dir_path)) == 0:
-                await aios.rmdir(base_dir_path)
-
-
-async def _get_sorted_segment_paths(segments_path: str) -> list[str]:
-    paths = []
-    for filename in await aios.listdir(segments_path):
-        if filename.endswith(".ts"):
-            paths.append(path_join(segments_path, filename))
-    return sorted(paths, key=lambda x: int(stem(x)))
 
 
 async def _remux_video(src_path: str, out_path: str, info: RecnodeSegmentsInfo):

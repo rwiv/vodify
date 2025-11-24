@@ -1,5 +1,5 @@
 from ..common.fs import read_fs_config
-from ..common.status import TaskStatusRepository
+from ..common.task import TaskStatusRepository
 from ..env import get_worker_env, get_celery_env
 from ..external.notifier import create_notifier
 from ..recnode import RecnodeTranscoder, create_recnode_accessor
