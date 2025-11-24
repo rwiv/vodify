@@ -1,14 +1,14 @@
 services:
-  vidt-default:
-    image: vidt:latest
-    container_name: vidt-default
+  vodify-default:
+    image: vodify:latest
+    container_name: vodify-default
     working_dir: /app
-    entrypoint: .venv/bin/python3 -m vidt worker
+    entrypoint: .venv/bin/python3 -m vodify worker
     restart: always
     environment:
       PY_ENV: prod
       WORKER_NAME: default
-      WORKER_QUEUES: celery:vidt:default
+      WORKER_QUEUES: celery:vodify:default
       TMP_DIR_PATH: /app/tmp
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
@@ -42,20 +42,20 @@ services:
       CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_CONCURRENCY}"
       CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
     volumes:
-      - ../vidt:/app/vidt
+      - ../vodify:/app/vodify
       - "${TMP_DIR_PATH}:/app/tmp"
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
-  vidt-io:
-    image: vidt:latest
-    container_name: vidt-io
+  vodify-io:
+    image: vodify:latest
+    container_name: vodify-io
     working_dir: /app
-    entrypoint: .venv/bin/python3 -m vidt worker
+    entrypoint: .venv/bin/python3 -m vodify worker
     restart: always
     environment:
       PY_ENV: dev
       WORKER_NAME: io
-      WORKER_QUEUES: celery:vidt:io:lfs,celery:vidt:io:net
+      WORKER_QUEUES: celery:vodify:io:lfs,celery:vodify:io:net
       TMP_DIR_PATH: "/app/tmp"
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
@@ -89,7 +89,7 @@ services:
       CELERY_WORKER_CONCURRENCY: "${CELERY_IO_WORKER_CONCURRENCY}"
       CELERY_VISIBILITY_TIMEOUT_SEC: "${CELERY_VISIBILITY_TIMEOUT_SEC}"
     volumes:
-      - ../vidt:/app/vidt
+      - ../vodify:/app/vodify
       - "${TMP_DIR_PATH}:/app/tmp"
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"

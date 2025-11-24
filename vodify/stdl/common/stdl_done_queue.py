@@ -3,7 +3,7 @@ import json
 from ..schema.stdl_types import StdlDoneMsg
 from ...external.redis import RedisConfig, RedisQueue, create_app_redis_client
 
-REDIS_STDL_DONE_LIST_KEY = "vidt:stdl:done"
+REDIS_STDL_DONE_LIST_KEY = "vodify:stdl:done"
 
 
 class StdlMsgQueue:

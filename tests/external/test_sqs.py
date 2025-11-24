@@ -1,8 +1,8 @@
 import pytest
 
 from tests.testutils.test_utils_misc import load_test_dotenv
-from vidt.env import get_server_env
-from vidt.external.sqs import SQSAsyncClient
+from vodify.env import get_server_env
+from vodify.external.sqs import SQSAsyncClient
 
 load_test_dotenv(".env-server-dev")
 # load_test_dotenv(".env-worker-prod")

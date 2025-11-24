@@ -11,7 +11,7 @@ from .stdl import StdlArchiveExecutor
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        log.info("Usage: python -m vidt [worker|server|batch]")
+        log.info("Usage: python -m vodify [worker|server|batch]")
         sys.exit(1)
 
     mode = sys.argv[1]

@@ -1,5 +1,5 @@
 cd ..
-set IMG=vidt:latest
+set IMG=vodify:latest
 set DOCKERFILE=./docker/Dockerfile-dev
 
 docker rmi %IMG%

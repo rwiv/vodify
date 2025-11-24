@@ -4,8 +4,8 @@ import os
 import pytest
 from pyutils import find_project_root, path_join, cur_duration
 
-from vidt.common.fs import read_fs_config, FsConfig
-from vidt.external.s3 import S3ListResponse, S3AsyncClient
+from vodify.common.fs import read_fs_config, FsConfig
+from vodify.external.s3 import S3ListResponse, S3AsyncClient
 
 fs_configs = read_fs_config(path_join(find_project_root(), "dev", "fs_conf_test.yaml"))
 

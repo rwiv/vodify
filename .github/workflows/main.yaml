@@ -4,12 +4,12 @@ on:
     tags:
       - v**
 env:
-  APP_NAME: vidt
+  APP_NAME: vodify
   IMAGE_PREFIX: private
   IMAGE_REGISTRY: harbor.rwiv.xyz
   IMAGE_DOCKERFILE_PATH: docker/Dockerfile-prod
   CHART_SRC_PATH: kube/server
-  CHART_OUT_DIRPATH: apps/media/vidt-server
+  CHART_OUT_DIRPATH: apps/media/vodify-server
   CHART_OUT_FILENAME: main.yaml
   GITOPS_REPO: rwiv/gitops-prod
 jobs:

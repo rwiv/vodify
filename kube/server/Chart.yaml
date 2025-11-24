@@ -1,5 +1,5 @@
 apiVersion: v2
-name: vidt
-description: vidt
+name: vodify
+description: vodify
 type: application
 version: 0.1.0

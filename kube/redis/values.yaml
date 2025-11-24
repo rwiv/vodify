@@ -1,18 +1,18 @@
 metadata:
-  name: vidt-redis
+  name: vodify-redis
   namespace: media
 vault:
   mount: kube
-  path: media/vidt/redis
+  path: media/vodify/redis
   version: 1
-  secretName: vidt-redis
+  secretName: vodify-redis
   refreshAfter: 30s
 
 redis:
   global:
     storageClass: rook-ceph-block
   auth:
-    existingSecret: vidt-redis
+    existingSecret: vodify-redis
     existingSecretPasswordKey: password
   master:
     count: 1

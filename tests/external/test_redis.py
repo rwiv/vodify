@@ -1,13 +1,13 @@
 import pytest
 
 from tests.testutils.test_utils_misc import load_test_dotenv
-from vidt.env import get_celery_env
-from vidt.external.redis import RedisQueue, create_app_redis_client
+from vodify.env import get_celery_env
+from vodify.external.redis import RedisQueue, create_app_redis_client
 
 load_test_dotenv(".env-worker-dev")
 # load_test_dotenv(".env-worker-prod")
 
-key = "vidt:test:list"
+key = "vodify:test:list"
 celery_env = get_celery_env()
 conf = celery_env.redis
 queue = RedisQueue(create_app_redis_client(conf), key=key)

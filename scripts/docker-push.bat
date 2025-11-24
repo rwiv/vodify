@@ -1,5 +1,5 @@
 cd ..
-set IMG=harbor.rwiv.xyz/private/vidt:0.9.2
+set IMG=harbor.rwiv.xyz/private/vodify:0.9.3
 set DOCKERFILE=./docker/Dockerfile-prod
 
 docker build -t %IMG% -f %DOCKERFILE% .

@@ -4,7 +4,7 @@ import yaml
 from pydantic import BaseModel, Field
 from pyutils import path_join, find_project_root
 
-from vidt.stdl import StdlLossInspector
+from vodify.stdl import StdlLossInspector
 
 base_path = path_join(find_project_root(), "dev", "loss_stdl")
 

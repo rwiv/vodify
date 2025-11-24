@@ -1,0 +1,5 @@
+DEFAULT_QUEUE_NAME = "celery:vodify:default"
+IO_LFS_QUEUE_NAME = "celery:vodify:io:lfs"
+IO_NET_QUEUE_NAME = "celery:vodify:io:net"
+CPU_SINGLE_QUEUE_NAME = "celery:vodify:cpu:single"
+CPU_MULTIPLE_QUEUE_NAME = "celery:vodify:cpu:multiple"

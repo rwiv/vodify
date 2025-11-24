@@ -1,5 +1,0 @@
-DEFAULT_QUEUE_NAME = "celery:vidt:default"
-IO_LFS_QUEUE_NAME = "celery:vidt:io:lfs"
-IO_NET_QUEUE_NAME = "celery:vidt:io:net"
-CPU_SINGLE_QUEUE_NAME = "celery:vidt:cpu:single"
-CPU_MULTIPLE_QUEUE_NAME = "celery:vidt:cpu:multiple"

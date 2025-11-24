@@ -1,8 +1,8 @@
 import pytest
 
 from tests.testutils.test_utils_misc import load_test_dotenv
-from vidt.common.status import TaskStatusRepository, TaskStatus
-from vidt.env import get_celery_env
+from vodify.common.status import TaskStatusRepository, TaskStatus
+from vodify.env import get_celery_env
 
 load_test_dotenv(".env-worker-dev")
 # load_test_dotenv(".env-worker-prod")

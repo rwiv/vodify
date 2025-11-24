@@ -7,7 +7,7 @@ from .celery_worker_deps import WorkerDependencyManager
 from ..stdl import StdlDoneMsg, StdlDoneStatus
 
 
-@app.task(name="vidt.stdl.transcode")
+@app.task(name="vodify.stdl.transcode")
 def stdl_transcode(dct: dict):
     asyncio.run(_stdl_transcode(dct))
 

@@ -7,9 +7,9 @@ from pydantic import BaseModel
 from pyutils import path_join, find_project_root, dirpath
 
 from tests.testutils.test_utils_misc import load_test_dotenv
-from vidt.common.status import TaskStatusRepository
-from vidt.env import get_celery_env
-from vidt.stdl import StdlDoneMsg, StdlMsgQueue
+from vodify.common.status import TaskStatusRepository
+from vodify.env import get_celery_env
+from vodify.stdl import StdlDoneMsg, StdlMsgQueue
 
 load_test_dotenv(".env-worker-dev")
 # load_test_dotenv(".env-worker-prod")

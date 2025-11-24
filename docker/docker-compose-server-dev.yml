@@ -1,9 +1,9 @@
 services:
-  vidt-server:
-    image: vidt:latest
-    container_name: vidt-server
+  vodify-server:
+    image: vodify:latest
+    container_name: vodify-server
     working_dir: /app
-    entrypoint: .venv/bin/python3 -m vidt server
+    entrypoint: .venv/bin/python3 -m vodify server
     environment:
       PY_ENV: prod
       SERVER_PORT: "${SERVER_PORT}"
@@ -19,12 +19,12 @@ services:
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
-      - ../vidt:/app/vidt
-  vidt-flower:
-    image: vidt:latest
-    container_name: vidt-flower
+      - ../vodify:/app/vodify
+  vodify-flower:
+    image: vodify:latest
+    container_name: vodify-flower
     working_dir: /app
-    entrypoint: .venv/bin/celery -A vidt.celery.celery_app.app flower
+    entrypoint: .venv/bin/celery -A vodify.celery.celery_app.app flower
     environment:
       FLOWER_UNAUTHENTICATED_API: "${FLOWER_UNAUTHENTICATED_API}"
 
@@ -34,4 +34,4 @@ services:
     ports:
       - "${FLOWER_PORT}:5555"
     volumes:
-      - ../vidt:/app/vidt
+      - ../vodify:/app/vodify

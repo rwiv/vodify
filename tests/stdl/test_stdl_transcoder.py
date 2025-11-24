@@ -7,10 +7,10 @@ from pyutils import path_join, log, find_project_root
 
 from tests.testutils.test_utils_fs import read_test_fs_configs, find_test_fs_config
 from tests.testutils.test_utils_misc import load_test_dotenv
-from vidt.common.fs import S3ObjectWriter
-from vidt.external.notifier import MockNotifier
-from vidt.external.s3 import S3AsyncClient
-from vidt.stdl import (
+from vodify.common.fs import S3ObjectWriter
+from vodify.external.notifier import MockNotifier
+from vodify.external.s3 import S3AsyncClient
+from vodify.stdl import (
     StdlDoneMsg,
     StdlDoneStatus,
     StdlPlatformType,
@@ -20,7 +20,7 @@ from vidt.stdl import (
     StdlArchiver,
     ArchiveTarget,
 )
-from vidt.utils import rmtree
+from vodify.utils import rmtree
 
 load_test_dotenv(".env-server-dev")
 

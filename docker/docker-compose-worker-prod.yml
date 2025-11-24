@@ -1,14 +1,14 @@
 services:
-  vidt-default:
-    image: harbor.rwiv.xyz/private/vidt:0.9.2
-    container_name: vidt-default
+  vodify-default:
+    image: harbor.rwiv.xyz/private/vodify:0.9.3
+    container_name: vodify-default
     working_dir: /app
-    entrypoint: .venv/bin/python3 -m vidt worker
+    entrypoint: .venv/bin/python3 -m vodify worker
     restart: always
     environment:
       PY_ENV: prod
       WORKER_NAME: default
-      WORKER_QUEUES: celery:vidt:default
+      WORKER_QUEUES: celery:vodify:default
       TMP_DIR_PATH: /app/tmp
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
@@ -38,23 +38,23 @@ services:
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
     labels:
-      app: vidt-worker
+      app: vodify-worker
       host: ${HOSTNAME}
     logging:
       driver: json-file
       options:
         labels: app,host
         tag: "container_image={{.ImageName}},container_name={{.Name}}"
-  vidt-io:
-    image: harbor.rwiv.xyz/private/vidt:0.9.2
-    container_name: vidt-io
+  vodify-io:
+    image: harbor.rwiv.xyz/private/vodify:0.9.3
+    container_name: vodify-io
     working_dir: /app
-    entrypoint: .venv/bin/python3 -m vidt worker
+    entrypoint: .venv/bin/python3 -m vodify worker
     restart: always
     environment:
       PY_ENV: prod
       WORKER_NAME: io
-      WORKER_QUEUES: celery:vidt:io:lfs,celery:vidt:io:net
+      WORKER_QUEUES: celery:vodify:io:lfs,celery:vodify:io:net
       TMP_DIR_PATH: /app/tmp
 
       OUT_FS_NAME: "${OUT_FS_NAME}"
@@ -91,7 +91,7 @@ services:
       - "${STDL_BASE_DIR_PATH}:/mnt/stdl"
       - "${FS_CONFIG_PATH}:/mnt/app_conf/fs_conf.yaml"
     labels:
-      app: vidt-worker
+      app: vodify-worker
       host: ${HOSTNAME}
     logging:
       driver: json-file
