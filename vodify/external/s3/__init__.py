@@ -3,6 +3,7 @@ import sys
 
 from .s3_client import S3AsyncClient
 from .s3_types import S3Config, S3ListResponse
+from .s3_utils import create_client
 
 targets = [
     "s3_client",
